@@ -14,20 +14,25 @@ dotenv.config();
 
 const app = express();
 
+// CORS Configuration with your live URLs
+const corsOptions = {
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://127.0.0.1:5500',
+    'https://amayra-a9i2.vercel.app',      // Frontend
+    'https://amayra-orcin.vercel.app'      // Admin Panel
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
 // Middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
   crossOriginEmbedderPolicy: false
 }));
-app.use(cors({
-  origin: [
-    'http://localhost:3000',           // লোকাল ডেভেলপমেন্ট
-    'http://localhost:5173',           // Vite ডিফল্ট পোর্ট
-    'https://amayra-a9i2.vercel.app',  // আপনার Vercel ফ্রন্টএন্ড URL
-    'https://amayra-orcin.vercel.app'  // যদি আলাদা করে এডমিন ডিপ্লয় করেন
-  ],
-  credentials: true
-}));
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
@@ -390,7 +395,6 @@ app.put('/api/admin/sliders/:id', auth, upload.single('image'), async (req, res)
       updateData.imageUrl = req.file.path;
       updateData.publicId = req.file.filename;
       
-      // Delete old image from cloudinary
       const oldSlider = await Slider.findById(req.params.id);
       if (oldSlider?.publicId) {
         await cloudinary.uploader.destroy(oldSlider.publicId);
@@ -506,7 +510,6 @@ app.post('/api/admin/products', auth, upload.array('images', 5), async (req, res
   try {
     const productData = JSON.parse(req.body.data || '{}');
     
-    // Get next available ID
     const lastProduct = await Product.findOne().sort('-id');
     const nextId = lastProduct ? lastProduct.id + 1 : 13;
 
@@ -544,7 +547,6 @@ app.put('/api/admin/products/:id', auth, upload.array('images', 5), async (req, 
     let publicIds = product.publicIds;
 
     if (req.files && req.files.length > 0) {
-      // Delete old images from cloudinary
       if (product.publicIds && product.publicIds.length > 0) {
         for (const publicId of product.publicIds) {
           await cloudinary.uploader.destroy(publicId);
@@ -616,7 +618,6 @@ app.post('/api/orders', async (req, res) => {
 
     await order.save();
     
-    // Update sold count for products
     for (const item of items) {
       await Product.findOneAndUpdate(
         { id: item.id },
@@ -841,5 +842,7 @@ initializeDatabase().then(() => {
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`✅ Frontend URL: https://amayra-a9i2.vercel.app`);
+    console.log(`✅ Admin URL: https://amayra-orcin.vercel.app`);
   });
 });
