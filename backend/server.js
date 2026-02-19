@@ -20,7 +20,12 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173', 'https://amayra.vercel.app'],
+  origin: [
+    'http://localhost:3000',           // লোকাল ডেভেলপমেন্ট
+    'http://localhost:5173',           // Vite ডিফল্ট পোর্ট
+    'https://amayra-a9i2.vercel.app',  // আপনার Vercel ফ্রন্টএন্ড URL
+    'https://amayra-orcin.vercel.app'  // যদি আলাদা করে এডমিন ডিপ্লয় করেন
+  ],
   credentials: true
 }));
 app.use(express.json({ limit: '50mb' }));
