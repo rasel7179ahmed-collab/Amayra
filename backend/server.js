@@ -506,7 +506,7 @@ app.get('/api/admin/products', auth, async (req, res) => {
   }
 });
 
-app.post('/api/admin/products', auth, upload.array('images', 5), async (req, res) => {
+app.post('/api/admin/products', auth, upload.array('images', 10), async (req, res) => {
   try {
     const productData = JSON.parse(req.body.data || '{}');
     
@@ -538,7 +538,7 @@ app.post('/api/admin/products', auth, upload.array('images', 5), async (req, res
   }
 });
 
-app.put('/api/admin/products/:id', auth, upload.array('images', 5), async (req, res) => {
+app.put('/api/admin/products/:id', auth, upload.array('images', 10), async (req, res) => {
   try {
     const productData = JSON.parse(req.body.data || '{}');
     const product = await Product.findById(req.params.id);
@@ -633,8 +633,10 @@ app.post('/api/orders', async (req, res) => {
 
 app.get('/api/admin/orders', auth, async (req, res) => {
   try {
-    const { status, page = 1, limit = 20 } = req.query;
-    const query = status ? { status } : {};
+    const { status, page = 1, limit = 20, isRead } = req.query;
+    const query = {};
+    if (status) query.status = status;
+    if (isRead !== undefined) query.isRead = isRead === 'true';
     
     const orders = await Order.find(query)
       .sort('-createdAt')
@@ -729,10 +731,14 @@ app.post('/api/reviews', async (req, res) => {
 
 app.get('/api/admin/reviews', auth, async (req, res) => {
   try {
-    const { status } = req.query;
-    const query = status ? { status } : {};
+    const { status, limit } = req.query;
+    const query = {};
+    if (status) query.status = status;
     
-    const reviews = await Review.find(query).sort('-createdAt');
+    let reviewsQuery = Review.find(query).sort('-createdAt');
+    if (limit) reviewsQuery = reviewsQuery.limit(parseInt(limit));
+    
+    const reviews = await reviewsQuery;
     res.json(reviews);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -832,6 +838,38 @@ app.get('/api/admin/dashboard', auth, async (req, res) => {
       },
       recentOrders
     });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Chart data for last 7 days
+app.get('/api/admin/chart-data', auth, async (req, res) => {
+  try {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const orders = await Order.aggregate([
+      { $match: { createdAt: { $gte: sevenDaysAgo } } },
+      { $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          count: { $sum: 1 }
+      }},
+      { $sort: { _id: 1 } }
+    ]);
+
+    const labels = [];
+    const data = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      labels.unshift(dateStr);
+      const found = orders.find(o => o._id === dateStr);
+      data.unshift(found ? found.count : 0);
+    }
+
+    res.json({ labels, data });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

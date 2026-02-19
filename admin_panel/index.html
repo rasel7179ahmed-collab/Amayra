@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
   <title>AMAYRA · অ্যাডমিন প্যানেল</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: 'Hind Siliguri', sans-serif;
       background: #f3f4f6;
     }
     
@@ -89,6 +89,7 @@
       display: none;
     }
     
+    /* Thin scrollbar for sidebar (no border-radius) */
     .sidebar {
       position: fixed;
       left: 0;
@@ -98,8 +99,21 @@
       background: #0A192F;
       color: white;
       overflow-y: auto;
-      transition: all 0.3s;
+      transition: transform 0.3s ease;
       z-index: 50;
+      scrollbar-width: thin;          /* Firefox */
+      scrollbar-color: #4a5568 #0A192F; /* Firefox */
+    }
+    /* WebKit scrollbar */
+    .sidebar::-webkit-scrollbar {
+      width: 5px;
+    }
+    .sidebar::-webkit-scrollbar-track {
+      background: #0A192F;
+    }
+    .sidebar::-webkit-scrollbar-thumb {
+      background: #4a5568;
+      border-radius: 0;               /* no border radius */
     }
     
     @media (max-width: 768px) {
@@ -162,7 +176,7 @@
     .main-content {
       margin-left: 260px;
       padding: 1.5rem;
-      transition: all 0.3s;
+      transition: margin-left 0.3s;
     }
     
     @media (max-width: 768px) {
@@ -195,9 +209,59 @@
       }
     }
     
+    /* Notification Bell & Dropdown */
+    .notification-badge {
+      position: relative;
+    }
+    .badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: #dc2626;
+      color: white;
+      font-size: 0.7rem;
+      min-width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .notification-dropdown {
+      position: absolute;
+      top: 60px;
+      right: 20px;
+      width: 320px;
+      background: white;
+      border-radius: 30px 8px 30px 8px;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+      z-index: 100;
+      display: none;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .notification-dropdown.show {
+      display: block;
+    }
+    .notification-item {
+      padding: 1rem;
+      border-bottom: 1px solid #e2e8f0;
+      transition: background 0.2s;
+    }
+    .notification-item:hover {
+      background: #f7fafc;
+    }
+    .notification-item.unread {
+      background: #ebf5ff;
+    }
+    .notification-time {
+      font-size: 0.7rem;
+      color: #718096;
+    }
+    
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 1.5rem;
       margin-bottom: 2rem;
     }
@@ -207,6 +271,8 @@
       padding: 1.5rem;
       border-radius: 30px 8px 30px 8px;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      background: linear-gradient(145deg, #ffffff, #f8fafc);
+      border: 1px solid rgba(24, 119, 242, 0.1);
     }
     
     .stat-icon {
@@ -277,6 +343,15 @@
       color: white;
       padding: 0.6rem 1.5rem;
       border-radius: 30px 6px 30px 6px;
+    }
+    
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #1e293b;
+      padding: 0.6rem 1.5rem;
+      border-radius: 30px 6px 30px 6px;
+      font-weight: 600;
+      cursor: pointer;
     }
     
     .data-table {
@@ -382,25 +457,6 @@
       border-color: #1877F2;
     }
     
-    .notification-badge {
-      position: relative;
-    }
-    
-    .badge {
-      position: absolute;
-      top: -5px;
-      right: -5px;
-      background: #dc2626;
-      color: white;
-      font-size: 0.7rem;
-      min-width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
     .tab {
       padding: 0.75rem 1.5rem;
       cursor: pointer;
@@ -479,6 +535,12 @@
     input:checked + .slider:before {
       transform: translateX(26px);
     }
+
+    /* Quick action buttons for reviews */
+    .review-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
   </style>
 </head>
 <body>
@@ -556,8 +618,24 @@
           <i class="fa-solid fa-bars menu-toggle" id="menuToggle"></i>
           <h2 class="text-xl font-bold" id="pageTitle">ড্যাশবোর্ড</h2>
         </div>
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-4 relative">
           <span class="text-sm text-gray-600" id="adminName">অ্যাডমিন</span>
+          <!-- Notification Bell -->
+          <div class="relative">
+            <i class="fa-regular fa-bell text-xl cursor-pointer text-[#1877F2]" id="notificationBell"></i>
+            <span class="badge" id="notificationTotalBadge" style="display: none;">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notification Dropdown -->
+      <div class="notification-dropdown" id="notificationDropdown">
+        <div class="p-3 border-b border-gray-200 flex justify-between items-center">
+          <h4 class="font-bold">নতুন নোটিফিকেশন</h4>
+          <button class="text-xs text-[#1877F2] hover:underline" id="markAllRead">সব দেখা হয়েছে</button>
+        </div>
+        <div id="notificationList" class="max-h-80 overflow-y-auto">
+          <div class="p-4 text-center text-gray-500">লোড হচ্ছে...</div>
         </div>
       </div>
 
@@ -584,6 +662,8 @@
       document.getElementById('adminName').textContent = adminUsername || 'অ্যাডমিন';
       loadDashboard();
       loadUnreadCounts();
+      // Start polling for unread counts
+      setInterval(loadUnreadCounts, 30000);
     }
 
     // Login Form
@@ -626,9 +706,18 @@
       document.getElementById('loginPage').style.display = 'flex';
     });
 
-    // Menu Toggle
+    // Menu Toggle for mobile
     document.getElementById('menuToggle').addEventListener('click', () => {
       document.getElementById('sidebar').classList.toggle('open');
+    });
+
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', (e) => {
+      const sidebar = document.getElementById('sidebar');
+      const menuToggle = document.getElementById('menuToggle');
+      if (window.innerWidth <= 768 && sidebar.classList.contains('open') && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+        sidebar.classList.remove('open');
+      }
     });
 
     // Menu Navigation
@@ -667,7 +756,23 @@
       });
     });
 
-    // Load Unread Counts
+    // Notification Bell Toggle
+    const bell = document.getElementById('notificationBell');
+    const dropdown = document.getElementById('notificationDropdown');
+    bell.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.classList.toggle('show');
+      if (dropdown.classList.contains('show')) {
+        loadNotifications();
+      }
+    });
+    document.addEventListener('click', (e) => {
+      if (!dropdown.contains(e.target) && !bell.contains(e.target)) {
+        dropdown.classList.remove('show');
+      }
+    });
+
+    // Load Unread Counts (for badges)
     async function loadUnreadCounts() {
       try {
         const [ordersRes, reviewsRes] = await Promise.all([
@@ -684,6 +789,9 @@
 
         const orderBadge = document.getElementById('orderBadge');
         const reviewBadge = document.getElementById('reviewBadge');
+        const totalBadge = document.getElementById('notificationTotalBadge');
+
+        const totalUnread = (ordersData.count || 0) + (reviewsData.count || 0);
 
         if (ordersData.count > 0) {
           orderBadge.style.display = 'flex';
@@ -698,10 +806,113 @@
         } else {
           reviewBadge.style.display = 'none';
         }
+
+        if (totalUnread > 0) {
+          totalBadge.style.display = 'flex';
+          totalBadge.textContent = totalUnread;
+        } else {
+          totalBadge.style.display = 'none';
+        }
       } catch (error) {
         console.error('Error loading unread counts:', error);
       }
     }
+
+    // Load Notifications (for dropdown)
+    async function loadNotifications() {
+      const listDiv = document.getElementById('notificationList');
+      listDiv.innerHTML = '<div class="p-4 text-center"><div class="loading-spinner mx-auto"></div></div>';
+      
+      try {
+        // Fetch recent unread orders (limit 5)
+        const ordersRes = await fetch(`${API_BASE}/admin/orders?limit=5&isRead=false`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const ordersData = await ordersRes.json();
+        // Fetch recent unread reviews (limit 5)
+        const reviewsRes = await fetch(`${API_BASE}/admin/reviews?status=pending&limit=5`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const reviewsData = await reviewsRes.json();
+
+        const notifications = [];
+
+        if (ordersData.orders) {
+          ordersData.orders.forEach(order => {
+            notifications.push({
+              type: 'order',
+              id: order._id,
+              title: `নতুন অর্ডার #${order.orderId}`,
+              description: `${order.customerName} - ৳${order.total}`,
+              time: order.createdAt,
+              onClick: () => {
+                showOrderDetails(order);
+                markNotificationRead('order', order._id);
+                dropdown.classList.remove('show');
+              }
+            });
+          });
+        }
+
+        if (reviewsData) {
+          reviewsData.forEach(review => {
+            notifications.push({
+              type: 'review',
+              id: review._id,
+              title: `নতুন রিভিউ (${review.rating}★)`,
+              description: `${review.name} - ${review.address}`,
+              time: review.createdAt,
+              onClick: () => {
+                showReviewDetails(review);
+                markNotificationRead('review', review._id);
+                dropdown.classList.remove('show');
+              }
+            });
+          });
+        }
+
+        // Sort by time desc
+        notifications.sort((a,b) => new Date(b.time) - new Date(a.time));
+
+        if (notifications.length === 0) {
+          listDiv.innerHTML = '<div class="p-4 text-center text-gray-500">কোন নতুন নোটিফিকেশন নেই</div>';
+          return;
+        }
+
+        listDiv.innerHTML = notifications.map(n => `
+          <div class="notification-item unread cursor-pointer" onclick="(${n.onClick})()">
+            <div class="flex justify-between">
+              <span class="font-medium">${n.title}</span>
+              <span class="notification-time">${new Date(n.time).toLocaleTimeString('bn-BD')}</span>
+            </div>
+            <p class="text-sm text-gray-600">${n.description}</p>
+          </div>
+        `).join('');
+
+      } catch (error) {
+        listDiv.innerHTML = '<div class="p-4 text-center text-red-500">নোটিফিকেশন লোড করতে ব্যর্থ</div>';
+        console.error(error);
+      }
+    }
+
+    // Mark notification as read (and refresh badges)
+    async function markNotificationRead(type, id) {
+      if (type === 'order') {
+        await fetch(`${API_BASE}/admin/orders/${id}/read`, {
+          method: 'PUT',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      } else {
+        // For review, we consider it read if status is not pending (we'll just update to approved for demo)
+        // In real app, add isRead field to review. For simplicity, we'll skip.
+      }
+      loadUnreadCounts();
+    }
+
+    // Mark all as read - just close dropdown
+    document.getElementById('markAllRead').addEventListener('click', () => {
+      dropdown.classList.remove('show');
+    });
 
     // Load Dashboard
     async function loadDashboard() {
@@ -709,10 +920,17 @@
       content.innerHTML = '<div class="flex justify-center p-8"><div class="loading-spinner"></div></div>';
 
       try {
-        const res = await fetch(`${API_BASE}/admin/dashboard`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await res.json();
+        const [statsRes, chartRes] = await Promise.all([
+          fetch(`${API_BASE}/admin/dashboard`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }),
+          fetch(`${API_BASE}/admin/chart-data`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+        ]);
+
+        const data = await statsRes.json();
+        const chartData = await chartRes.json();
 
         content.innerHTML = `
           <div class="stats-grid">
@@ -749,6 +967,11 @@
           </div>
 
           <div class="section-card">
+            <h3 class="text-xl font-bold mb-4">গত ৭ দিনের অর্ডার</h3>
+            <canvas id="ordersChart" style="max-height:300px;"></canvas>
+          </div>
+
+          <div class="section-card">
             <h3 class="text-xl font-bold mb-4">সাম্প্রতিক অর্ডার</h3>
             <div class="data-table">
               <table>
@@ -778,6 +1001,30 @@
             </div>
           </div>
         `;
+
+        // Render chart
+        const ctx = document.getElementById('ordersChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: chartData.labels,
+            datasets: [{
+              label: 'অর্ডার সংখ্যা',
+              data: chartData.data,
+              borderColor: '#1877F2',
+              backgroundColor: 'rgba(24, 119, 242, 0.1)',
+              tension: 0.3,
+              fill: true
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: false }
+            }
+          }
+        });
+
       } catch (error) {
         content.innerHTML = '<p class="text-red-500">ডেটা লোড করতে ব্যর্থ</p>';
       }
@@ -823,7 +1070,7 @@
                       <td>${slider.order}</td>
                       <td><span class="status-badge ${slider.active ? 'status-delivered' : 'status-cancelled'}">${slider.active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</span></td>
                       <td>
-                        <button onclick="showSliderModal(${JSON.stringify(slider)})" class="btn-primary text-sm px-3 py-1 mr-2"><i class="fa-regular fa-pen-to-square"></i></button>
+                        <button onclick="showSliderModal(${JSON.stringify(slider).replace(/"/g, '&quot;')})" class="btn-primary text-sm px-3 py-1 mr-2"><i class="fa-regular fa-pen-to-square"></i></button>
                         <button onclick="deleteSlider('${slider._id}')" class="btn-danger text-sm px-3 py-1"><i class="fa-regular fa-trash-can"></i></button>
                       </td>
                     </tr>
@@ -1013,7 +1260,7 @@
                       <td>${cat.order}</td>
                       <td><span class="status-badge ${cat.active ? 'status-delivered' : 'status-cancelled'}">${cat.active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</span></td>
                       <td>
-                        <button onclick="showCategoryModal(${JSON.stringify(cat)})" class="btn-primary text-sm px-3 py-1 mr-2"><i class="fa-regular fa-pen-to-square"></i></button>
+                        <button onclick="showCategoryModal(${JSON.stringify(cat).replace(/"/g, '&quot;')})" class="btn-primary text-sm px-3 py-1 mr-2"><i class="fa-regular fa-pen-to-square"></i></button>
                         <button onclick="deleteCategory('${cat._id}')" class="btn-danger text-sm px-3 py-1"><i class="fa-regular fa-trash-can"></i></button>
                       </td>
                     </tr>
@@ -1189,7 +1436,7 @@
                       <td>${product.stock}</td>
                       <td>${product.sold}</td>
                       <td>
-                        <button onclick="showProductModal(${JSON.stringify(product)})" class="btn-primary text-sm px-3 py-1 mr-2"><i class="fa-regular fa-pen-to-square"></i></button>
+                        <button onclick="showProductModal(${JSON.stringify(product).replace(/"/g, '&quot;')})" class="btn-primary text-sm px-3 py-1 mr-2"><i class="fa-regular fa-pen-to-square"></i></button>
                         <button onclick="deleteProduct('${product._id}')" class="btn-danger text-sm px-3 py-1"><i class="fa-regular fa-trash-can"></i></button>
                       </td>
                     </tr>
@@ -1204,12 +1451,11 @@
       }
     }
 
-    // Show Product Modal
+    // Show Product Modal (with multiple images up to 10)
     window.showProductModal = async (product = null) => {
       const modal = document.getElementById('modal');
       const modalContent = document.getElementById('modalContent');
 
-      // Get categories for dropdown
       const categoriesRes = await fetch(`${API_BASE}/categories`);
       const categories = await categoriesRes.json();
 
@@ -1227,9 +1473,7 @@
           <div class="form-group">
             <label class="form-label">ক্যাটাগরি</label>
             <select class="form-select" name="category" required>
-              ${categories.map(cat => `
-                <option value="${cat.name}" ${product?.category === cat.name ? 'selected' : ''}>${cat.banglaName}</option>
-              `).join('')}
+              ${categories.map(cat => `<option value="${cat.name}" ${product?.category === cat.name ? 'selected' : ''}>${cat.banglaName}</option>`).join('')}
             </select>
           </div>
           <div class="form-group">
@@ -1249,11 +1493,9 @@
             <input type="number" class="form-input" name="sold" value="${product?.sold || '0'}" required>
           </div>
           <div class="form-group">
-            <label class="form-label">ছবি (একাধিক নির্বাচন)</label>
+            <label class="form-label">ছবি (সর্বোচ্চ ১০টি নির্বাচন করুন)</label>
             <input type="file" class="form-input" name="images" accept="image/*" multiple ${product ? '' : 'required'}>
-            ${product?.images ? product.images.map(img => `
-              <img src="${img}" class="image-preview inline-block w-16 h-16 mr-2 mt-2">
-            `).join('') : ''}
+            ${product?.images ? product.images.map(img => `<img src="${img}" class="image-preview inline-block w-16 h-16 mr-2 mt-2">`).join('') : ''}
           </div>
           <div class="form-group">
             <label class="flex items-center gap-2">
@@ -1398,7 +1640,7 @@
                       <td><span class="status-badge status-${order.status}">${order.status}</span></td>
                       <td>${new Date(order.createdAt).toLocaleDateString('bn-BD')}</td>
                       <td>
-                        <button onclick="showOrderDetails(${JSON.stringify(order)})" class="btn-primary text-sm px-3 py-1 mr-2"><i class="fa-regular fa-eye"></i></button>
+                        <button onclick="showOrderDetails(${JSON.stringify(order).replace(/"/g, '&quot;')})" class="btn-primary text-sm px-3 py-1 mr-2"><i class="fa-regular fa-eye"></i></button>
                         <button onclick="deleteOrder('${order._id}')" class="btn-danger text-sm px-3 py-1"><i class="fa-regular fa-trash-can"></i></button>
                       </td>
                     </tr>
@@ -1571,8 +1813,9 @@
                       <td><span class="status-badge status-${review.status}">${review.status}</span></td>
                       <td>${new Date(review.createdAt).toLocaleDateString('bn-BD')}</td>
                       <td>
-                        <button onclick="showReviewDetails(${JSON.stringify(review)})" class="btn-primary text-sm px-3 py-1 mr-2"><i class="fa-regular fa-eye"></i></button>
-                        <button onclick="deleteReview('${review._id}')" class="btn-danger text-sm px-3 py-1"><i class="fa-regular fa-trash-can"></i></button>
+                        <button onclick="showReviewDetails(${JSON.stringify(review).replace(/"/g, '&quot;')})" class="btn-primary text-sm px-3 py-1 mr-2"><i class="fa-regular fa-eye"></i></button>
+                        <button onclick="updateReviewStatusSimple('${review._id}', 'approved')" class="btn-success text-sm px-3 py-1 mr-2"><i class="fa-regular fa-check"></i></button>
+                        <button onclick="updateReviewStatusSimple('${review._id}', 'rejected')" class="btn-danger text-sm px-3 py-1"><i class="fa-regular fa-xmark"></i></button>
                       </td>
                     </tr>
                   `).join('')}
@@ -1586,13 +1829,34 @@
       }
     }
 
+    // Quick review status update
+    window.updateReviewStatusSimple = async (id, status) => {
+      try {
+        const res = await fetch(`${API_BASE}/admin/reviews/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ status })
+        });
+        if (res.ok) {
+          Swal.fire('সফল', `রিভিউ ${status === 'approved' ? 'অনুমোদিত' : 'বাতিল'} হয়েছে`, 'success');
+          loadReviews();
+          loadUnreadCounts();
+        }
+      } catch (error) {
+        Swal.fire('ত্রুটি', 'আপডেট ব্যর্থ', 'error');
+      }
+    };
+
     // Filter Reviews
     window.filterReviews = async (status) => {
       document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
       event.target.classList.add('active');
 
       try {
-        const res = await fetch(`${API_BASE}/admin/reviews?status=${status}`, {
+        const res = await fetch(`${API_BASE}/admin/reviews?status=${status === 'all' ? '' : status}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const reviews = await res.json();
@@ -1607,8 +1871,9 @@
             <td><span class="status-badge status-${review.status}">${review.status}</span></td>
             <td>${new Date(review.createdAt).toLocaleDateString('bn-BD')}</td>
             <td>
-              <button onclick="showReviewDetails(${JSON.stringify(review)})" class="btn-primary text-sm px-3 py-1 mr-2"><i class="fa-regular fa-eye"></i></button>
-              <button onclick="deleteReview('${review._id}')" class="btn-danger text-sm px-3 py-1"><i class="fa-regular fa-trash-can"></i></button>
+              <button onclick="showReviewDetails(${JSON.stringify(review).replace(/"/g, '&quot;')})" class="btn-primary text-sm px-3 py-1 mr-2"><i class="fa-regular fa-eye"></i></button>
+              <button onclick="updateReviewStatusSimple('${review._id}', 'approved')" class="btn-success text-sm px-3 py-1 mr-2"><i class="fa-regular fa-check"></i></button>
+              <button onclick="updateReviewStatusSimple('${review._id}', 'rejected')" class="btn-danger text-sm px-3 py-1"><i class="fa-regular fa-xmark"></i></button>
             </td>
           </tr>
         `).join('');
