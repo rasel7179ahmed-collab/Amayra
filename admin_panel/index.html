@@ -1057,7 +1057,6 @@
   let allOrders = [];
   let allReviews = [];
 
-  // ---------- Utility: fetch with retry ----------
   async function fetchWithRetry(url, options = {}, retries = 3, delay = 1000) {
     for (let i = 0; i < retries; i++) {
       try {
@@ -1218,7 +1217,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
-      }, 2, 1000); // ২ বার রিট্রাই, ১ সেকেন্ড ব্যবধান
+      }, 2, 1000);
 
       const data = await res.json();
 
@@ -1260,7 +1259,6 @@
     showPopup('লগআউট করা হয়েছে', 'info');
   });
 
-  // Sidebar menu toggle
   document.getElementById('menuToggle').addEventListener('click', () => {
     document.getElementById('sidebar').classList.add('open');
     document.getElementById('sidebarOverlay').classList.remove('hidden');
@@ -1271,7 +1269,6 @@
     document.getElementById('sidebarOverlay').classList.add('hidden');
   };
 
-  // Menu item clicks
   document.querySelectorAll('.menu-item').forEach(item => {
     if (item.id !== 'logoutBtn') {
       item.addEventListener('click', async () => {
@@ -1309,7 +1306,6 @@
     }
   });
 
-  // Notification dropdown
   const bell = document.getElementById('notificationBell');
   const dropdown = document.getElementById('notificationDropdown');
   
@@ -1459,7 +1455,6 @@
     dropdown.classList.remove('show');
   });
 
-  // Modal functions
   window.openImageModal = () => {
     document.getElementById('imageModal').classList.add('active');
   };
@@ -1530,7 +1525,6 @@
     document.getElementById('modal').classList.remove('active');
   };
 
-  // Image upload handling
   const dropZone = document.getElementById('dropZone');
   const fileInput = document.getElementById('fileInput');
 
@@ -1642,7 +1636,6 @@
     updateImagePreview();
   };
 
-  // ---------- loadDashboard ----------
   async function loadDashboard() {
     const content = document.getElementById('pageContent');
     showLoading('ড্যাশবোর্ড লোড হচ্ছে...');
@@ -1683,7 +1676,6 @@
         showPopup('প্রোডাক্ট লোড করতে সমস্যা হয়েছে', 'warning');
       }
 
-      // Render dashboard
       renderDashboard(statsData, chartData, products);
 
     } catch (error) {
@@ -1827,7 +1819,6 @@
       </div>
     `;
 
-    // Charts
     if (chartInstance1) chartInstance1.destroy();
     if (chartInstance2) chartInstance2.destroy();
 
@@ -1885,7 +1876,6 @@
     }
   }
 
-  // ---------- loadCategories ----------
   async function loadCategories() {
     const content = document.getElementById('pageContent');
     showLoading('ক্যাটাগরি লোড হচ্ছে...');
@@ -2062,7 +2052,6 @@
     }
   };
 
-  // ---------- loadProducts ----------
   async function loadProducts() {
     const content = document.getElementById('pageContent');
     showLoading('প্রোডাক্ট লোড হচ্ছে...');
@@ -2091,6 +2080,7 @@
                   <th>নাম</th>
                   <th>ক্যাটাগরি</th>
                   <th>মূল্য</th>
+                  <th>ডিসকাউন্ট</th>
                   <th>স্টক</th>
                   <th>বিক্রি</th>
                   <th>অ্যাকশন</th>
@@ -2103,6 +2093,7 @@
                     <td>${product.name || ''}</td>
                     <td>${product.category || ''}</td>
                     <td>৳${product.price || 0}</td>
+                    <td><span class="status-badge bg-[#FF7A00] text-white">${product.discountPercent || Math.round(((product.original - product.price) / product.original) * 100)}%</span></td>
                     <td>${product.stock || 0}</td>
                     <td>${product.sold || 0}</td>
                     <td>
@@ -2111,7 +2102,7 @@
                     </td>
                   </tr>
                 `).join('')}
-                ${products.length === 0 ? '<tr><td colspan="7" class="text-center py-4">কোন প্রোডাক্ট নেই</td></tr>' : ''}
+                ${products.length === 0 ? '<tr><td colspan="8" class="text-center py-4">কোন প্রোডাক্ট নেই</td></tr>' : ''}
               </tbody>
             </table>
           </div>
@@ -2130,6 +2121,36 @@
       hideLoading();
     }
   }
+
+  window.calculateDiscount = function() {
+    const original = parseFloat(document.getElementById('originalPrice')?.value) || 0;
+    const price = parseFloat(document.getElementById('price')?.value) || 0;
+    
+    if (original > 0 && price > 0 && price < original) {
+      const discount = Math.round(((original - price) / original) * 100);
+      document.getElementById('discountPercent').value = discount;
+    }
+  };
+
+  window.calculateSellingPrice = function() {
+    const original = parseFloat(document.getElementById('originalPrice')?.value) || 0;
+    const discount = parseFloat(document.getElementById('discountPercent')?.value) || 0;
+    
+    if (original > 0 && discount >= 0 && discount <= 100) {
+      const price = original - (original * discount / 100);
+      document.getElementById('price').value = Math.round(price);
+    }
+  };
+
+  window.calculateDiscountFromPrice = function() {
+    const original = parseFloat(document.getElementById('originalPrice')?.value) || 0;
+    const price = parseFloat(document.getElementById('price')?.value) || 0;
+    
+    if (original > 0 && price > 0 && price < original) {
+      const discount = Math.round(((original - price) / original) * 100);
+      document.getElementById('discountPercent').value = discount;
+    }
+  };
 
   window.showProductForm = async (product = null) => {
     currentProductId = product?._id || null;
@@ -2166,11 +2187,16 @@
         </div>
         <div class="form-group">
           <label class="form-label">মূল মূল্য</label>
-          <input type="number" class="form-input" name="original" value="${product?.original || ''}" required>
+          <input type="number" class="form-input" name="original" id="originalPrice" value="${product?.original || ''}" required onkeyup="calculateDiscount()" onchange="calculateDiscount()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ডিসকাউন্ট পার্সেন্ট (%)</label>
+          <input type="number" class="form-input" name="discountPercent" id="discountPercent" value="${product?.discountPercent || Math.round(((product?.original - product?.price) / product?.original) * 100) || '0'}" min="0" max="100" step="1" required onkeyup="calculateSellingPrice()" onchange="calculateSellingPrice()">
+          <small class="text-gray-500">ডিসকাউন্ট পার্সেন্ট দিলে বিক্রয় মূল্য অটো ক্যালকুলেট হবে</small>
         </div>
         <div class="form-group">
           <label class="form-label">বিক্রয় মূল্য</label>
-          <input type="number" class="form-input" name="price" value="${product?.price || ''}" required>
+          <input type="number" class="form-input" name="price" id="price" value="${product?.price || ''}" required onkeyup="calculateDiscountFromPrice()" onchange="calculateDiscountFromPrice()">
         </div>
         <div class="form-group">
           <label class="form-label">স্টক</label>
@@ -2219,12 +2245,28 @@
       return;
     }
 
+    const original = parseInt(formData.get('original')) || 0;
+    const price = parseInt(formData.get('price')) || 0;
+    const discountPercent = parseInt(formData.get('discountPercent')) || 0;
+
+    if (price > original) {
+      showPopup('বিক্রয় মূল্য মূল মূল্যের বেশি হতে পারবে না', 'error');
+      return;
+    }
+
+    const calculatedDiscount = Math.round(((original - price) / original) * 100);
+    if (Math.abs(calculatedDiscount - discountPercent) > 1) {
+      showPopup('ডিসকাউন্ট পার্সেন্ট এবং মূল্যের মিল নেই', 'error');
+      return;
+    }
+
     const data = {
       name: formData.get('name'),
       desc: formData.get('desc'),
       category: formData.get('category'),
-      original: parseInt(formData.get('original')) || 0,
-      price: parseInt(formData.get('price')) || 0,
+      original: original,
+      price: price,
+      discountPercent: discountPercent,
       stock: parseInt(formData.get('stock')) || 10,
       sold: parseInt(formData.get('sold')) || 0,
       featured: formData.get('featured') === 'on',
@@ -2300,7 +2342,6 @@
     }
   };
 
-  // ---------- loadOrders ----------
   async function loadOrders() {
     const content = document.getElementById('pageContent');
     showLoading('অর্ডার লোড হচ্ছে...');
@@ -2419,7 +2460,6 @@
 
   window.showOrderDetails = (order) => {
     if (typeof order === 'string') {
-      // order is an ID, fetch details
       fetchOrderDetails(order);
       return;
     }
@@ -2568,7 +2608,6 @@
     }
   };
 
-  // ---------- loadReviews ----------
   async function loadReviews() {
     const content = document.getElementById('pageContent');
     showLoading('রিভিউ লোড হচ্ছে...');
@@ -2732,7 +2771,6 @@
     }
   };
 
-  // ---------- loadSliders ----------
   async function loadSliders() {
     const content = document.getElementById('pageContent');
     showLoading('স্লাইডার লোড হচ্ছে...');
@@ -2935,7 +2973,6 @@
     }
   };
 
-  // ---------- loadSettings ----------
   async function loadSettings() {
     const content = document.getElementById('pageContent');
     showLoading('সেটিংস লোড হচ্ছে...');

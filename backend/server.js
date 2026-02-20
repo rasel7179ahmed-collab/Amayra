@@ -13,9 +13,8 @@ require('dotenv').config();
 
 const app = express();
 
-// ---------- Self‑ping (Render free tier prevention) ----------
 if (process.env.RENDER) {
-  const PING_INTERVAL = 5 * 60 * 1000; // 5 মিনিট
+  const PING_INTERVAL = 5 * 60 * 1000;
   const pingUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${process.env.PORT || 5000}`;
 
   setInterval(async () => {
@@ -34,7 +33,6 @@ if (process.env.RENDER) {
   console.log('🔄 Self‑ping system activated (interval: 5 minutes)');
 }
 
-// Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({ 
     status: 'ok', 
@@ -43,7 +41,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// ---------- CORS configuration (flexible) ----------
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
   : [
@@ -64,7 +61,6 @@ app.use(helmet({
 
 app.use(cors({
   origin: function (origin, callback) {
-    // allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
       callback(null, true);
@@ -82,17 +78,15 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// ---------- Rate limiting (increased limit) ----------
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500, // increased from 200 to 500
+  windowMs: 15 * 60 * 1000,
+  max: 500,
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
 });
 app.use('/api/', limiter);
 
-// ---------- Cloudinary ----------
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -113,7 +107,6 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 }
 });
 
-// ---------- MongoDB connection with improved stability ----------
 const connectWithRetry = () => {
   mongoose.connect(process.env.MONGODB_URI, {
   serverSelectionTimeoutMS: 15000,
@@ -137,7 +130,6 @@ mongoose.connection.on('reconnected', () => {
   console.log('✅ MongoDB reconnected');
 });
 
-// ---------- Schemas ----------
 const AdminSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
@@ -178,6 +170,7 @@ const ProductSchema = new mongoose.Schema({
   desc: { type: String, required: true },
   original: { type: Number, required: true },
   price: { type: Number, required: true },
+  discountPercent: { type: Number, default: 0 },
   category: { type: String, required: true },
   stock: { type: Number, default: 10 },
   sold: { type: Number, default: 0 },
@@ -262,7 +255,6 @@ const Order = mongoose.model('Order', OrderSchema);
 const Review = mongoose.model('Review', ReviewSchema);
 const Settings = mongoose.model('Settings', SettingsSchema);
 
-// ---------- Middleware ----------
 const validate = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -285,7 +277,6 @@ const auth = async (req, res, next) => {
   }
 };
 
-// ---------- Database initialization ----------
 async function initializeDatabase() {
   try {
     const adminExists = await Admin.findOne({ username: process.env.ADMIN_USERNAME });
@@ -355,7 +346,6 @@ async function initializeDatabase() {
   }
 }
 
-// ---------- Routes ----------
 app.post('/api/admin/login', [
   body('username').notEmpty(),
   body('password').notEmpty()
@@ -423,7 +413,6 @@ app.post('/api/admin/change-password', auth, async (req, res) => {
   }
 });
 
-// Public routes
 app.get('/api/categories', async (req, res) => {
   try {
     const categories = await Category.find({ active: true }).sort('order');
@@ -561,7 +550,6 @@ app.get('/api/settings', async (req, res) => {
   }
 });
 
-// Admin routes (protected)
 app.get('/api/admin/categories', auth, async (req, res) => {
   try {
     const categories = await Category.find().sort('order');
@@ -754,6 +742,7 @@ app.post('/api/admin/products', auth, upload.array('images', 10), async (req, re
       desc: productData.desc,
       original: productData.original,
       price: productData.price,
+      discountPercent: productData.discountPercent || Math.round(((productData.original - productData.price) / productData.original) * 100),
       category: productData.category,
       stock: productData.stock || 10,
       sold: productData.sold || 0,
@@ -798,6 +787,7 @@ app.put('/api/admin/products/:id', auth, upload.array('images', 10), async (req,
         desc: productData.desc,
         original: productData.original,
         price: productData.price,
+        discountPercent: productData.discountPercent || Math.round(((productData.original - productData.price) / productData.original) * 100),
         category: productData.category,
         stock: productData.stock,
         sold: productData.sold,
@@ -1144,7 +1134,6 @@ app.get('/api/admin/notifications/unread', auth, async (req, res) => {
   }
 });
 
-// ---------- Start server ----------
 initializeDatabase().then(() => {
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {

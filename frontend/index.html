@@ -1122,7 +1122,6 @@
   let fullscreenCurrentIndex = 0;
   let lastAddedItemId = null;
 
-  // ---------- Utility: fetch with retry ----------
   async function fetchWithRetry(url, options = {}, retries = 3, delay = 1000) {
     for (let i = 0; i < retries; i++) {
       try {
@@ -1181,7 +1180,6 @@
       
     } catch (error) {
       console.error('Error loading settings:', error);
-      // ডিফল্ট সেটিংস
       settings = {
         siteName: 'AMAYRA',
         phoneNumber: '01712345678',
@@ -1202,7 +1200,7 @@
       renderSliders();
     } catch (error) {
       console.error('Error loading sliders:', error);
-      renderSliders(); // ডিফল্ট স্লাইডার দেখাবে (renderSliders ফাংশনে ডিফল্ট দেওয়া আছে)
+      renderSliders();
     }
   }
 
@@ -1302,7 +1300,7 @@
 
     let html = '';
     filtered.forEach(product => {
-      const discount = Math.round((1 - product.price / product.original) * 100);
+      const discount = product.discountPercent || Math.round((1 - product.price / product.original) * 100);
       const isSoldOut = product.stock <= 0;
       const images = product.images && product.images.length ? product.images : [product.img];
       const currentIndex = currentProductImages[product.id] || 0;
@@ -1430,7 +1428,7 @@
     if (!product) return;
     
     const images = product.images && product.images.length ? product.images : [product.img];
-    const discount = Math.round((1 - product.price / product.original) * 100);
+    const discount = product.discountPercent || Math.round((1 - product.price / product.original) * 100);
     
     const container = document.getElementById('bestsellerContainer');
     container.innerHTML = `
@@ -1737,7 +1735,7 @@
         updateCart();
         e.target.reset();
 
-        await loadProducts(); // stock আপডেট
+        await loadProducts();
       } else {
         throw new Error('Order failed');
       }
@@ -1862,7 +1860,7 @@
         e.target.reset();
         ratingInput.value = 0;
         starContainer.querySelectorAll('i').forEach(s => s.className = 'fa-regular fa-star');
-        await loadReviews(); // নতুন রিভিউ দেখান
+        await loadReviews();
       } else {
         throw new Error('Review submission failed');
       }
