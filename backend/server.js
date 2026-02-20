@@ -14,10 +14,44 @@ dotenv.config();
 
 const app = express();
 
-// CORS Configuration – allow your Vercel frontend and admin URLs
+// ========== Render Self‑Ping (স্লিপ প্রতিরোধ) ==========
+// শুধুমাত্র Render পরিবেশে চললে প্রতি ৫ মিনিটে নিজেকে কল করবে
+if (process.env.RENDER) {
+  const PING_INTERVAL = 5 * 60 * 1000; // ৫ মিনিট
+  const port = process.env.PORT || 5000;
+  // প্রথমে লোকালহোস্ট দিয়ে চেষ্টা করবে, পরে পাবলিক URL দিয়ে
+  const pingUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${port}`;
+
+  setInterval(async () => {
+    try {
+      const response = await fetch(`${pingUrl}/api/health`);
+      if (response.ok) {
+        console.log('✅ Self‑ping successful at', new Date().toISOString());
+      } else {
+        console.log('⚠️ Self‑ping returned status', response.status);
+      }
+    } catch (err) {
+      console.error('❌ Self‑ping failed:', err.message);
+    }
+  }, PING_INTERVAL);
+
+  console.log('🔄 Self‑ping system activated (interval: 5 minutes)');
+}
+
+// ========== হেল্থ চেক এন্ডপয়েন্ট ==========
+// এই এন্ডপয়েন্টটি সেলফ-পিং এবং UptimeRobot-এর জন্যও ব্যবহার করা যাবে
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.RENDER ? 'render' : 'local'
+  });
+});
+
+// ========== CORS কনফিগারেশন ==========
 const allowedOrigins = [
-  process.env.CLIENT_URL_1, // e.g., https://amayra-frontend.vercel.app
-  process.env.CLIENT_URL_2, // e.g., https://amayra-admin.vercel.app
+  process.env.CLIENT_URL_1,
+  process.env.CLIENT_URL_2,
   'http://localhost:3000',
   'http://localhost:5173',
   'http://127.0.0.1:5500'
@@ -35,7 +69,7 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Rate limiting
+// ========== রেট লিমিটিং ==========
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -43,14 +77,14 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// Cloudinary Config
+// ========== Cloudinary কনফিগার ==========
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Multer Storage for Cloudinary
+// ========== মুল্টার স্টোরেজ ==========
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
@@ -61,7 +95,7 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
-// MongoDB Connection
+// ========== MongoDB সংযোগ ==========
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -231,6 +265,8 @@ async function initializeDatabase() {
 }
 
 // ========== API ROUTES ==========
+// (এখানে আপনার সব API রুট অপরিবর্তিত থাকবে)
+
 // Auth
 app.post('/api/admin/login', async (req, res) => {
   try {
@@ -689,7 +725,7 @@ app.get('/api/admin/chart-data', auth, async (req, res) => {
   }
 });
 
-// Initialize database and start server
+// ========== ইনিশিয়ালাইজ ও সার্ভার চালু ==========
 initializeDatabase().then(() => {
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
