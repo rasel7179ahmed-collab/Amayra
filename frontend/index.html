@@ -909,6 +909,196 @@
       box-shadow: 0 8px 20px rgba(255,122,0,0.4);
       background: linear-gradient(135deg, #e66e00, #ff8a2b);
     }
+
+    .recent-reviews-slider {
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+      border-radius: 40px 12px 40px 12px;
+      padding: 1.5rem;
+      border: 2px solid rgba(24, 119, 242, 0.15);
+      box-shadow: 0 15px 30px -10px rgba(0,0,0,0.1);
+      height: fit-content;
+      position: relative;
+      overflow: hidden;
+      display: none;
+      margin-top: 1.5rem;
+    }
+    
+    @media (min-width: 992px) {
+      .recent-reviews-slider {
+        display: block;
+      }
+    }
+    
+    .recent-reviews-slider::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, #FF7A00, #1877F2, #FF7A00);
+      background-size: 200% 100%;
+      animation: gradientMove 3s linear infinite;
+    }
+    
+    .reviews-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 1.2rem;
+      padding-bottom: 0.8rem;
+      border-bottom: 2px dashed rgba(24, 119, 242, 0.2);
+    }
+    
+    .reviews-header i {
+      font-size: 2rem;
+      color: #1877F2;
+      filter: drop-shadow(0 4px 6px rgba(24,119,242,0.3));
+      animation: bounce 2s ease-in-out infinite;
+    }
+    
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+    
+    .reviews-header h3 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #1877F2, #FF7A00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .recent-reviews-container {
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+    
+    .recent-reviews-container::-webkit-scrollbar {
+      width: 4px;
+    }
+    
+    .recent-reviews-container::-webkit-scrollbar-track {
+      background: #F0F2F5;
+      border-radius: 10px;
+    }
+    
+    .recent-reviews-container::-webkit-scrollbar-thumb {
+      background: #1877F2;
+      border-radius: 10px;
+    }
+    
+    .recent-review-item {
+      background: white;
+      border-radius: 25px 6px 25px 6px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-left: 4px solid #1877F2;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .recent-review-item::after {
+      content: '"';
+      position: absolute;
+      bottom: -10px;
+      right: 10px;
+      font-size: 4rem;
+      color: rgba(24, 119, 242, 0.1);
+      font-family: serif;
+    }
+    
+    .recent-review-item:hover {
+      transform: translateX(5px);
+      border-left-color: #FF7A00;
+      box-shadow: 0 8px 15px rgba(24,119,242,0.1);
+    }
+    
+    .reviewer-name {
+      font-weight: 700;
+      color: #1C1E21;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .reviewer-name i {
+      color: #1877F2;
+      font-size: 0.9rem;
+    }
+    
+    .review-location {
+      font-size: 0.8rem;
+      color: #666;
+      margin: 4px 0;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .review-location i {
+      color: #FF7A00;
+      font-size: 0.7rem;
+    }
+    
+    .review-stars {
+      color: #FF7A00;
+      font-size: 0.8rem;
+      margin: 5px 0;
+    }
+    
+    .review-text {
+      font-size: 0.9rem;
+      color: #4a5568;
+      line-height: 1.4;
+      margin-top: 6px;
+      font-style: italic;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .hotline-badge {
+      margin-top: 1.2rem;
+      padding-top: 0.8rem;
+      border-top: 2px solid rgba(24, 119, 242, 0.2);
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: linear-gradient(135deg, #f0f2f5, #ffffff);
+      border-radius: 50px 8px 50px 8px;
+      padding: 0.8rem;
+    }
+    
+    .hotline-badge i {
+      color: #25D366;
+      font-size: 1.5rem;
+      animation: pulse 2s infinite;
+    }
+    
+    .hotline-badge span {
+      font-weight: 700;
+      font-size: 1.2rem;
+      background: linear-gradient(135deg, #1877F2, #FF7A00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .loading-spinner-small {
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #1877F2;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
   </style>
 </head>
 <body class="text-[#1C1E21]">
@@ -1047,6 +1237,23 @@
       </div>
       <div class="bestseller-nav" id="bestsellerNav"></div>
     </div>
+
+    <div class="desktop-only recent-reviews-slider">
+      <div class="reviews-header">
+        <i class="fas fa-comments"></i>
+        <h3>সাম্প্রতিক রিভিউ</h3>
+      </div>
+      <div id="recentReviewsContainer" class="recent-reviews-container">
+        <div class="text-center py-4">
+          <div class="loading-spinner-small"></div>
+          <p class="mt-2 text-sm text-gray-500">রিভিউ লোড হচ্ছে...</p>
+        </div>
+      </div>
+      <div class="hotline-badge">
+        <i class="fas fa-headset"></i>
+        <span>হটলাইন: 01712-345678</span>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -1122,7 +1329,6 @@
   let fullscreenCurrentIndex = 0;
   let lastAddedItemId = null;
 
-  // ---------- Utility: fetch with retry ----------
   async function fetchWithRetry(url, options = {}, retries = 3, delay = 1000) {
     for (let i = 0; i < retries; i++) {
       try {
@@ -1130,7 +1336,6 @@
         if (!res.ok) {
           if (res.status === 429 && i < retries - 1) {
             const waitTime = delay * Math.pow(2, i);
-            console.log(`Rate limited. Retrying in ${waitTime}ms...`);
             await new Promise(r => setTimeout(r, waitTime));
             continue;
           }
@@ -1140,7 +1345,6 @@
       } catch (err) {
         if (i === retries - 1) throw err;
         const waitTime = delay * Math.pow(2, i);
-        console.log(`Request failed (${err.message}). Retrying in ${waitTime}ms...`);
         await new Promise(r => setTimeout(r, waitTime));
       }
     }
@@ -1171,17 +1375,20 @@
       document.getElementById('headerPhone').href = `tel:+88${phoneNumber}`;
       document.getElementById('sidebarPhone').href = `tel:+88${phoneNumber}`;
       
+      const formattedHotline = phoneNumber.replace(/(\d{5})(\d{6})/, '$1-$2');
+      document.querySelectorAll('.hotline-badge span').forEach(el => {
+        el.textContent = `হটলাইন: ${formattedHotline}`;
+      });
+      
       const whatsappMessage = encodeURIComponent('হ্যালো, AMAYRA প্রিমিয়াম শার্ট কালেকশন সম্পর্কে জানতে চাই। আমি এই পণ্যটি সম্পর্কে আরও বিস্তারিত জানতে আগ্রহী।');
       document.getElementById('whatsappButton').href = `https://wa.me/${settings.whatsappNumber || '8801712345678'}?text=${whatsappMessage}`;
       
       document.getElementById('footerText').textContent = settings.footerText || 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন · ২০২৫';
-      document.getElementById('footerSocial').innerHTML = `ফেসবুক: ${settings.facebook || '@amayra.shirt'} | হটলাইন: ${settings.phoneNumber || '01712-345678'}`;
+      document.getElementById('footerSocial').innerHTML = `ফেসবুক: ${settings.facebook || '@amayra.shirt'} | হটলাইন: ${formattedHotline}`;
       
       document.getElementById('deliveryNote').innerHTML = `<i class="fa-solid fa-truck text-[#1877F2] mr-1"></i> ঢাকার মধ্যে ${settings.deliveryChargeDhaka || 60} টাকা, বাইরে ${settings.deliveryChargeOutside || 120} টাকা। ${settings.freeDeliveryThreshold || 2000} টাকার বেশি অর্ডারে ডেলিভারি ফ্রি!`;
       
     } catch (error) {
-      console.error('Error loading settings:', error);
-      // ডিফল্ট সেটিংস
       settings = {
         siteName: 'AMAYRA',
         phoneNumber: '01712345678',
@@ -1201,8 +1408,7 @@
       sliders = await res.json();
       renderSliders();
     } catch (error) {
-      console.error('Error loading sliders:', error);
-      renderSliders(); // ডিফল্ট স্লাইডার দেখাবে (renderSliders ফাংশনে ডিফল্ট দেওয়া আছে)
+      renderSliders();
     }
   }
 
@@ -1251,7 +1457,6 @@
       categories = await res.json();
       renderCategoryPills();
     } catch (error) {
-      console.error('Error loading categories:', error);
       categories = [];
       renderCategoryPills();
     }
@@ -1280,7 +1485,6 @@
       renderProducts();
       loadBestsellers();
     } catch (error) {
-      console.error('Error loading products:', error);
       document.getElementById('productGrid').innerHTML = `
         <div class="col-span-full text-center py-10">
           <p class="text-red-500 mb-4">প্রোডাক্ট লোড করতে ব্যর্থ হয়েছে</p>
@@ -1737,7 +1941,7 @@
         updateCart();
         e.target.reset();
 
-        await loadProducts(); // stock আপডেট
+        await loadProducts();
       } else {
         throw new Error('Order failed');
       }
@@ -1756,14 +1960,19 @@
       const res = await fetchWithRetry(`${API_BASE}/reviews`);
       const reviews = await res.json();
       displayReviews(reviews);
+      displayRecentReviews(reviews);
     } catch (error) {
-      console.error('Error loading reviews:', error);
       document.getElementById('reviewsList').innerHTML = `
         <div class="text-center py-10">
           <p class="text-red-500 mb-4">রিভিউ লোড করতে ব্যর্থ হয়েছে</p>
           <button onclick="loadReviews()" class="btn-primary px-6 py-2">
             <i class="fas fa-sync-alt mr-2"></i>আবার চেষ্টা করুন
           </button>
+        </div>
+      `;
+      document.getElementById('recentReviewsContainer').innerHTML = `
+        <div class="text-center py-4">
+          <p class="text-sm text-red-500">রিভিউ লোড করতে ব্যর্থ</p>
         </div>
       `;
     }
@@ -1789,6 +1998,38 @@
     `).join('');
 
     document.getElementById('reviewsList').innerHTML = html;
+  }
+
+  function displayRecentReviews(reviews) {
+    const container = document.getElementById('recentReviewsContainer');
+    
+    if (!reviews || reviews.length === 0) {
+      container.innerHTML = '<p class="text-center text-gray-500 py-2">কোন রিভিউ নেই</p>';
+      return;
+    }
+
+    const recentReviews = reviews.slice(-3).reverse();
+
+    const html = recentReviews.map(review => `
+      <div class="recent-review-item">
+        <div class="reviewer-name">
+          <i class="fa-regular fa-circle-user"></i>
+          ${review.name}
+        </div>
+        <div class="review-location">
+          <i class="fa-solid fa-location-dot"></i>
+          ${review.address}
+        </div>
+        <div class="review-stars">
+          ${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}
+        </div>
+        <div class="review-text">
+          "${review.text.substring(0, 60)}${review.text.length > 60 ? '...' : ''}"
+        </div>
+      </div>
+    `).join('');
+
+    container.innerHTML = html;
   }
 
   const starContainer = document.getElementById('starRating');
@@ -1862,7 +2103,7 @@
         e.target.reset();
         ratingInput.value = 0;
         starContainer.querySelectorAll('i').forEach(s => s.className = 'fa-regular fa-star');
-        await loadReviews(); // নতুন রিভিউ দেখান
+        await loadReviews();
       } else {
         throw new Error('Review submission failed');
       }
