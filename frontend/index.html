@@ -323,22 +323,20 @@
       color: #FF7A00;
     }
 
-    /* রিভিউ স্ক্রলবার - মোটা এবং গোলাকার কর্নার সহ */
+    /* রিভিউ স্ক্রলবার - চিকন এবং বর্ডার রেডিয়েস ছাড়া */
     .reviews-scroll::-webkit-scrollbar {
-      width: 10px;
-      height: 10px;
+      width: 3px;
+      height: 3px;
     }
 
     .reviews-scroll::-webkit-scrollbar-track {
       background: #F0F2F5;
-      border-radius: 30px;
-      border: 2px solid #ffffff;
+      border-radius: 0;
     }
 
     .reviews-scroll::-webkit-scrollbar-thumb {
       background: #1877F2;
-      border-radius: 30px;
-      border: 2px solid #F0F2F5;
+      border-radius: 0;
     }
 
     .reviews-scroll::-webkit-scrollbar-thumb:hover {
@@ -347,7 +345,7 @@
 
     /* Firefox এর জন্য */
     .reviews-scroll {
-      scrollbar-width: auto;
+      scrollbar-width: thin;
       scrollbar-color: #1877F2 #F0F2F5;
     }
 
@@ -454,7 +452,6 @@
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
       overflow: hidden;
-      height: 100%;
       display: flex;
       flex-direction: column;
     }
@@ -481,6 +478,13 @@
       transform: rotate(45deg) translate(50%, 50%);
     }
     
+    .bestseller-item .product-section {
+      display: flex;
+      flex-direction: row;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
     .bestseller-item img {
       width: 100px;
       height: 100px;
@@ -497,8 +501,6 @@
     
     .bestseller-info {
       flex: 1;
-      display: flex;
-      flex-direction: column;
     }
     
     .bestseller-info h4 {
@@ -536,6 +538,102 @@
       font-weight: 600;
       display: inline-block;
       margin-bottom: 1rem;
+    }
+    
+    /* রিভিউ সেকশন */
+    .bestseller-reviews {
+      margin: 1rem 0;
+      padding: 0.5rem 0;
+      border-top: 1px dashed rgba(24, 119, 242, 0.2);
+      border-bottom: 1px dashed rgba(24, 119, 242, 0.2);
+    }
+    
+    .bestseller-review-item {
+      background: #F8FAFC;
+      border-radius: 20px 4px 20px 4px;
+      padding: 0.8rem;
+      margin-bottom: 0.8rem;
+      border-left: 3px solid #FF7A00;
+      animation: slideInReview 0.5s ease-out;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .bestseller-review-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .bestseller-review-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, transparent, rgba(255, 122, 0, 0.05), transparent);
+      transform: translateX(-100%);
+      animation: shimmerReview 2s infinite;
+    }
+    
+    @keyframes slideInReview {
+      0% {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    
+    @keyframes shimmerReview {
+      0% {
+        transform: translateX(-100%);
+      }
+      50% {
+        transform: translateX(100%);
+      }
+      100% {
+        transform: translateX(200%);
+      }
+    }
+    
+    .bestseller-review-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.3rem;
+    }
+    
+    .bestseller-review-name {
+      font-weight: 600;
+      color: #1C1E21;
+      font-size: 0.9rem;
+    }
+    
+    .bestseller-review-rating {
+      color: #FF7A00;
+      font-size: 0.8rem;
+    }
+    
+    .bestseller-review-text {
+      font-size: 0.85rem;
+      color: #4a5568;
+      line-height: 1.4;
+      margin: 0.2rem 0;
+    }
+    
+    .bestseller-review-location {
+      font-size: 0.7rem;
+      color: #1877F2;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      margin-top: 0.2rem;
+    }
+    
+    .bestseller-review-location i {
+      font-size: 0.6rem;
     }
     
     .bestseller-btn {
@@ -1074,6 +1172,7 @@
   let fullscreenImages = [];
   let fullscreenCurrentIndex = 0;
   let lastAddedItemId = null;
+  let allReviews = [];
 
   async function fetchWithRetry(url, options = {}, retries = 3, delay = 1000) {
     for (let i = 0; i < retries; i++) {
@@ -1360,6 +1459,36 @@
     }
   });
 
+  function getRandomReviewsForProduct(productId, count = 2) {
+    if (!allReviews || allReviews.length === 0) {
+      // ডেমো রিভিউ যদি কোন রিভিউ না থাকে
+      return [
+        {
+          name: 'রহিম মিয়া',
+          rating: 5,
+          text: 'অসাধারণ কোয়ালিটি! ফেব্রিক খুব সফট।',
+          address: 'ঢাকা'
+        },
+        {
+          name: 'করিম হোসেন',
+          rating: 4,
+          text: 'ডিজাইন সুন্দর, দাম একটু বেশি কিন্তু মান ভালো।',
+          address: 'চট্টগ্রাম'
+        }
+      ];
+    }
+    
+    // প্রোডাক্ট আইডি অনুযায়ী রিভিউ ফিল্টার বা র্যান্ডম
+    const productReviews = allReviews.filter(r => r.productId === productId);
+    if (productReviews.length >= count) {
+      return productReviews.slice(0, count);
+    } else {
+      // র্যান্ডম রিভিউ নিন
+      const shuffled = [...allReviews].sort(() => 0.5 - Math.random());
+      return shuffled.slice(0, count);
+    }
+  }
+
   function loadBestsellers() {
     bestsellerProducts = [...products]
       .sort((a, b) => (b.sold || 0) - (a.sold || 0))
@@ -1384,25 +1513,44 @@
     const images = product.images && product.images.length ? product.images : [product.img];
     const discount = product.discountPercent || Math.round((1 - product.price / product.original) * 100);
     
+    // প্রোডাক্টের জন্য রিভিউ নিন
+    const reviews = getRandomReviewsForProduct(product.id, 2);
+    
     const container = document.getElementById('bestsellerContainer');
     container.innerHTML = `
       <div class="bestseller-item">
-        <div class="flex flex-col md:flex-row gap-4">
-          <img src="${images[0]}" class="w-full md:w-24 h-48 md:h-24 object-cover rounded-[25px_6px_25px_6px]" onerror="this.src='https://via.placeholder.com/90'">
+        <div class="product-section">
+          <img src="${images[0]}" class="w-24 h-24 object-cover rounded-[25px_6px_25px_6px]" onerror="this.src='https://via.placeholder.com/90'">
           <div class="bestseller-info">
             <h4>${product.name}</h4>
-            <p class="text-sm text-gray-500 mb-2">${product.desc.substring(0, 50)}${product.desc.length > 50 ? '...' : ''}</p>
+            <p class="text-sm text-gray-500 mb-1">${product.desc.substring(0, 40)}${product.desc.length > 40 ? '...' : ''}</p>
             <div class="bestseller-price">
               <span class="current">৳${product.price}</span>
               <span class="original">৳${product.original}</span>
             </div>
             <span class="bestseller-discount">-${discount}% ছাড়</span>
-            <button onclick="addToCart(${product.id})" class="bestseller-btn" ${product.stock <= 0 ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>
-              <i class="fa-solid fa-bag-shopping"></i>
-              অর্ডার করুন
-            </button>
           </div>
         </div>
+        
+        <div class="bestseller-reviews">
+          ${reviews.map((review, index) => `
+            <div class="bestseller-review-item" style="animation-delay: ${index * 0.2}s">
+              <div class="bestseller-review-header">
+                <span class="bestseller-review-name">${review.name}</span>
+                <span class="bestseller-review-rating">${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}</span>
+              </div>
+              <p class="bestseller-review-text">"${review.text}"</p>
+              <div class="bestseller-review-location">
+                <i class="fas fa-map-marker-alt"></i> ${review.address}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        
+        <button onclick="addToCart(${product.id})" class="bestseller-btn" ${product.stock <= 0 ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>
+          <i class="fa-solid fa-bag-shopping"></i>
+          অর্ডার করুন
+        </button>
       </div>
     `;
 
@@ -1430,7 +1578,7 @@
     if (bestsellerInterval) clearInterval(bestsellerInterval);
     bestsellerInterval = setInterval(() => {
       changeBestseller(1);
-    }, 4000);
+    }, 6000);
   }
 
   function restartBestsellerInterval() {
@@ -1727,8 +1875,8 @@
   async function loadReviews() {
     try {
       const res = await fetchWithRetry(`${API_BASE}/reviews`);
-      const reviews = await res.json();
-      displayReviews(reviews);
+      allReviews = await res.json();
+      displayReviews(allReviews);
     } catch (error) {
       console.error('Error loading reviews:', error);
       document.getElementById('reviewsList').innerHTML = `
@@ -1836,6 +1984,7 @@
         ratingInput.value = 0;
         starContainer.querySelectorAll('i').forEach(s => s.className = 'fa-regular fa-star');
         await loadReviews();
+        updateBestsellerDisplay(); // বেস্টসেলার রিভিউ আপডেট
       } else {
         throw new Error('Review submission failed');
       }
