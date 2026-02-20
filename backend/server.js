@@ -9,30 +9,29 @@ const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
- 
+
 dotenv.config();
 
 const app = express();
 
-// CORS Configuration with your live URLs
-const corsOptions = {
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'http://127.0.0.1:5500',
-    'https://amayra-a9i2.vercel.app',      // Frontend
-    'https://amayra-orcin.vercel.app'      // Admin Panel
-  ],
-  credentials: true,
-  optionsSuccessStatus: 200
-};
+// CORS Configuration – allow your Vercel frontend and admin URLs
+const allowedOrigins = [
+  process.env.CLIENT_URL_1, // e.g., https://amayra-frontend.vercel.app
+  process.env.CLIENT_URL_2, // e.g., https://amayra-admin.vercel.app
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:5500'
+].filter(Boolean);
 
-// Middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
   crossOriginEmbedderPolicy: false
 }));
-app.use(cors(corsOptions));
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+  optionsSuccessStatus: 200
+}));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
@@ -60,11 +59,7 @@ const storage = new CloudinaryStorage({
     transformation: [{ width: 800, height: 1000, crop: 'limit' }]
   }
 });
-
-const upload = multer({ 
-  storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }
-});
+const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI, {
@@ -79,15 +74,12 @@ mongoose.connect(process.env.MONGODB_URI, {
 });
 
 // ========== SCHEMAS ==========
-
-// Admin Schema
 const AdminSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   createdAt: { type: Date, default: Date.now }
 });
 
-// Slider Schema
 const SliderSchema = new mongoose.Schema({
   title: { type: String, required: true },
   subtitle: { type: String, required: true },
@@ -102,7 +94,6 @@ const SliderSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-// Category Schema
 const CategorySchema = new mongoose.Schema({
   name: { type: String, required: true },
   slug: { type: String, required: true, unique: true },
@@ -113,7 +104,6 @@ const CategorySchema = new mongoose.Schema({
   active: { type: Boolean, default: true }
 });
 
-// Product Schema
 const ProductSchema = new mongoose.Schema({
   id: { type: Number, required: true, unique: true },
   name: { type: String, required: true },
@@ -130,7 +120,6 @@ const ProductSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-// Order Schema
 const OrderSchema = new mongoose.Schema({
   orderId: { type: String, required: true, unique: true },
   customerName: { type: String, required: true },
@@ -146,11 +135,7 @@ const OrderSchema = new mongoose.Schema({
   subtotal: { type: Number, required: true },
   deliveryCharge: { type: Number, required: true },
   total: { type: Number, required: true },
-  status: { 
-    type: String, 
-    enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'],
-    default: 'pending'
-  },
+  status: { type: String, enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'], default: 'pending' },
   paymentMethod: { type: String, default: 'Cash on Delivery' },
   paymentStatus: { type: String, default: 'pending' },
   notes: { type: String },
@@ -158,7 +143,6 @@ const OrderSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-// Review Schema
 const ReviewSchema = new mongoose.Schema({
   name: { type: String, required: true },
   address: { type: String, required: true },
@@ -169,7 +153,6 @@ const ReviewSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-// Settings Schema
 const SettingsSchema = new mongoose.Schema({
   siteName: { type: String, default: 'AMAYRA' },
   siteTitle: { type: String, default: 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন' },
@@ -194,17 +177,13 @@ const Review = mongoose.model('Review', ReviewSchema);
 const Settings = mongoose.model('Settings', SettingsSchema);
 
 // ========== MIDDLEWARE ==========
-
-// Auth Middleware
 const auth = async (req, res, next) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     if (!token) throw new Error();
-
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const admin = await Admin.findById(decoded.id);
     if (!admin) throw new Error();
-
     req.admin = admin;
     next();
   } catch (error) {
@@ -215,25 +194,17 @@ const auth = async (req, res, next) => {
 // ========== INITIAL SETUP ==========
 async function initializeDatabase() {
   try {
-    // Create default admin if not exists
     const adminExists = await Admin.findOne({ username: process.env.ADMIN_USERNAME });
     if (!adminExists) {
       const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
-      await Admin.create({
-        username: process.env.ADMIN_USERNAME,
-        password: hashedPassword
-      });
+      await Admin.create({ username: process.env.ADMIN_USERNAME, password: hashedPassword });
       console.log('✅ Default admin created');
     }
-
-    // Create default settings if not exists
     const settingsExists = await Settings.findOne();
     if (!settingsExists) {
       await Settings.create({});
       console.log('✅ Default settings created');
     }
-
-    // Create default categories if not exists
     const categoriesExist = await Category.countDocuments();
     if (categoriesExist === 0) {
       const defaultCategories = [
@@ -244,71 +215,32 @@ async function initializeDatabase() {
       await Category.insertMany(defaultCategories);
       console.log('✅ Default categories created');
     }
-
-    // Create default sliders if not exists
     const slidersExist = await Slider.countDocuments();
     if (slidersExist === 0) {
       const defaultSliders = [
-        {
-          title: 'প্রিমিয়াম কালেকশন',
-          subtitle: 'আড়ম্বরপূর্ণ ডিজাইন, অনন্য গুণগত মান',
-          badge: 'সীমিত অফার',
-          badgeColor: '#1877F2',
-          imageUrl: 'https://images.unsplash.com/photo-1598033128083-2f68a5d9b1b1?w=1200&q=85',
-          productId: 1,
-          order: 1
-        },
-        {
-          title: 'হোয়াইট প্রিমিয়াম',
-          subtitle: 'হাতের ছোঁয়ায় প্রিমিয়াম সুতি',
-          badge: 'বেস্টসেলার',
-          badgeColor: '#FF7A00',
-          imageUrl: 'https://images.unsplash.com/photo-1602810316693-3667c854239a?w=1200&q=85',
-          productId: 2,
-          order: 2
-        },
-        {
-          title: 'ডেনিম প্যাচ',
-          subtitle: 'হাতের কাজ করা লিমিটেড এডিশন',
-          badge: 'এক্সক্লুসিভ',
-          badgeColor: '#1877F2',
-          imageUrl: 'https://images.unsplash.com/photo-1588359348347-9bc6cbbb689c?w=1200&q=85',
-          productId: 5,
-          order: 3
-        }
+        { title: 'প্রিমিয়াম কালেকশন', subtitle: 'আড়ম্বরপূর্ণ ডিজাইন, অনন্য গুণগত মান', badge: 'সীমিত অফার', badgeColor: '#1877F2', imageUrl: 'https://images.unsplash.com/photo-1598033128083-2f68a5d9b1b1?w=1200&q=85', productId: 1, order: 1 },
+        { title: 'হোয়াইট প্রিমিয়াম', subtitle: 'হাতের ছোঁয়ায় প্রিমিয়াম সুতি', badge: 'বেস্টসেলার', badgeColor: '#FF7A00', imageUrl: 'https://images.unsplash.com/photo-1602810316693-3667c854239a?w=1200&q=85', productId: 2, order: 2 },
+        { title: 'ডেনিম প্যাচ', subtitle: 'হাতের কাজ করা লিমিটেড এডিশন', badge: 'এক্সক্লুসিভ', badgeColor: '#1877F2', imageUrl: 'https://images.unsplash.com/photo-1588359348347-9bc6cbbb689c?w=1200&q=85', productId: 5, order: 3 }
       ];
       await Slider.insertMany(defaultSliders);
       console.log('✅ Default sliders created');
     }
-
   } catch (error) {
     console.error('Database initialization error:', error);
   }
 }
 
 // ========== API ROUTES ==========
-
-// Auth Routes
+// Auth
 app.post('/api/admin/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-    
     const admin = await Admin.findOne({ username });
-    if (!admin) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
+    if (!admin) return res.status(401).json({ error: 'Invalid credentials' });
     const isMatch = await bcrypt.compare(password, admin.password);
-    if (!isMatch) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
+    if (!isMatch) return res.status(401).json({ error: 'Invalid credentials' });
     const token = jwt.sign({ id: admin._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    
-    res.json({ 
-      token, 
-      admin: { username: admin.username, id: admin._id } 
-    });
+    res.json({ token, admin: { username: admin.username, id: admin._id } });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -317,24 +249,18 @@ app.post('/api/admin/login', async (req, res) => {
 app.post('/api/admin/change-password', auth, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    
     const admin = await Admin.findById(req.admin._id);
     const isMatch = await bcrypt.compare(currentPassword, admin.password);
-    
-    if (!isMatch) {
-      return res.status(400).json({ error: 'Current password is incorrect' });
-    }
-
+    if (!isMatch) return res.status(400).json({ error: 'Current password is incorrect' });
     admin.password = await bcrypt.hash(newPassword, 10);
     await admin.save();
-    
     res.json({ message: 'Password changed successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Slider Routes
+// Sliders
 app.get('/api/sliders', async (req, res) => {
   try {
     const sliders = await Slider.find({ active: true }).sort('order');
@@ -356,7 +282,6 @@ app.get('/api/admin/sliders', auth, async (req, res) => {
 app.post('/api/admin/sliders', auth, upload.single('image'), async (req, res) => {
   try {
     const sliderData = JSON.parse(req.body.data || '{}');
-    
     const newSlider = new Slider({
       title: sliderData.title,
       subtitle: sliderData.subtitle,
@@ -369,7 +294,6 @@ app.post('/api/admin/sliders', auth, upload.single('image'), async (req, res) =>
       imageUrl: req.file ? req.file.path : sliderData.imageUrl,
       publicId: req.file ? req.file.filename : null
     });
-
     await newSlider.save();
     res.status(201).json(newSlider);
   } catch (error) {
@@ -390,17 +314,14 @@ app.put('/api/admin/sliders/:id', auth, upload.single('image'), async (req, res)
       order: sliderData.order,
       active: sliderData.active === 'true' || sliderData.active === true
     };
-
     if (req.file) {
       updateData.imageUrl = req.file.path;
       updateData.publicId = req.file.filename;
-      
       const oldSlider = await Slider.findById(req.params.id);
       if (oldSlider?.publicId) {
         await cloudinary.uploader.destroy(oldSlider.publicId);
       }
     }
-
     const slider = await Slider.findByIdAndUpdate(req.params.id, updateData, { new: true });
     res.json(slider);
   } catch (error) {
@@ -411,9 +332,7 @@ app.put('/api/admin/sliders/:id', auth, upload.single('image'), async (req, res)
 app.delete('/api/admin/sliders/:id', auth, async (req, res) => {
   try {
     const slider = await Slider.findById(req.params.id);
-    if (slider?.publicId) {
-      await cloudinary.uploader.destroy(slider.publicId);
-    }
+    if (slider?.publicId) await cloudinary.uploader.destroy(slider.publicId);
     await Slider.findByIdAndDelete(req.params.id);
     res.json({ message: 'Slider deleted successfully' });
   } catch (error) {
@@ -421,7 +340,7 @@ app.delete('/api/admin/sliders/:id', auth, async (req, res) => {
   }
 });
 
-// Category Routes
+// Categories
 app.get('/api/categories', async (req, res) => {
   try {
     const categories = await Category.find({ active: true }).sort('order');
@@ -443,18 +362,8 @@ app.get('/api/admin/categories', auth, async (req, res) => {
 app.post('/api/admin/categories', auth, async (req, res) => {
   try {
     const { name, banglaName, description, order, active } = req.body;
-    
     const slug = name.toLowerCase().replace(/\s+/g, '-');
-    
-    const category = new Category({
-      name,
-      slug,
-      banglaName,
-      description,
-      order,
-      active
-    });
-
+    const category = new Category({ name, slug, banglaName, description, order, active });
     await category.save();
     res.status(201).json(category);
   } catch (error) {
@@ -466,12 +375,7 @@ app.put('/api/admin/categories/:id', auth, async (req, res) => {
   try {
     const { name, banglaName, description, order, active } = req.body;
     const slug = name.toLowerCase().replace(/\s+/g, '-');
-    
-    const category = await Category.findByIdAndUpdate(
-      req.params.id,
-      { name, slug, banglaName, description, order, active },
-      { new: true }
-    );
+    const category = await Category.findByIdAndUpdate(req.params.id, { name, slug, banglaName, description, order, active }, { new: true });
     res.json(category);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -487,7 +391,7 @@ app.delete('/api/admin/categories/:id', auth, async (req, res) => {
   }
 });
 
-// Product Routes
+// Products
 app.get('/api/products', async (req, res) => {
   try {
     const products = await Product.find().sort('id');
@@ -509,13 +413,10 @@ app.get('/api/admin/products', auth, async (req, res) => {
 app.post('/api/admin/products', auth, upload.array('images', 10), async (req, res) => {
   try {
     const productData = JSON.parse(req.body.data || '{}');
-    
     const lastProduct = await Product.findOne().sort('-id');
     const nextId = lastProduct ? lastProduct.id + 1 : 13;
-
     const imageUrls = req.files ? req.files.map(f => f.path) : [];
     const publicIds = req.files ? req.files.map(f => f.filename) : [];
-
     const product = new Product({
       id: nextId,
       name: productData.name,
@@ -530,7 +431,6 @@ app.post('/api/admin/products', auth, upload.array('images', 10), async (req, re
       publicIds,
       featured: productData.featured || false
     });
-
     await product.save();
     res.status(201).json(product);
   } catch (error) {
@@ -542,39 +442,30 @@ app.put('/api/admin/products/:id', auth, upload.array('images', 10), async (req,
   try {
     const productData = JSON.parse(req.body.data || '{}');
     const product = await Product.findById(req.params.id);
-    
     let imageUrls = product.images;
     let publicIds = product.publicIds;
-
     if (req.files && req.files.length > 0) {
       if (product.publicIds && product.publicIds.length > 0) {
         for (const publicId of product.publicIds) {
           await cloudinary.uploader.destroy(publicId);
         }
       }
-      
       imageUrls = req.files.map(f => f.path);
       publicIds = req.files.map(f => f.filename);
     }
-
-    const updatedProduct = await Product.findByIdAndUpdate(
-      req.params.id,
-      {
-        name: productData.name,
-        desc: productData.desc,
-        original: productData.original,
-        price: productData.price,
-        category: productData.category,
-        stock: productData.stock,
-        sold: productData.sold,
-        img: imageUrls[0],
-        images: imageUrls,
-        publicIds,
-        featured: productData.featured
-      },
-      { new: true }
-    );
-
+    const updatedProduct = await Product.findByIdAndUpdate(req.params.id, {
+      name: productData.name,
+      desc: productData.desc,
+      original: productData.original,
+      price: productData.price,
+      category: productData.category,
+      stock: productData.stock,
+      sold: productData.sold,
+      img: imageUrls[0],
+      images: imageUrls,
+      publicIds,
+      featured: productData.featured
+    }, { new: true });
     res.json(updatedProduct);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -596,35 +487,16 @@ app.delete('/api/admin/products/:id', auth, async (req, res) => {
   }
 });
 
-// Order Routes
+// Orders
 app.post('/api/orders', async (req, res) => {
   try {
     const { customerName, phone, district, address, items, subtotal, deliveryCharge, total, notes } = req.body;
-    
     const orderId = 'ORD' + Date.now() + Math.floor(Math.random() * 1000);
-    
-    const order = new Order({
-      orderId,
-      customerName,
-      phone,
-      district,
-      address,
-      items,
-      subtotal,
-      deliveryCharge,
-      total,
-      notes
-    });
-
+    const order = new Order({ orderId, customerName, phone, district, address, items, subtotal, deliveryCharge, total, notes });
     await order.save();
-    
     for (const item of items) {
-      await Product.findOneAndUpdate(
-        { id: item.id },
-        { $inc: { sold: item.quantity, stock: -item.quantity } }
-      );
+      await Product.findOneAndUpdate({ id: item.id }, { $inc: { sold: item.quantity, stock: -item.quantity } });
     }
-
     res.status(201).json({ orderId, message: 'Order placed successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -637,20 +509,9 @@ app.get('/api/admin/orders', auth, async (req, res) => {
     const query = {};
     if (status) query.status = status;
     if (isRead !== undefined) query.isRead = isRead === 'true';
-    
-    const orders = await Order.find(query)
-      .sort('-createdAt')
-      .limit(limit * 1)
-      .skip((page - 1) * limit);
-    
+    const orders = await Order.find(query).sort('-createdAt').limit(limit * 1).skip((page - 1) * limit);
     const total = await Order.countDocuments(query);
-    
-    res.json({
-      orders,
-      totalPages: Math.ceil(total / limit),
-      currentPage: page,
-      total
-    });
+    res.json({ orders, totalPages: Math.ceil(total / limit), currentPage: page, total });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -668,13 +529,7 @@ app.get('/api/admin/orders/unread-count', auth, async (req, res) => {
 app.put('/api/admin/orders/:id', auth, async (req, res) => {
   try {
     const { status, paymentStatus, notes } = req.body;
-    
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
-      { status, paymentStatus, notes },
-      { new: true }
-    );
-    
+    const order = await Order.findByIdAndUpdate(req.params.id, { status, paymentStatus, notes }, { new: true });
     res.json(order);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -699,12 +554,10 @@ app.delete('/api/admin/orders/:id', auth, async (req, res) => {
   }
 });
 
-// Review Routes
+// Reviews
 app.get('/api/reviews', async (req, res) => {
   try {
-    const reviews = await Review.find({ status: 'approved' })
-      .sort('-createdAt')
-      .limit(20);
+    const reviews = await Review.find({ status: 'approved' }).sort('-createdAt').limit(20);
     res.json(reviews);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -714,14 +567,7 @@ app.get('/api/reviews', async (req, res) => {
 app.post('/api/reviews', async (req, res) => {
   try {
     const { name, address, text, rating } = req.body;
-    
-    const review = new Review({
-      name,
-      address,
-      text,
-      rating
-    });
-
+    const review = new Review({ name, address, text, rating });
     await review.save();
     res.status(201).json({ message: 'Review submitted successfully' });
   } catch (error) {
@@ -731,14 +577,10 @@ app.post('/api/reviews', async (req, res) => {
 
 app.get('/api/admin/reviews', auth, async (req, res) => {
   try {
-    const { status, limit } = req.query;
+    const { status } = req.query;
     const query = {};
     if (status) query.status = status;
-    
-    let reviewsQuery = Review.find(query).sort('-createdAt');
-    if (limit) reviewsQuery = reviewsQuery.limit(parseInt(limit));
-    
-    const reviews = await reviewsQuery;
+    const reviews = await Review.find(query).sort('-createdAt');
     res.json(reviews);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -757,13 +599,7 @@ app.get('/api/admin/reviews/unread-count', auth, async (req, res) => {
 app.put('/api/admin/reviews/:id', auth, async (req, res) => {
   try {
     const { status } = req.body;
-    
-    const review = await Review.findByIdAndUpdate(
-      req.params.id,
-      { status, isRead: true },
-      { new: true }
-    );
-    
+    const review = await Review.findByIdAndUpdate(req.params.id, { status, isRead: true }, { new: true });
     res.json(review);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -779,7 +615,7 @@ app.delete('/api/admin/reviews/:id', auth, async (req, res) => {
   }
 });
 
-// Settings Routes
+// Settings
 app.get('/api/settings', async (req, res) => {
   try {
     const settings = await Settings.findOne();
@@ -800,18 +636,14 @@ app.get('/api/admin/settings', auth, async (req, res) => {
 
 app.put('/api/admin/settings', auth, async (req, res) => {
   try {
-    const settings = await Settings.findOneAndUpdate(
-      {},
-      { ...req.body, updatedAt: Date.now() },
-      { new: true, upsert: true }
-    );
+    const settings = await Settings.findOneAndUpdate({}, { ...req.body, updatedAt: Date.now() }, { new: true, upsert: true });
     res.json(settings);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Dashboard Stats
+// Dashboard stats
 app.get('/api/admin/dashboard', auth, async (req, res) => {
   try {
     const totalOrders = await Order.countDocuments();
@@ -819,23 +651,13 @@ app.get('/api/admin/dashboard', auth, async (req, res) => {
     const totalProducts = await Product.countDocuments();
     const totalReviews = await Review.countDocuments();
     const pendingReviews = await Review.countDocuments({ status: 'pending' });
-    
     const recentOrders = await Order.find().sort('-createdAt').limit(5);
-    
     const revenue = await Order.aggregate([
       { $match: { status: { $in: ['delivered', 'shipped'] } } },
       { $group: { _id: null, total: { $sum: '$total' } } }
     ]);
-
     res.json({
-      stats: {
-        totalOrders,
-        pendingOrders,
-        totalProducts,
-        totalReviews,
-        pendingReviews,
-        revenue: revenue[0]?.total || 0
-      },
+      stats: { totalOrders, pendingOrders, totalProducts, totalReviews, pendingReviews, revenue: revenue[0]?.total || 0 },
       recentOrders
     });
   } catch (error) {
@@ -843,23 +665,16 @@ app.get('/api/admin/dashboard', auth, async (req, res) => {
   }
 });
 
-// Chart data for last 7 days
 app.get('/api/admin/chart-data', auth, async (req, res) => {
   try {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
     const orders = await Order.aggregate([
       { $match: { createdAt: { $gte: sevenDaysAgo } } },
-      { $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-          count: { $sum: 1 }
-      }},
+      { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, count: { $sum: 1 } } },
       { $sort: { _id: 1 } }
     ]);
-
-    const labels = [];
-    const data = [];
+    const labels = [], data = [];
     for (let i = 0; i < 7; i++) {
       const d = new Date();
       d.setDate(d.getDate() - i);
@@ -868,7 +683,6 @@ app.get('/api/admin/chart-data', auth, async (req, res) => {
       const found = orders.find(o => o._id === dateStr);
       data.unshift(found ? found.count : 0);
     }
-
     res.json({ labels, data });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -880,7 +694,6 @@ initializeDatabase().then(() => {
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`✅ Frontend URL: https://amayra-a9i2.vercel.app`);
-    console.log(`✅ Admin URL: https://amayra-orcin.vercel.app`);
+    console.log(`✅ Allowed origins:`, allowedOrigins);
   });
 });
