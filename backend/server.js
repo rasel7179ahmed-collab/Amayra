@@ -217,6 +217,7 @@ const ReviewSchema = new mongoose.Schema({
   address: { type: String, required: true },
   text: { type: String, required: true },
   rating: { type: Number, required: true, min: 1, max: 5 },
+  productId: { type: Number },
   status: { 
     type: String, 
     enum: ['pending', 'approved', 'rejected'], 
@@ -433,8 +434,9 @@ app.get('/api/sliders', async (req, res) => {
 
 app.get('/api/products', async (req, res) => {
   try {
-    const { category, search, featured } = req.query;
+    const { category, search, featured, sort, limit } = req.query;
     let filter = {};
+    let sortOptions = {};
     
     if (category && category !== 'all') filter.category = category;
     if (featured === 'true') filter.featured = true;
@@ -444,8 +446,20 @@ app.get('/api/products', async (req, res) => {
         { desc: { $regex: search, $options: 'i' } }
       ];
     }
+    
+    if (sort === 'sold') {
+      sortOptions = { sold: -1 };
+    } else {
+      sortOptions = { id: 1 };
+    }
 
-    const products = await Product.find(filter).sort('id');
+    let query = Product.find(filter).sort(sortOptions);
+    
+    if (limit) {
+      query = query.limit(parseInt(limit));
+    }
+
+    const products = await query;
     res.json(products);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -529,8 +543,8 @@ app.post('/api/reviews', [
   body('rating').isInt({ min: 1, max: 5 })
 ], validate, async (req, res) => {
   try {
-    const { name, address, text, rating } = req.body;
-    const review = new Review({ name, address, text, rating });
+    const { name, address, text, rating, productId } = req.body;
+    const review = new Review({ name, address, text, rating, productId });
     await review.save();
     res.status(201).json({ message: 'Review submitted successfully' });
   } catch (error) {
@@ -630,6 +644,13 @@ app.post('/api/admin/sliders', auth, upload.single('image'), async (req, res) =>
   try {
     const sliderData = JSON.parse(req.body.data || '{}');
     
+    if (sliderData.productId) {
+      const product = await Product.findOne({ id: sliderData.productId });
+      if (!product) {
+        return res.status(400).json({ error: 'Invalid product ID' });
+      }
+    }
+    
     const newSlider = new Slider({
       title: sliderData.title,
       subtitle: sliderData.subtitle,
@@ -653,6 +674,13 @@ app.post('/api/admin/sliders', auth, upload.single('image'), async (req, res) =>
 app.put('/api/admin/sliders/:id', auth, upload.single('image'), async (req, res) => {
   try {
     const sliderData = JSON.parse(req.body.data || '{}');
+    
+    if (sliderData.productId) {
+      const product = await Product.findOne({ id: sliderData.productId });
+      if (!product) {
+        return res.status(400).json({ error: 'Invalid product ID' });
+      }
+    }
     
     const updateData = {
       title: sliderData.title,
@@ -699,6 +727,19 @@ app.get('/api/admin/products', auth, async (req, res) => {
   try {
     const products = await Product.find().sort('id');
     res.json(products);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/admin/bestsellers', auth, async (req, res) => {
+  try {
+    const bestsellers = await Product.find()
+      .sort({ sold: -1 })
+      .limit(5)
+      .select('id name desc original price images sold discountPercent stock');
+    
+    res.json(bestsellers);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
