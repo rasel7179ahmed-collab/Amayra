@@ -1569,43 +1569,51 @@
           })
         ]);
 
+        if (!statsRes.ok || !chartRes.ok) {
+          throw new Error('Failed to load dashboard data');
+        }
+
         const data = await statsRes.json();
         const chartData = await chartRes.json();
 
+        // Update sidebar counts
         document.getElementById('productCount').textContent = data.stats.totalProducts || 0;
         document.getElementById('orderBadge').textContent = data.stats.pendingOrders || 0;
+        if (data.stats.pendingOrders > 0) {
+          document.getElementById('orderBadge').style.display = 'flex';
+        }
 
         content.innerHTML = `
           <div class="stats-grid">
             <div class="stat-card">
               <div class="stat-icon"><i class="fas fa-truck"></i></div>
               <p class="text-gray-600 text-sm">মোট অর্ডার</p>
-              <h3 class="text-2xl font-bold">${data.stats.totalOrders}</h3>
+              <h3 class="text-2xl font-bold">${data.stats.totalOrders || 0}</h3>
             </div>
             <div class="stat-card">
               <div class="stat-icon"><i class="fas fa-clock"></i></div>
               <p class="text-gray-600 text-sm">পেন্ডিং অর্ডার</p>
-              <h3 class="text-2xl font-bold">${data.stats.pendingOrders}</h3>
+              <h3 class="text-2xl font-bold">${data.stats.pendingOrders || 0}</h3>
             </div>
             <div class="stat-card">
               <div class="stat-icon"><i class="fas fa-shirt"></i></div>
               <p class="text-gray-600 text-sm">মোট প্রোডাক্ট</p>
-              <h3 class="text-2xl font-bold">${data.stats.totalProducts}</h3>
+              <h3 class="text-2xl font-bold">${data.stats.totalProducts || 0}</h3>
             </div>
             <div class="stat-card">
               <div class="stat-icon"><i class="fas fa-star"></i></div>
               <p class="text-gray-600 text-sm">মোট রিভিউ</p>
-              <h3 class="text-2xl font-bold">${data.stats.totalReviews}</h3>
+              <h3 class="text-2xl font-bold">${data.stats.totalReviews || 0}</h3>
             </div>
             <div class="stat-card">
               <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
               <p class="text-gray-600 text-sm">পেন্ডিং রিভিউ</p>
-              <h3 class="text-2xl font-bold">${data.stats.pendingReviews}</h3>
+              <h3 class="text-2xl font-bold">${data.stats.pendingReviews || 0}</h3>
             </div>
             <div class="stat-card">
               <div class="stat-icon"><i class="fas fa-bangladeshi-taka-sign"></i></div>
               <p class="text-gray-600 text-sm">মোট আয়</p>
-              <h3 class="text-2xl font-bold">৳${data.stats.revenue.toLocaleString()}</h3>
+              <h3 class="text-2xl font-bold">৳${(data.stats.revenue || 0).toLocaleString()}</h3>
             </div>
           </div>
 
@@ -1631,16 +1639,17 @@
                   </tr>
                 </thead>
                 <tbody>
-                  ${data.recentOrders.map(order => `
+                  ${(data.recentOrders || []).map(order => `
                     <tr onclick="showOrderDetails('${order._id}')">
-                      <td>${order.orderId}</td>
-                      <td>${order.customerName}</td>
-                      <td>${order.phone}</td>
-                      <td>৳${order.total}</td>
-                      <td><span class="status-badge status-${order.status}">${order.status === 'pending' ? 'অপেক্ষমাণ' : order.status}</span></td>
-                      <td>${new Date(order.createdAt).toLocaleDateString('bn-BD')}</td>
+                      <td>${order.orderId || 'N/A'}</td>
+                      <td>${order.customerName || 'N/A'}</td>
+                      <td>${order.phone || 'N/A'}</td>
+                      <td>৳${order.total || 0}</td>
+                      <td><span class="status-badge status-${order.status || 'pending'}">${order.status === 'pending' ? 'অপেক্ষমাণ' : order.status || 'pending'}</span></td>
+                      <td>${order.createdAt ? new Date(order.createdAt).toLocaleDateString('bn-BD') : 'N/A'}</td>
                     </tr>
                   `).join('')}
+                  ${(!data.recentOrders || data.recentOrders.length === 0) ? '<tr><td colspan="6" class="text-center py-4">কোন অর্ডার নেই</td></tr>' : ''}
                 </tbody>
               </table>
             </div>
@@ -1648,32 +1657,35 @@
         `;
 
         // Render chart
-        const ctx = document.getElementById('ordersChart').getContext('2d');
-        if (chartInstance) chartInstance.destroy();
-        chartInstance = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: chartData.labels,
-            datasets: [{
-              label: 'অর্ডার সংখ্যা',
-              data: chartData.data,
-              borderColor: '#1877F2',
-              backgroundColor: 'rgba(24, 119, 242, 0.1)',
-              tension: 0.3,
-              fill: true
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { display: false }
+        const ctx = document.getElementById('ordersChart')?.getContext('2d');
+        if (ctx) {
+          if (chartInstance) chartInstance.destroy();
+          chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: chartData.labels || [],
+              datasets: [{
+                label: 'অর্ডার সংখ্যা',
+                data: chartData.data || [],
+                borderColor: '#1877F2',
+                backgroundColor: 'rgba(24, 119, 242, 0.1)',
+                tension: 0.3,
+                fill: true
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false }
+              }
             }
-          }
-        });
+          });
+        }
 
       } catch (error) {
-        content.innerHTML = '<p class="text-red-500">ডেটা লোড করতে ব্যর্থ</p>';
+        console.error('Dashboard error:', error);
+        content.innerHTML = '<p class="text-red-500 text-center py-8">ডেটা লোড করতে ব্যর্থ হয়েছে</p>';
       }
     }
 
@@ -1686,6 +1698,9 @@
         const res = await fetch(`${API_BASE}/admin/categories`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
+
+        if (!res.ok) throw new Error('Failed to load categories');
+
         const categories = await res.json();
 
         document.getElementById('categoryCount').textContent = categories.length;
@@ -1712,28 +1727,32 @@
                 <tbody>
                   ${categories.map(cat => `
                     <tr>
-                      <td>${cat.name}</td>
-                      <td>${cat.banglaName}</td>
-                      <td>${cat.order}</td>
+                      <td>${cat.name || ''}</td>
+                      <td>${cat.banglaName || ''}</td>
+                      <td>${cat.order || 0}</td>
                       <td><span class="status-badge ${cat.active ? 'status-delivered' : 'status-cancelled'}">${cat.active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</span></td>
                       <td>
-                        <button onclick="showCategoryForm(${JSON.stringify(cat).replace(/"/g, '&quot;')})" class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-edit"></i></button>
+                        <button onclick='showCategoryForm(${JSON.stringify(cat).replace(/'/g, "\\'")})' class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-edit"></i></button>
                         <button onclick="confirmDeleteCategory('${cat._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
                       </td>
                     </tr>
                   `).join('')}
+                  ${categories.length === 0 ? '<tr><td colspan="5" class="text-center py-4">কোন ক্যাটাগরি নেই</td></tr>' : ''}
                 </tbody>
               </table>
             </div>
           </div>
         `;
       } catch (error) {
-        content.innerHTML = '<p class="text-red-500">ক্যাটাগরি লোড করতে ব্যর্থ</p>';
+        console.error('Categories error:', error);
+        content.innerHTML = '<p class="text-red-500 text-center py-8">ক্যাটাগরি লোড করতে ব্যর্থ হয়েছে</p>';
       }
     }
 
     window.showCategoryForm = (category = null) => {
       const modal = document.getElementById('modal');
+      if (!modal) return;
+
       const modalContent = document.getElementById('modalContent');
 
       modalContent.innerHTML = `
@@ -1779,7 +1798,7 @@
         name: formData.get('name'),
         banglaName: formData.get('banglaName'),
         description: formData.get('description'),
-        order: formData.get('order'),
+        order: parseInt(formData.get('order')) || 1,
         active: formData.get('active') === 'on'
       };
 
@@ -1801,9 +1820,11 @@
           closeModal();
           loadCategories();
         } else {
-          showNotification('ব্যর্থ হয়েছে', 'error');
+          const error = await res.json();
+          showNotification(error.error || 'ব্যর্থ হয়েছে', 'error');
         }
       } catch (error) {
+        console.error('Save category error:', error);
         showNotification('সার্ভার সংযোগ ব্যর্থ', 'error');
       }
     };
@@ -1826,8 +1847,12 @@
         if (res.ok) {
           showNotification('ক্যাটাগরি মুছে ফেলা হয়েছে', 'success');
           loadCategories();
+        } else {
+          const error = await res.json();
+          showNotification(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
         }
       } catch (error) {
+        console.error('Delete category error:', error);
         showNotification('মুছতে সমস্যা হয়েছে', 'error');
       }
     };
@@ -1838,15 +1863,13 @@
       content.innerHTML = '<div class="flex justify-center p-8"><div class="loading-spinner"></div></div>';
 
       try {
-        const [productsRes, categoriesRes] = await Promise.all([
-          fetch(`${API_BASE}/admin/products`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }),
-          fetch(`${API_BASE}/categories`)
-        ]);
+        const res = await fetch(`${API_BASE}/admin/products`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
 
-        const products = await productsRes.json();
-        const categories = await categoriesRes.json();
+        if (!res.ok) throw new Error('Failed to load products');
+
+        const products = await res.json();
 
         document.getElementById('productCount').textContent = products.length;
 
@@ -1874,37 +1897,47 @@
                 <tbody>
                   ${products.map(product => `
                     <tr>
-                      <td><img src="${product.img}" class="image-preview w-12 h-12" onerror="this.src='https://via.placeholder.com/50'"></td>
-                      <td>${product.name}</td>
-                      <td>${product.category}</td>
-                      <td>৳${product.price}</td>
-                      <td>${product.stock}</td>
-                      <td>${product.sold}</td>
+                      <td><img src="${product.img || product.images?.[0] || ''}" class="image-preview w-12 h-12" onerror="this.src='https://via.placeholder.com/50'"></td>
+                      <td>${product.name || ''}</td>
+                      <td>${product.category || ''}</td>
+                      <td>৳${product.price || 0}</td>
+                      <td>${product.stock || 0}</td>
+                      <td>${product.sold || 0}</td>
                       <td>
-                        <button onclick="showProductForm(${JSON.stringify(product).replace(/"/g, '&quot;')})" class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-edit"></i></button>
+                        <button onclick='showProductForm(${JSON.stringify(product).replace(/'/g, "\\'")})' class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-edit"></i></button>
                         <button onclick="confirmDeleteProduct('${product._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
                       </td>
                     </tr>
                   `).join('')}
+                  ${products.length === 0 ? '<tr><td colspan="7" class="text-center py-4">কোন প্রোডাক্ট নেই</td></tr>' : ''}
                 </tbody>
               </table>
             </div>
           </div>
         `;
       } catch (error) {
-        content.innerHTML = '<p class="text-red-500">প্রোডাক্ট লোড করতে ব্যর্থ</p>';
+        console.error('Products error:', error);
+        content.innerHTML = '<p class="text-red-500 text-center py-8">প্রোডাক্ট লোড করতে ব্যর্থ হয়েছে</p>';
       }
     }
 
     window.showProductForm = async (product = null) => {
       currentProductId = product?._id || null;
-      productImages = product?.images || [];
-
-      const categoriesRes = await fetch(`${API_BASE}/categories`);
-      const categories = await categoriesRes.json();
+      productImages = product?.images || (product?.img ? [product.img] : []);
 
       const modal = document.getElementById('modal');
+      if (!modal) return;
+
       const modalContent = document.getElementById('modalContent');
+
+      // Load categories for dropdown
+      let categories = [];
+      try {
+        const res = await fetch(`${API_BASE}/categories`);
+        categories = await res.json();
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+      }
 
       modalContent.innerHTML = `
         <h3 class="text-2xl font-bold mb-6">${product ? 'প্রোডাক্ট সম্পাদনা' : 'নতুন প্রোডাক্ট'}</h3>
@@ -1920,7 +1953,8 @@
           <div class="form-group">
             <label class="form-label">ক্যাটাগরি</label>
             <select class="form-select" name="category" required>
-              ${categories.map(cat => `<option value="${cat.name}" ${product?.category === cat.name ? 'selected' : ''}>${cat.banglaName}</option>`).join('')}
+              <option value="">ক্যাটাগরি নির্বাচন করুন</option>
+              ${categories.map(cat => `<option value="${cat.name}" ${product?.category === cat.name ? 'selected' : ''}>${cat.banglaName || cat.name}</option>`).join('')}
             </select>
           </div>
           <div class="form-group">
@@ -1947,7 +1981,7 @@
             <div id="imagePreviewContainer" class="flex flex-wrap gap-3 mt-4">
               ${productImages.map(img => `
                 <div class="relative group">
-                  <img src="${img}" class="image-preview w-24 h-24">
+                  <img src="${img}" class="image-preview w-24 h-24" onerror="this.src='https://via.placeholder.com/100'">
                   <button type="button" onclick="removeImage('${img}')" class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full">×</button>
                 </div>
               `).join('')}
@@ -1982,10 +2016,10 @@
         name: formData.get('name'),
         desc: formData.get('desc'),
         category: formData.get('category'),
-        original: formData.get('original'),
-        price: formData.get('price'),
-        stock: formData.get('stock'),
-        sold: formData.get('sold'),
+        original: parseInt(formData.get('original')) || 0,
+        price: parseInt(formData.get('price')) || 0,
+        stock: parseInt(formData.get('stock')) || 10,
+        sold: parseInt(formData.get('sold')) || 0,
         featured: formData.get('featured') === 'on'
       };
 
@@ -2007,9 +2041,11 @@
           closeModal();
           loadProducts();
         } else {
-          showNotification('ব্যর্থ হয়েছে', 'error');
+          const error = await res.json();
+          showNotification(error.error || 'ব্যর্থ হয়েছে', 'error');
         }
       } catch (error) {
+        console.error('Save product error:', error);
         showNotification('সার্ভার সংযোগ ব্যর্থ', 'error');
       }
     };
@@ -2032,8 +2068,12 @@
         if (res.ok) {
           showNotification('প্রোডাক্ট মুছে ফেলা হয়েছে', 'success');
           loadProducts();
+        } else {
+          const error = await res.json();
+          showNotification(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
         }
       } catch (error) {
+        console.error('Delete product error:', error);
         showNotification('মুছতে সমস্যা হয়েছে', 'error');
       }
     };
@@ -2047,6 +2087,9 @@
         const res = await fetch(`${API_BASE}/admin/orders`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
+
+        if (!res.ok) throw new Error('Failed to load orders');
+
         const data = await res.json();
 
         content.innerHTML = `
@@ -2081,29 +2124,31 @@
                   </tr>
                 </thead>
                 <tbody>
-                  ${data.orders.map(order => `
+                  ${(data.orders || []).map(order => `
                     <tr>
-                      <td>${order.orderId}</td>
-                      <td>${order.customerName}</td>
-                      <td>${order.phone}</td>
+                      <td>${order.orderId || 'N/A'}</td>
+                      <td>${order.customerName || 'N/A'}</td>
+                      <td>${order.phone || 'N/A'}</td>
                       <td>${order.district === 'dhaka' ? 'ঢাকা' : 'ঢাকার বাইরে'}</td>
-                      <td>${order.items.length}</td>
-                      <td>৳${order.total}</td>
-                      <td><span class="status-badge status-${order.status}">${order.status}</span></td>
-                      <td>${new Date(order.createdAt).toLocaleDateString('bn-BD')}</td>
+                      <td>${order.items?.length || 0}</td>
+                      <td>৳${order.total || 0}</td>
+                      <td><span class="status-badge status-${order.status || 'pending'}">${order.status === 'pending' ? 'অপেক্ষমাণ' : order.status || 'pending'}</span></td>
+                      <td>${order.createdAt ? new Date(order.createdAt).toLocaleDateString('bn-BD') : 'N/A'}</td>
                       <td>
-                        <button onclick="showOrderDetails('${order._id}')" class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-eye"></i></button>
+                        <button onclick='showOrderDetails(${JSON.stringify(order).replace(/'/g, "\\'")})' class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-eye"></i></button>
                         <button onclick="confirmDeleteOrder('${order._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
                       </td>
                     </tr>
                   `).join('')}
+                  ${(!data.orders || data.orders.length === 0) ? '<tr><td colspan="9" class="text-center py-4">কোন অর্ডার নেই</td></tr>' : ''}
                 </tbody>
               </table>
             </div>
           </div>
         `;
       } catch (error) {
-        content.innerHTML = '<p class="text-red-500">অর্ডার লোড করতে ব্যর্থ</p>';
+        console.error('Orders error:', error);
+        content.innerHTML = '<p class="text-red-500 text-center py-8">অর্ডার লোড করতে ব্যর্থ হয়েছে</p>';
       }
     }
 
@@ -2112,110 +2157,115 @@
         const res = await fetch(`${API_BASE}/admin/orders${status !== 'all' ? `?status=${status}` : ''}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
+
+        if (!res.ok) throw new Error('Failed to filter orders');
+
         const data = await res.json();
 
         const tbody = document.querySelector('tbody');
-        tbody.innerHTML = data.orders.map(order => `
-          <tr>
-            <td>${order.orderId}</td>
-            <td>${order.customerName}</td>
-            <td>${order.phone}</td>
-            <td>${order.district === 'dhaka' ? 'ঢাকা' : 'ঢাকার বাইরে'}</td>
-            <td>${order.items.length}</td>
-            <td>৳${order.total}</td>
-            <td><span class="status-badge status-${order.status}">${order.status}</span></td>
-            <td>${new Date(order.createdAt).toLocaleDateString('bn-BD')}</td>
-            <td>
-              <button onclick="showOrderDetails('${order._id}')" class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-eye"></i></button>
-              <button onclick="confirmDeleteOrder('${order._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
-            </td>
-          </tr>
-        `).join('');
+        if (tbody) {
+          tbody.innerHTML = (data.orders || []).map(order => `
+            <tr>
+              <td>${order.orderId || 'N/A'}</td>
+              <td>${order.customerName || 'N/A'}</td>
+              <td>${order.phone || 'N/A'}</td>
+              <td>${order.district === 'dhaka' ? 'ঢাকা' : 'ঢাকার বাইরে'}</td>
+              <td>${order.items?.length || 0}</td>
+              <td>৳${order.total || 0}</td>
+              <td><span class="status-badge status-${order.status || 'pending'}">${order.status === 'pending' ? 'অপেক্ষমাণ' : order.status || 'pending'}</span></td>
+              <td>${order.createdAt ? new Date(order.createdAt).toLocaleDateString('bn-BD') : 'N/A'}</td>
+              <td>
+                <button onclick='showOrderDetails(${JSON.stringify(order).replace(/'/g, "\\'")})' class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-eye"></i></button>
+                <button onclick="confirmDeleteOrder('${order._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
+              </td>
+            </tr>
+          `).join('');
+          
+          if (data.orders.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4">কোন অর্ডার নেই</td></tr>';
+          }
+        }
       } catch (error) {
+        console.error('Filter orders error:', error);
         showNotification('অর্ডার ফিল্টার করতে ব্যর্থ', 'error');
       }
     };
 
-    window.showOrderDetails = async (orderId) => {
-      try {
-        const res = await fetch(`${API_BASE}/admin/orders/${orderId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const order = await res.json();
+    window.showOrderDetails = (order) => {
+      const modalContent = document.getElementById('orderDetails');
+      if (!modalContent) return;
 
-        const modalContent = document.getElementById('orderDetails');
-        modalContent.innerHTML = `
-          <div class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h4 class="font-bold mb-2">গ্রাহকের তথ্য</h4>
-                <p><span class="text-gray-600">নাম:</span> ${order.customerName}</p>
-                <p><span class="text-gray-600">ফোন:</span> ${order.phone}</p>
-                <p><span class="text-gray-600">ঠিকানা:</span> ${order.address}</p>
-              </div>
-              
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h4 class="font-bold mb-2">অর্ডারের তথ্য</h4>
-                <p><span class="text-gray-600">অর্ডার ID:</span> ${order.orderId}</p>
-                <p><span class="text-gray-600">তারিখ:</span> ${new Date(order.createdAt).toLocaleString('bn-BD')}</p>
-                <p><span class="text-gray-600">স্ট্যাটাস:</span> <span class="status-badge status-${order.status}">${order.status}</span></p>
-              </div>
-            </div>
-
+      modalContent.innerHTML = `
+        <div class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="bg-gray-50 p-4 rounded-lg">
-              <h4 class="font-bold mb-2">পণ্যের তালিকা</h4>
-              <div class="space-y-2">
-                ${order.items.map(item => `
-                  <div class="flex justify-between items-center border-b pb-2">
-                    <div>
-                      <p class="font-medium">${item.name}</p>
-                      <p class="text-sm text-gray-600">৳${item.price} × ${item.quantity}</p>
-                    </div>
-                    <p class="font-bold">৳${item.price * item.quantity}</p>
-                  </div>
-                `).join('')}
-              </div>
-              
-              <div class="mt-4 pt-2 border-t">
-                <div class="flex justify-between">
-                  <span>সাবটোটাল:</span>
-                  <span class="font-bold">৳${order.subtotal}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span>ডেলিভারি চার্জ:</span>
-                  <span class="font-bold">৳${order.deliveryCharge}</span>
-                </div>
-                <div class="flex justify-between text-lg">
-                  <span>মোট:</span>
-                  <span class="font-bold text-[#1877F2]">৳${order.total}</span>
-                </div>
-              </div>
+              <h4 class="font-bold mb-2">গ্রাহকের তথ্য</h4>
+              <p><span class="text-gray-600">নাম:</span> ${order.customerName || 'N/A'}</p>
+              <p><span class="text-gray-600">ফোন:</span> ${order.phone || 'N/A'}</p>
+              <p><span class="text-gray-600">ঠিকানা:</span> ${order.address || 'N/A'}</p>
             </div>
-
-            <div class="flex justify-end gap-3">
-              <select id="orderStatusUpdate" class="form-select w-auto">
-                <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>অপেক্ষমাণ</option>
-                <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>নিশ্চিত</option>
-                <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>প্রক্রিয়াধীন</option>
-                <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>পাঠানো হয়েছে</option>
-                <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>ডেলিভারি হয়েছে</option>
-                <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>বাতিল</option>
-              </select>
-              <button onclick="updateOrderStatus('${order._id}')" class="btn-primary px-4 py-2">
-                আপডেট করুন
-              </button>
+            
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <h4 class="font-bold mb-2">অর্ডারের তথ্য</h4>
+              <p><span class="text-gray-600">অর্ডার ID:</span> ${order.orderId || 'N/A'}</p>
+              <p><span class="text-gray-600">তারিখ:</span> ${order.createdAt ? new Date(order.createdAt).toLocaleString('bn-BD') : 'N/A'}</p>
+              <p><span class="text-gray-600">স্ট্যাটাস:</span> <span class="status-badge status-${order.status || 'pending'}">${order.status === 'pending' ? 'অপেক্ষমাণ' : order.status || 'pending'}</span></p>
             </div>
           </div>
-        `;
 
-        openOrderModal();
-      } catch (error) {
-        showNotification('অর্ডারের তথ্য লোড করতে ব্যর্থ', 'error');
-      }
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <h4 class="font-bold mb-2">পণ্যের তালিকা</h4>
+            <div class="space-y-2">
+              ${(order.items || []).map(item => `
+                <div class="flex justify-between items-center border-b pb-2">
+                  <div>
+                    <p class="font-medium">${item.name || 'N/A'}</p>
+                    <p class="text-sm text-gray-600">৳${item.price || 0} × ${item.quantity || 0}</p>
+                  </div>
+                  <p class="font-bold">৳${(item.price || 0) * (item.quantity || 0)}</p>
+                </div>
+              `).join('')}
+              ${(!order.items || order.items.length === 0) ? '<p class="text-gray-500 text-center">কোন পণ্য নেই</p>' : ''}
+            </div>
+            
+            <div class="mt-4 pt-2 border-t">
+              <div class="flex justify-between">
+                <span>সাবটোটাল:</span>
+                <span class="font-bold">৳${order.subtotal || 0}</span>
+              </div>
+              <div class="flex justify-between">
+                <span>ডেলিভারি চার্জ:</span>
+                <span class="font-bold">৳${order.deliveryCharge || 0}</span>
+              </div>
+              <div class="flex justify-between text-lg">
+                <span>মোট:</span>
+                <span class="font-bold text-[#1877F2]">৳${order.total || 0}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-3">
+            <select id="orderStatusUpdate" class="form-select w-auto">
+              <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>অপেক্ষমাণ</option>
+              <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>নিশ্চিত</option>
+              <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>প্রক্রিয়াধীন</option>
+              <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>পাঠানো হয়েছে</option>
+              <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>ডেলিভারি হয়েছে</option>
+              <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>বাতিল</option>
+            </select>
+            <button onclick="updateOrderStatus('${order._id}')" class="btn-primary px-4 py-2">
+              আপডেট করুন
+            </button>
+          </div>
+        </div>
+      `;
+
+      openOrderModal();
     };
 
     window.updateOrderStatus = async (orderId) => {
-      const status = document.getElementById('orderStatusUpdate').value;
+      const status = document.getElementById('orderStatusUpdate')?.value;
+      if (!status) return;
 
       try {
         const res = await fetch(`${API_BASE}/admin/orders/${orderId}`, {
@@ -2232,8 +2282,12 @@
           closeOrderModal();
           loadOrders();
           loadUnreadCounts();
+        } else {
+          const error = await res.json();
+          showNotification(error.error || 'আপডেট ব্যর্থ', 'error');
         }
       } catch (error) {
+        console.error('Update order error:', error);
         showNotification('আপডেট ব্যর্থ', 'error');
       }
     };
@@ -2257,8 +2311,12 @@
           showNotification('অর্ডার মুছে ফেলা হয়েছে', 'success');
           loadOrders();
           loadUnreadCounts();
+        } else {
+          const error = await res.json();
+          showNotification(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
         }
       } catch (error) {
+        console.error('Delete order error:', error);
         showNotification('মুছতে সমস্যা হয়েছে', 'error');
       }
     };
@@ -2272,6 +2330,9 @@
         const res = await fetch(`${API_BASE}/admin/reviews`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
+
+        if (!res.ok) throw new Error('Failed to load reviews');
+
         const reviews = await res.json();
 
         content.innerHTML = `
@@ -2303,12 +2364,12 @@
                 <tbody>
                   ${reviews.map(review => `
                     <tr>
-                      <td>${review.name}</td>
-                      <td>${review.address}</td>
-                      <td>${review.text.substring(0, 30)}...</td>
-                      <td>${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}</td>
-                      <td><span class="status-badge status-${review.status}">${review.status}</span></td>
-                      <td>${new Date(review.createdAt).toLocaleDateString('bn-BD')}</td>
+                      <td>${review.name || ''}</td>
+                      <td>${review.address || ''}</td>
+                      <td>${(review.text || '').substring(0, 30)}${review.text?.length > 30 ? '...' : ''}</td>
+                      <td>${'★'.repeat(review.rating || 0)}${'☆'.repeat(5 - (review.rating || 0))}</td>
+                      <td><span class="status-badge status-${review.status || 'pending'}">${review.status === 'pending' ? 'অপেক্ষমাণ' : review.status === 'approved' ? 'অনুমোদিত' : 'বাতিল'}</span></td>
+                      <td>${review.createdAt ? new Date(review.createdAt).toLocaleDateString('bn-BD') : 'N/A'}</td>
                       <td>
                         <button onclick="updateReviewStatus('${review._id}', 'approved')" class="btn-success text-sm px-3 py-1 mr-2"><i class="fas fa-check"></i></button>
                         <button onclick="updateReviewStatus('${review._id}', 'rejected')" class="btn-danger text-sm px-3 py-1 mr-2"><i class="fas fa-times"></i></button>
@@ -2316,13 +2377,15 @@
                       </td>
                     </tr>
                   `).join('')}
+                  ${reviews.length === 0 ? '<tr><td colspan="7" class="text-center py-4">কোন রিভিউ নেই</td></tr>' : ''}
                 </tbody>
               </table>
             </div>
           </div>
         `;
       } catch (error) {
-        content.innerHTML = '<p class="text-red-500">রিভিউ লোড করতে ব্যর্থ</p>';
+        console.error('Reviews error:', error);
+        content.innerHTML = '<p class="text-red-500 text-center py-8">রিভিউ লোড করতে ব্যর্থ হয়েছে</p>';
       }
     }
 
@@ -2331,25 +2394,35 @@
         const res = await fetch(`${API_BASE}/admin/reviews${status !== 'all' ? `?status=${status}` : ''}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
+
+        if (!res.ok) throw new Error('Failed to filter reviews');
+
         const reviews = await res.json();
 
         const tbody = document.querySelector('tbody');
-        tbody.innerHTML = reviews.map(review => `
-          <tr>
-            <td>${review.name}</td>
-            <td>${review.address}</td>
-            <td>${review.text.substring(0, 30)}...</td>
-            <td>${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}</td>
-            <td><span class="status-badge status-${review.status}">${review.status}</span></td>
-            <td>${new Date(review.createdAt).toLocaleDateString('bn-BD')}</td>
-            <td>
-              <button onclick="updateReviewStatus('${review._id}', 'approved')" class="btn-success text-sm px-3 py-1 mr-2"><i class="fas fa-check"></i></button>
-              <button onclick="updateReviewStatus('${review._id}', 'rejected')" class="btn-danger text-sm px-3 py-1 mr-2"><i class="fas fa-times"></i></button>
-              <button onclick="confirmDeleteReview('${review._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
-            </td>
-          </tr>
-        `).join('');
+        if (tbody) {
+          tbody.innerHTML = reviews.map(review => `
+            <tr>
+              <td>${review.name || ''}</td>
+              <td>${review.address || ''}</td>
+              <td>${(review.text || '').substring(0, 30)}${review.text?.length > 30 ? '...' : ''}</td>
+              <td>${'★'.repeat(review.rating || 0)}${'☆'.repeat(5 - (review.rating || 0))}</td>
+              <td><span class="status-badge status-${review.status || 'pending'}">${review.status === 'pending' ? 'অপেক্ষমাণ' : review.status === 'approved' ? 'অনুমোদিত' : 'বাতিল'}</span></td>
+              <td>${review.createdAt ? new Date(review.createdAt).toLocaleDateString('bn-BD') : 'N/A'}</td>
+              <td>
+                <button onclick="updateReviewStatus('${review._id}', 'approved')" class="btn-success text-sm px-3 py-1 mr-2"><i class="fas fa-check"></i></button>
+                <button onclick="updateReviewStatus('${review._id}', 'rejected')" class="btn-danger text-sm px-3 py-1 mr-2"><i class="fas fa-times"></i></button>
+                <button onclick="confirmDeleteReview('${review._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
+              </td>
+            </tr>
+          `).join('');
+          
+          if (reviews.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">কোন রিভিউ নেই</td></tr>';
+          }
+        }
       } catch (error) {
+        console.error('Filter reviews error:', error);
         showNotification('রিভিউ ফিল্টার করতে ব্যর্থ', 'error');
       }
     };
@@ -2369,8 +2442,12 @@
           showNotification(`রিভিউ ${status === 'approved' ? 'অনুমোদিত' : 'বাতিল'} হয়েছে`, 'success');
           loadReviews();
           loadUnreadCounts();
+        } else {
+          const error = await res.json();
+          showNotification(error.error || 'আপডেট ব্যর্থ', 'error');
         }
       } catch (error) {
+        console.error('Update review error:', error);
         showNotification('আপডেট ব্যর্থ', 'error');
       }
     };
@@ -2394,8 +2471,12 @@
           showNotification('রিভিউ মুছে ফেলা হয়েছে', 'success');
           loadReviews();
           loadUnreadCounts();
+        } else {
+          const error = await res.json();
+          showNotification(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
         }
       } catch (error) {
+        console.error('Delete review error:', error);
         showNotification('মুছতে সমস্যা হয়েছে', 'error');
       }
     };
@@ -2409,6 +2490,9 @@
         const res = await fetch(`${API_BASE}/admin/sliders`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
+
+        if (!res.ok) throw new Error('Failed to load sliders');
+
         const sliders = await res.json();
 
         content.innerHTML = `
@@ -2434,24 +2518,26 @@
                 <tbody>
                   ${sliders.map(slider => `
                     <tr>
-                      <td><img src="${slider.imageUrl}" class="image-preview w-12 h-12" onerror="this.src='https://via.placeholder.com/50'"></td>
-                      <td>${slider.title}</td>
-                      <td><span style="background:${slider.badgeColor}" class="px-2 py-1 text-white rounded-full text-xs">${slider.badge}</span></td>
-                      <td>${slider.order}</td>
+                      <td><img src="${slider.imageUrl || ''}" class="image-preview w-12 h-12" onerror="this.src='https://via.placeholder.com/50'"></td>
+                      <td>${slider.title || ''}</td>
+                      <td><span style="background:${slider.badgeColor || '#1877F2'}" class="px-2 py-1 text-white rounded-full text-xs">${slider.badge || ''}</span></td>
+                      <td>${slider.order || 0}</td>
                       <td><span class="status-badge ${slider.active ? 'status-delivered' : 'status-cancelled'}">${slider.active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</span></td>
                       <td>
-                        <button onclick="showSliderForm(${JSON.stringify(slider).replace(/"/g, '&quot;')})" class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-edit"></i></button>
+                        <button onclick='showSliderForm(${JSON.stringify(slider).replace(/'/g, "\\'")})' class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-edit"></i></button>
                         <button onclick="confirmDeleteSlider('${slider._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
                       </td>
                     </tr>
                   `).join('')}
+                  ${sliders.length === 0 ? '<tr><td colspan="6" class="text-center py-4">কোন স্লাইডার নেই</td></tr>' : ''}
                 </tbody>
               </table>
             </div>
           </div>
         `;
       } catch (error) {
-        content.innerHTML = '<p class="text-red-500">স্লাইডার লোড করতে ব্যর্থ</p>';
+        console.error('Sliders error:', error);
+        content.innerHTML = '<p class="text-red-500 text-center py-8">স্লাইডার লোড করতে ব্যর্থ হয়েছে</p>';
       }
     }
 
@@ -2460,6 +2546,8 @@
       slideImage = slider?.imageUrl || '';
 
       const modal = document.getElementById('modal');
+      if (!modal) return;
+
       const modalContent = document.getElementById('modalContent');
 
       modalContent.innerHTML = `
@@ -2483,7 +2571,7 @@
           </div>
           <div class="form-group">
             <label class="form-label">বাটন টেক্সট</label>
-            <input type="text" class="form-input" name="buttonText" value="${slider?.buttonText || 'এখনই কিনун'}" required>
+            <input type="text" class="form-input" name="buttonText" value="${slider?.buttonText || 'এখনই কিনুন'}" required>
           </div>
           <div class="form-group">
             <label class="form-label">প্রোডাক্ট আইডি</label>
@@ -2524,8 +2612,8 @@
         badge: formData.get('badge'),
         badgeColor: formData.get('badgeColor'),
         buttonText: formData.get('buttonText'),
-        productId: formData.get('productId'),
-        order: formData.get('order'),
+        productId: parseInt(formData.get('productId')) || 0,
+        order: parseInt(formData.get('order')) || 1,
         active: formData.get('active') === 'on'
       };
 
@@ -2550,9 +2638,11 @@
           closeModal();
           loadSliders();
         } else {
-          showNotification('ব্যর্থ হয়েছে', 'error');
+          const error = await res.json();
+          showNotification(error.error || 'ব্যর্থ হয়েছে', 'error');
         }
       } catch (error) {
+        console.error('Save slider error:', error);
         showNotification('সার্ভার সংযোগ ব্যর্থ', 'error');
       }
     };
@@ -2575,8 +2665,12 @@
         if (res.ok) {
           showNotification('স্লাইডার মুছে ফেলা হয়েছে', 'success');
           loadSliders();
+        } else {
+          const error = await res.json();
+          showNotification(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
         }
       } catch (error) {
+        console.error('Delete slider error:', error);
         showNotification('মুছতে সমস্যা হয়েছে', 'error');
       }
     };
@@ -2590,6 +2684,9 @@
         const res = await fetch(`${API_BASE}/admin/settings`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
+
+        if (!res.ok) throw new Error('Failed to load settings');
+
         const settings = await res.json();
 
         content.innerHTML = `
@@ -2599,47 +2696,47 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="form-group">
                   <label class="form-label">সাইট নাম</label>
-                  <input type="text" class="form-input" name="siteName" value="${settings.siteName}" required>
+                  <input type="text" class="form-input" name="siteName" value="${settings.siteName || ''}" required>
                 </div>
                 <div class="form-group">
                   <label class="form-label">সাইট টাইটেল</label>
-                  <input type="text" class="form-input" name="siteTitle" value="${settings.siteTitle}" required>
+                  <input type="text" class="form-input" name="siteTitle" value="${settings.siteTitle || ''}" required>
                 </div>
                 <div class="form-group">
                   <label class="form-label">ফোন নম্বর</label>
-                  <input type="text" class="form-input" name="phoneNumber" value="${settings.phoneNumber}" required>
+                  <input type="text" class="form-input" name="phoneNumber" value="${settings.phoneNumber || ''}" required>
                 </div>
                 <div class="form-group">
                   <label class="form-label">হোয়াটসঅ্যাপ নম্বর</label>
-                  <input type="text" class="form-input" name="whatsappNumber" value="${settings.whatsappNumber}" required>
+                  <input type="text" class="form-input" name="whatsappNumber" value="${settings.whatsappNumber || ''}" required>
                 </div>
                 <div class="form-group">
                   <label class="form-label">ইমেইল</label>
-                  <input type="email" class="form-input" name="email" value="${settings.email}" required>
+                  <input type="email" class="form-input" name="email" value="${settings.email || ''}" required>
                 </div>
                 <div class="form-group">
                   <label class="form-label">ফেসবুক পেজ</label>
-                  <input type="text" class="form-input" name="facebook" value="${settings.facebook}" required>
+                  <input type="text" class="form-input" name="facebook" value="${settings.facebook || ''}" required>
                 </div>
                 <div class="form-group">
                   <label class="form-label">ঠিকানা</label>
-                  <input type="text" class="form-input" name="address" value="${settings.address}" required>
+                  <input type="text" class="form-input" name="address" value="${settings.address || ''}" required>
                 </div>
                 <div class="form-group">
                   <label class="form-label">ঢাকার ভেতরে ডেলিভারি চার্জ</label>
-                  <input type="number" class="form-input" name="deliveryChargeDhaka" value="${settings.deliveryChargeDhaka}" required>
+                  <input type="number" class="form-input" name="deliveryChargeDhaka" value="${settings.deliveryChargeDhaka || 60}" required>
                 </div>
                 <div class="form-group">
                   <label class="form-label">ঢাকার বাইরে ডেলিভারি চার্জ</label>
-                  <input type="number" class="form-input" name="deliveryChargeOutside" value="${settings.deliveryChargeOutside}" required>
+                  <input type="number" class="form-input" name="deliveryChargeOutside" value="${settings.deliveryChargeOutside || 120}" required>
                 </div>
                 <div class="form-group">
                   <label class="form-label">ফ্রি ডেলিভারির জন্য ন্যূনতম অর্ডার</label>
-                  <input type="number" class="form-input" name="freeDeliveryThreshold" value="${settings.freeDeliveryThreshold}" required>
+                  <input type="number" class="form-input" name="freeDeliveryThreshold" value="${settings.freeDeliveryThreshold || 2000}" required>
                 </div>
                 <div class="form-group md:col-span-2">
                   <label class="form-label">ফুটার টেক্সট</label>
-                  <input type="text" class="form-input" name="footerText" value="${settings.footerText}" required>
+                  <input type="text" class="form-input" name="footerText" value="${settings.footerText || ''}" required>
                 </div>
               </div>
               
@@ -2650,7 +2747,8 @@
           </div>
         `;
       } catch (error) {
-        content.innerHTML = '<p class="text-red-500">সেটিংস লোড করতে ব্যর্থ</p>';
+        console.error('Settings error:', error);
+        content.innerHTML = '<p class="text-red-500 text-center py-8">সেটিংস লোড করতে ব্যর্থ হয়েছে</p>';
       }
     }
 
@@ -2658,6 +2756,11 @@
       e.preventDefault();
       const formData = new FormData(e.target);
       const data = Object.fromEntries(formData.entries());
+
+      // Convert numeric values
+      data.deliveryChargeDhaka = parseInt(data.deliveryChargeDhaka) || 60;
+      data.deliveryChargeOutside = parseInt(data.deliveryChargeOutside) || 120;
+      data.freeDeliveryThreshold = parseInt(data.freeDeliveryThreshold) || 2000;
 
       try {
         const res = await fetch(`${API_BASE}/admin/settings`, {
@@ -2672,9 +2775,11 @@
         if (res.ok) {
           showNotification('সেটিংস সংরক্ষিত হয়েছে', 'success');
         } else {
-          showNotification('ব্যর্থ হয়েছে', 'error');
+          const error = await res.json();
+          showNotification(error.error || 'ব্যর্থ হয়েছে', 'error');
         }
       } catch (error) {
+        console.error('Save settings error:', error);
         showNotification('সার্ভার সংযোগ ব্যর্থ', 'error');
       }
     };
@@ -2735,13 +2840,14 @@
           showNotification(data.error || 'ব্যর্থ হয়েছে', 'error');
         }
       } catch (error) {
+        console.error('Change password error:', error);
         showNotification('সার্ভার সংযোগ ব্যর্থ', 'error');
       }
     };
 
     // ========== UTILITY FUNCTIONS ==========
     window.closeModal = () => {
-      document.getElementById('modal').classList.remove('open');
+      document.getElementById('modal')?.classList.remove('open');
     };
 
     async function loadUnreadCounts() {
