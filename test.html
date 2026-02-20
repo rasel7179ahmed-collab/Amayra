@@ -1,0 +1,36 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AMAYRA Brand</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            brand: ["Montserrat", "sans-serif"],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+
+<body class="bg-black flex items-center justify-center h-screen">
+
+  <!-- Brand Name -->
+  <div class="font-brand text-4xl tracking-[0.45em] font-semibold text-gray-200">
+    AMAYRA
+  </div>
+
+</body>
+</html>
+```

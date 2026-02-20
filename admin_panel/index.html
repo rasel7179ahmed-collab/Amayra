@@ -238,15 +238,23 @@
     .top-bar {
       background: white;
       padding: 1rem 1.5rem;
-      border-radius: 30px 8px 30px 8px;
       margin-bottom: 1.5rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
       position: sticky;
-      top: 1rem;
+      top: 0;
+      left: 260px;
+      right: 0;
       z-index: 40;
+      border-radius: 0;
+    }
+    
+    @media (max-width: 768px) {
+      .top-bar {
+        left: 0;
+      }
     }
     
     .menu-toggle {
@@ -262,7 +270,7 @@
       }
     }
     
-    /* Stats Cards - নতুন ডিজাইন */
+    /* Stats Cards */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -443,12 +451,37 @@
       cursor: pointer;
       transition: all 0.3s;
       border: none;
+      position: relative;
     }
     
     .btn-primary:hover {
       background: #1666d9;
       transform: translateY(-2px);
       box-shadow: 0 8px 15px -3px rgba(24, 119, 242, 0.4);
+    }
+    
+    .btn-primary.loading {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+    
+    .btn-primary.loading::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      top: 50%;
+      left: 50%;
+      margin-left: 20px;
+      margin-top: -8px;
+      border: 2px solid #ffffff;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: button-spin 0.8s linear infinite;
+    }
+    
+    @keyframes button-spin {
+      to { transform: rotate(360deg); }
     }
     
     .btn-warning {
@@ -669,6 +702,7 @@
       width: 40px;
       height: 40px;
       animation: spin 1s linear infinite;
+      display: inline-block;
     }
     
     @keyframes spin {
@@ -676,41 +710,99 @@
       100% { transform: rotate(360deg); }
     }
     
-    /* Notification Container */
-    .notification-container {
+    /* Custom Popup (SweetAlert2 like) */
+    .popup-message {
       position: fixed;
       top: 20px;
       right: 20px;
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      pointer-events: none;
-    }
-    
-    .notification-item-popup {
       background: white;
-      border-radius: 12px;
-      padding: 16px 24px;
+      border-radius: 30px 8px 30px 8px;
+      padding: 1rem 1.5rem;
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       display: flex;
       align-items: center;
-      gap: 12px;
-      transform: translateX(120%);
-      animation: slideIn 0.5s forwards;
-      pointer-events: auto;
+      gap: 1rem;
+      z-index: 9999;
+      animation: popup-slide 0.3s ease forwards;
+      max-width: 350px;
       border-left: 4px solid;
-      min-width: 300px;
-      max-width: 400px;
     }
     
-    @keyframes slideIn {
-      to { transform: translateX(0); }
+    .popup-message.success { border-left-color: #10b981; }
+    .popup-message.error { border-left-color: #ef4444; }
+    .popup-message.info { border-left-color: #3b82f6; }
+    .popup-message.warning { border-left-color: #f59e0b; }
+    
+    .popup-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
     }
     
-    .notification-success { border-left-color: #10b981; }
-    .notification-error { border-left-color: #ef4444; }
-    .notification-info { border-left-color: #3b82f6; }
+    .popup-icon.success { background: #d1fae5; color: #10b981; }
+    .popup-icon.error { background: #fee2e2; color: #ef4444; }
+    .popup-icon.info { background: #dbeafe; color: #3b82f6; }
+    .popup-icon.warning { background: #fef3c7; color: #f59e0b; }
+    
+    .popup-content {
+      flex: 1;
+    }
+    
+    .popup-title {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    
+    .popup-text {
+      font-size: 0.9rem;
+      color: #6b7280;
+    }
+    
+    @keyframes popup-slide {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(4px);
+      z-index: 9998;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1rem;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+    
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .loading-text {
+      font-size: 1.1rem;
+      color: #1877F2;
+      font-weight: 500;
+    }
     
     /* Product Gallery */
     .product-gallery {
@@ -830,6 +922,12 @@
   </style>
 </head>
 <body>
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">লোড হচ্ছে...</div>
+  </div>
+
   <!-- Login Page -->
   <div class="login-container" id="loginPage">
     <div class="login-card">
@@ -846,7 +944,7 @@
           <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
           <input type="password" class="login-input pl-12" id="password" placeholder="পাসওয়ার্ড" required>
         </div>
-        <button type="submit" class="login-btn">
+        <button type="submit" class="login-btn" id="loginBtn">
           <span class="inline-flex items-center">
             লগইন করুন <i class="fas fa-arrow-right ml-2"></i>
           </span>
@@ -1084,8 +1182,8 @@
     </div>
   </div>
 
-  <!-- Notification Container -->
-  <div id="notificationContainer" class="notification-container"></div>
+  <!-- Popup Container -->
+  <div id="popupContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
 
   <script>
     // ========== কনফিগারেশন ==========
@@ -1104,7 +1202,55 @@
     let chartInstance2 = null;
     let chartInstance3 = null;
 
-    // Check login status
+    // ========== POPUP FUNCTION ==========
+    function showPopup(message, type = 'info', title = '') {
+      const container = document.getElementById('popupContainer');
+      const id = Date.now() + Math.random();
+      
+      const titles = {
+        success: 'সফল হয়েছে',
+        error: 'ব্যর্থ হয়েছে',
+        info: 'তথ্য',
+        warning: 'সতর্কতা'
+      };
+      
+      const popup = document.createElement('div');
+      popup.className = `popup-message ${type}`;
+      popup.id = `popup-${id}`;
+      popup.innerHTML = `
+        <div class="popup-icon ${type}">
+          <i class="fas ${type === 'success' ? 'fa-check' : type === 'error' ? 'fa-times' : type === 'warning' ? 'fa-exclamation' : 'fa-info'}"></i>
+        </div>
+        <div class="popup-content">
+          <div class="popup-title">${title || titles[type]}</div>
+          <div class="popup-text">${message}</div>
+        </div>
+      `;
+      
+      container.appendChild(popup);
+      
+      setTimeout(() => {
+        const popupElement = document.getElementById(`popup-${id}`);
+        if (popupElement) {
+          popupElement.style.animation = 'popup-slide 0.3s ease reverse';
+          setTimeout(() => {
+            popupElement.remove();
+          }, 300);
+        }
+      }, 3000);
+    }
+
+    // ========== LOADING OVERLAY ==========
+    function showLoading(message = 'লোড হচ্ছে...') {
+      document.getElementById('loadingText').textContent = message;
+      document.getElementById('loadingOverlay').classList.add('active');
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('active');
+    }
+
+    // ========== CHECK LOGIN ==========
     if (token) {
       document.getElementById('loginPage').style.display = 'none';
       document.getElementById('adminPanel').style.display = 'block';
@@ -1117,40 +1263,6 @@
     }
 
     // ========== NOTIFICATION FUNCTIONS ==========
-    function showNotification(message, type = 'info', duration = 3000) {
-      const container = document.getElementById('notificationContainer');
-      const id = Date.now() + Math.random();
-      
-      const notification = document.createElement('div');
-      notification.id = `notification-${id}`;
-      notification.className = `notification-item-popup notification-${type}`;
-      notification.innerHTML = `
-        <i class="fas ${type === 'success' ? 'fa-check-circle text-green-500' : 
-                     type === 'error' ? 'fa-exclamation-circle text-red-500' : 
-                     'fa-info-circle text-blue-500'} text-xl"></i>
-        <span class="flex-1">${message}</span>
-        <button onclick="removeNotification('${id}')" class="text-gray-400 hover:text-gray-600">
-          <i class="fas fa-times"></i>
-        </button>
-      `;
-      
-      container.appendChild(notification);
-      
-      setTimeout(() => {
-        removeNotification(id);
-      }, duration);
-    }
-
-    window.removeNotification = function(id) {
-      const notification = document.getElementById(`notification-${id}`);
-      if (notification) {
-        notification.style.animation = 'slideIn 0.5s reverse';
-        setTimeout(() => {
-          notification.remove();
-        }, 500);
-      }
-    };
-
     function startNotificationChecker() {
       if (notificationInterval) clearInterval(notificationInterval);
       checkNotifications();
@@ -1210,7 +1322,7 @@
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
       const errorDiv = document.getElementById('loginError');
-      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const submitBtn = document.getElementById('loginBtn');
 
       try {
         submitBtn.disabled = true;
@@ -1236,19 +1348,19 @@
           loadDashboard();
           loadUnreadCounts();
           startNotificationChecker();
-          showNotification('লগইন সফল হয়েছে', 'success');
+          showPopup('লগইন সফল হয়েছে', 'success');
         } else {
           errorDiv.textContent = data.error || 'লগইন ব্যর্থ হয়েছে';
           errorDiv.classList.remove('hidden');
-          showNotification(data.error || 'লগইন ব্যর্থ হয়েছে', 'error');
+          showPopup(data.error || 'লগইন ব্যর্থ হয়েছে', 'error');
         }
       } catch (error) {
         errorDiv.textContent = 'সার্ভারে সংযোগ করা যায়নি';
         errorDiv.classList.remove('hidden');
-        showNotification('সার্ভারে সংযোগ করা যায়নি', 'error');
+        showPopup('সার্ভারে সংযোগ করা যায়নি', 'error');
       } finally {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = 'লগইন করুন <i class="fas fa-arrow-right ml-2"></i>';
+        submitBtn.innerHTML = '<span class="inline-flex items-center">লগইন করুন <i class="fas fa-arrow-right ml-2"></i></span>';
       }
     });
 
@@ -1260,7 +1372,7 @@
       document.getElementById('adminPanel').style.display = 'none';
       document.getElementById('loginPage').style.display = 'flex';
       if (notificationInterval) clearInterval(notificationInterval);
-      showNotification('লগআউট করা হয়েছে', 'info');
+      showPopup('লগআউট করা হয়েছে', 'info');
     });
 
     // ========== SIDEBAR TOGGLE ==========
@@ -1336,7 +1448,7 @@
       
       try {
         const [ordersRes, reviewsRes] = await Promise.all([
-          fetch(`${API_BASE}/admin/orders?limit=5&isRead=false`, {
+          fetch(`${API_BASE}/admin/orders?limit=10&isRead=false`, {
             headers: { 'Authorization': `Bearer ${token}` }
           }),
           fetch(`${API_BASE}/admin/reviews?status=pending&limit=5`, {
@@ -1349,13 +1461,13 @@
 
         const notifications = [];
 
-        if (ordersData.orders) {
+        if (ordersData.orders && ordersData.orders.length > 0) {
           ordersData.orders.forEach(order => {
             notifications.push({
               type: 'order',
               id: order._id,
               title: `নতুন অর্ডার #${order.orderId}`,
-              description: `${order.customerName} - ৳${order.total}`,
+              description: `${order.customerName || 'N/A'} - ৳${order.total || 0}`,
               time: order.createdAt,
               onClick: () => {
                 showOrderDetails(order);
@@ -1366,13 +1478,13 @@
           });
         }
 
-        if (reviewsData.reviews) {
+        if (reviewsData.reviews && reviewsData.reviews.length > 0) {
           reviewsData.reviews.forEach(review => {
             notifications.push({
               type: 'review',
               id: review._id,
-              title: `নতুন রিভিউ (${review.rating}★)`,
-              description: `${review.name} - ${review.address}`,
+              title: `নতুন রিভিউ (${review.rating || 0}★)`,
+              description: `${review.name || 'N/A'} - ${review.address || 'N/A'}`,
               time: review.createdAt,
               onClick: () => {
                 currentPage = 'reviews';
@@ -1401,6 +1513,7 @@
         `).join('');
 
       } catch (error) {
+        console.error('Error loading notifications:', error);
         listDiv.innerHTML = '<div class="p-4 text-center text-red-500">নোটিফিকেশন লোড করতে ব্যর্থ</div>';
       }
     }
@@ -1591,7 +1704,7 @@
           };
           reader.readAsDataURL(file);
         } else {
-          showNotification('শুধুমাত্র PNG ফাইল গ্রহণযোগ্য', 'error');
+          showPopup('শুধুমাত্র PNG ফাইল গ্রহণযোগ্য', 'error');
         }
       }
     }
@@ -1599,7 +1712,7 @@
     window.uploadImages = async function() {
       const files = fileInput.files;
       if (files.length === 0) {
-        showNotification('কমপক্ষে একটি ছবি নির্বাচন করুন', 'error');
+        showPopup('কমপক্ষে একটি ছবি নির্বাচন করুন', 'error');
         return;
       }
 
@@ -1628,12 +1741,13 @@
           productImages = [...productImages, ...data.urls];
           updateImagePreview();
           closeImageModal();
-          showNotification(`${data.urls.length} টি ছবি আপলোড সফল হয়েছে`, 'success');
+          showPopup(`${data.urls.length} টি ছবি আপলোড সফল হয়েছে`, 'success');
         } else {
-          showNotification(data.error || 'ছবি আপলোড ব্যর্থ হয়েছে', 'error');
+          showPopup(data.error || 'ছবি আপলোড ব্যর্থ হয়েছে', 'error');
         }
       } catch (error) {
-        showNotification('ছবি আপলোড করতে সমস্যা হয়েছে', 'error');
+        console.error('Upload error:', error);
+        showPopup('ছবি আপলোড করতে সমস্যা হয়েছে', 'error');
       } finally {
         uploadBtn.disabled = false;
         uploadBtn.innerHTML = originalText;
@@ -1643,13 +1757,13 @@
     window.uploadLogo = async function() {
       const files = logoFileInput.files;
       if (files.length === 0) {
-        showNotification('লোগো নির্বাচন করুন', 'error');
+        showPopup('লোগো নির্বাচন করুন', 'error');
         return;
       }
 
       const file = files[0];
       if (file.type !== 'image/png') {
-        showNotification('শুধুমাত্র PNG ফাইল গ্রহণযোগ্য', 'error');
+        showPopup('শুধুমাত্র PNG ফাইল গ্রহণযোগ্য', 'error');
         return;
       }
 
@@ -1673,13 +1787,14 @@
         
         if (res.ok) {
           closeLogoModal();
-          showNotification('লোগো আপলোড সফল হয়েছে', 'success');
+          showPopup('লোগো আপলোড সফল হয়েছে', 'success');
           loadSettings();
         } else {
-          showNotification(data.error || 'লোগো আপলোড ব্যর্থ হয়েছে', 'error');
+          showPopup(data.error || 'লোগো আপলোড ব্যর্থ হয়েছে', 'error');
         }
       } catch (error) {
-        showNotification('লোগো আপলোড করতে সমস্যা হয়েছে', 'error');
+        console.error('Logo upload error:', error);
+        showPopup('লোগো আপলোড করতে সমস্যা হয়েছে', 'error');
       } finally {
         uploadBtn.disabled = false;
         uploadBtn.innerHTML = originalText;
@@ -1707,8 +1822,8 @@
 
     // ========== DASHBOARD ==========
     async function loadDashboard() {
+      showLoading('ড্যাশবোর্ড লোড হচ্ছে...');
       const content = document.getElementById('pageContent');
-      content.innerHTML = '<div class="flex justify-center p-8"><div class="loading-spinner"></div></div>';
 
       try {
         const [statsRes, chartRes, productsRes] = await Promise.all([
@@ -1731,15 +1846,12 @@
         const chartData = await chartRes.json();
         const products = await productsRes.json();
 
-        // Update sidebar counts
         document.getElementById('productCount').textContent = data.stats.totalProducts || 0;
         
-        // Calculate top selling products
         const topProducts = [...products]
           .sort((a, b) => (b.sold || 0) - (a.sold || 0))
           .slice(0, 5);
 
-        // Calculate category distribution
         const categoryMap = {};
         products.forEach(p => {
           categoryMap[p.category] = (categoryMap[p.category] || 0) + 1;
@@ -1748,7 +1860,6 @@
         const categoryData = Object.values(categoryMap);
 
         content.innerHTML = `
-          <!-- Stats Cards - নতুন ডিজাইন -->
           <div class="stats-grid">
             <div class="stat-card">
               <div class="stat-icon"><i class="fas fa-truck"></i></div>
@@ -1794,7 +1905,6 @@
             </div>
           </div>
 
-          <!-- চার্ট সেকশন -->
           <div class="chart-grid">
             <div class="chart-card">
               <h3 class="chart-title">অর্ডার স্ট্যাটাস</h3>
@@ -1810,7 +1920,6 @@
             </div>
           </div>
 
-          <!-- সর্বাধিক বিক্রিত পণ্য -->
           <div class="section-card">
             <h3 class="text-xl font-bold mb-4">সর্বাধিক বিক্রিত পণ্য</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1828,7 +1937,6 @@
             </div>
           </div>
 
-          <!-- সাম্প্রতিক অর্ডার -->
           <div class="section-card">
             <h3 class="text-xl font-bold mb-4">সাম্প্রতিক অর্ডার</h3>
             <div class="data-table">
@@ -1861,11 +1969,9 @@
           </div>
         `;
 
-        // Render charts
         if (chartInstance1) chartInstance1.destroy();
         if (chartInstance2) chartInstance2.destroy();
 
-        // Orders Status Chart
         const ctx1 = document.getElementById('ordersStatusChart')?.getContext('2d');
         if (ctx1) {
           chartInstance1 = new Chart(ctx1, {
@@ -1896,7 +2002,6 @@
           });
         }
 
-        // Category Chart
         const ctx2 = document.getElementById('categoryChart')?.getContext('2d');
         if (ctx2) {
           chartInstance2 = new Chart(ctx2, {
@@ -1923,13 +2028,15 @@
       } catch (error) {
         console.error('Dashboard error:', error);
         content.innerHTML = '<p class="text-red-500 text-center py-8">ডেটা লোড করতে ব্যর্থ হয়েছে</p>';
+      } finally {
+        hideLoading();
       }
     }
 
     // ========== CATEGORIES ==========
     async function loadCategories() {
+      showLoading('ক্যাটাগরি লোড হচ্ছে...');
       const content = document.getElementById('pageContent');
-      content.innerHTML = '<div class="flex justify-center p-8"><div class="loading-spinner"></div></div>';
 
       try {
         const res = await fetch(`${API_BASE}/admin/categories`, {
@@ -1983,13 +2090,15 @@
       } catch (error) {
         console.error('Categories error:', error);
         content.innerHTML = '<p class="text-red-500 text-center py-8">ক্যাটাগরি লোড করতে ব্যর্থ হয়েছে</p>';
+      } finally {
+        hideLoading();
       }
     }
 
     window.showCategoryForm = (category = null) => {
       const modal = document.getElementById('modal');
-
       const modalContent = document.getElementById('modalContent');
+      
       modalContent.innerHTML = `
         <h3 class="text-2xl font-bold mb-6">${category ? 'ক্যাটাগরি সম্পাদনা' : 'নতুন ক্যাটাগরি'}</h3>
         <form id="categoryForm" onsubmit="saveCategory(event, '${category?._id || ''}')">
@@ -2028,6 +2137,7 @@
     window.saveCategory = async (e, id) => {
       e.preventDefault();
       const formData = new FormData(e.target);
+      const submitBtn = e.target.querySelector('button[type="submit"]');
       
       const data = {
         name: formData.get('name'),
@@ -2036,6 +2146,10 @@
         order: parseInt(formData.get('order')) || 1,
         active: formData.get('active') === 'on'
       };
+
+      submitBtn.disabled = true;
+      submitBtn.classList.add('loading');
+      submitBtn.innerHTML = 'সংরক্ষণ হচ্ছে...';
 
       try {
         const url = id ? `${API_BASE}/admin/categories/${id}` : `${API_BASE}/admin/categories`;
@@ -2051,16 +2165,20 @@
         });
 
         if (res.ok) {
-          showNotification(id ? 'ক্যাটাগরি আপডেট হয়েছে' : 'ক্যাটাগরি তৈরি হয়েছে', 'success');
+          showPopup(id ? 'ক্যাটাগরি আপডেট হয়েছে' : 'ক্যাটাগরি তৈরি হয়েছে', 'success');
           closeModal();
           loadCategories();
         } else {
           const error = await res.json();
-          showNotification(error.error || 'ব্যর্থ হয়েছে', 'error');
+          showPopup(error.error || 'ব্যর্থ হয়েছে', 'error');
         }
       } catch (error) {
         console.error('Save category error:', error);
-        showNotification('সার্ভার সংযোগ ব্যর্থ', 'error');
+        showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
+        submitBtn.innerHTML = 'সংরক্ষণ';
       }
     };
 
@@ -2073,6 +2191,7 @@
     };
 
     window.deleteCategory = async (id) => {
+      showLoading('মুছে ফেলা হচ্ছে...');
       try {
         const res = await fetch(`${API_BASE}/admin/categories/${id}`, {
           method: 'DELETE',
@@ -2080,22 +2199,24 @@
         });
 
         if (res.ok) {
-          showNotification('ক্যাটাগরি মুছে ফেলা হয়েছে', 'success');
+          showPopup('ক্যাটাগরি মুছে ফেলা হয়েছে', 'success');
           loadCategories();
         } else {
           const error = await res.json();
-          showNotification(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
+          showPopup(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
         }
       } catch (error) {
         console.error('Delete category error:', error);
-        showNotification('মুছতে সমস্যা হয়েছে', 'error');
+        showPopup('মুছতে সমস্যা হয়েছে', 'error');
+      } finally {
+        hideLoading();
       }
     };
 
     // ========== PRODUCTS ==========
     async function loadProducts() {
+      showLoading('প্রোডাক্ট লোড হচ্ছে...');
       const content = document.getElementById('pageContent');
-      content.innerHTML = '<div class="flex justify-center p-8"><div class="loading-spinner"></div></div>';
 
       try {
         const res = await fetch(`${API_BASE}/admin/products`, {
@@ -2153,6 +2274,8 @@
       } catch (error) {
         console.error('Products error:', error);
         content.innerHTML = '<p class="text-red-500 text-center py-8">প্রোডাক্ট লোড করতে ব্যর্থ হয়েছে</p>';
+      } finally {
+        hideLoading();
       }
     }
 
@@ -2163,7 +2286,6 @@
       const modal = document.getElementById('modal');
       const modalContent = document.getElementById('modalContent');
 
-      // Load categories for dropdown
       let categories = [];
       try {
         const res = await fetch(`${API_BASE}/categories`);
@@ -2239,9 +2361,10 @@
     window.saveProduct = async (e, id) => {
       e.preventDefault();
       const formData = new FormData(e.target);
+      const submitBtn = e.target.querySelector('button[type="submit"]');
       
       if (productImages.length === 0) {
-        showNotification('কমপক্ষে একটি ছবি আপলোড করুন', 'error');
+        showPopup('কমপক্ষে একটি ছবি আপলোড করুন', 'error');
         return;
       }
 
@@ -2257,6 +2380,10 @@
         images: productImages
       };
 
+      submitBtn.disabled = true;
+      submitBtn.classList.add('loading');
+      submitBtn.innerHTML = 'সংরক্ষণ হচ্ছে...';
+
       try {
         const url = id ? `${API_BASE}/admin/products/${id}` : `${API_BASE}/admin/products`;
         const method = id ? 'PUT' : 'POST';
@@ -2271,16 +2398,20 @@
         });
 
         if (res.ok) {
-          showNotification(id ? 'প্রোডাক্ট আপডেট হয়েছে' : 'প্রোডাক্ট তৈরি হয়েছে', 'success');
+          showPopup(id ? 'প্রোডাক্ট আপডেট হয়েছে' : 'প্রোডাক্ট তৈরি হয়েছে', 'success');
           closeModal();
           loadProducts();
         } else {
           const error = await res.json();
-          showNotification(error.error || 'ব্যর্থ হয়েছে', 'error');
+          showPopup(error.error || 'ব্যর্থ হয়েছে', 'error');
         }
       } catch (error) {
         console.error('Save product error:', error);
-        showNotification('সার্ভার সংযোগ ব্যর্থ', 'error');
+        showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
+        submitBtn.innerHTML = 'সংরক্ষণ';
       }
     };
 
@@ -2293,6 +2424,7 @@
     };
 
     window.deleteProduct = async (id) => {
+      showLoading('মুছে ফেলা হচ্ছে...');
       try {
         const res = await fetch(`${API_BASE}/admin/products/${id}`, {
           method: 'DELETE',
@@ -2300,22 +2432,24 @@
         });
 
         if (res.ok) {
-          showNotification('প্রোডাক্ট মুছে ফেলা হয়েছে', 'success');
+          showPopup('প্রোডাক্ট মুছে ফেলা হয়েছে', 'success');
           loadProducts();
         } else {
           const error = await res.json();
-          showNotification(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
+          showPopup(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
         }
       } catch (error) {
         console.error('Delete product error:', error);
-        showNotification('মুছতে সমস্যা হয়েছে', 'error');
+        showPopup('মুছতে সমস্যা হয়েছে', 'error');
+      } finally {
+        hideLoading();
       }
     };
 
     // ========== ORDERS ==========
     async function loadOrders() {
+      showLoading('অর্ডার লোড হচ্ছে...');
       const content = document.getElementById('pageContent');
-      content.innerHTML = '<div class="flex justify-center p-8"><div class="loading-spinner"></div></div>';
 
       try {
         const res = await fetch(`${API_BASE}/admin/orders`, {
@@ -2383,6 +2517,8 @@
       } catch (error) {
         console.error('Orders error:', error);
         content.innerHTML = '<p class="text-red-500 text-center py-8">অর্ডার লোড করতে ব্যর্থ হয়েছে</p>';
+      } finally {
+        hideLoading();
       }
     }
 
@@ -2421,7 +2557,7 @@
         }
       } catch (error) {
         console.error('Filter orders error:', error);
-        showNotification('অর্ডার ফিল্টার করতে ব্যর্থ', 'error');
+        showPopup('অর্ডার ফিল্টার করতে ব্যর্থ', 'error');
       }
     };
 
@@ -2512,17 +2648,17 @@
         });
 
         if (res.ok) {
-          showNotification('অর্ডার স্ট্যাটাস আপডেট হয়েছে', 'success');
+          showPopup('অর্ডার স্ট্যাটাস আপডেট হয়েছে', 'success');
           closeOrderModal();
           loadOrders();
           loadUnreadCounts();
         } else {
           const error = await res.json();
-          showNotification(error.error || 'আপডেট ব্যর্থ', 'error');
+          showPopup(error.error || 'আপডেট ব্যর্থ', 'error');
         }
       } catch (error) {
         console.error('Update order error:', error);
-        showNotification('আপডেট ব্যর্থ', 'error');
+        showPopup('আপডেট ব্যর্থ', 'error');
       }
     };
 
@@ -2535,6 +2671,7 @@
     };
 
     window.deleteOrder = async (id) => {
+      showLoading('মুছে ফেলা হচ্ছে...');
       try {
         const res = await fetch(`${API_BASE}/admin/orders/${id}`, {
           method: 'DELETE',
@@ -2542,23 +2679,25 @@
         });
 
         if (res.ok) {
-          showNotification('অর্ডার মুছে ফেলা হয়েছে', 'success');
+          showPopup('অর্ডার মুছে ফেলা হয়েছে', 'success');
           loadOrders();
           loadUnreadCounts();
         } else {
           const error = await res.json();
-          showNotification(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
+          showPopup(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
         }
       } catch (error) {
         console.error('Delete order error:', error);
-        showNotification('মুছতে সমস্যা হয়েছে', 'error');
+        showPopup('মুছতে সমস্যা হয়েছে', 'error');
+      } finally {
+        hideLoading();
       }
     };
 
     // ========== REVIEWS ==========
     async function loadReviews() {
+      showLoading('রিভিউ লোড হচ্ছে...');
       const content = document.getElementById('pageContent');
-      content.innerHTML = '<div class="flex justify-center p-8"><div class="loading-spinner"></div></div>';
 
       try {
         const res = await fetch(`${API_BASE}/admin/reviews`, {
@@ -2620,6 +2759,8 @@
       } catch (error) {
         console.error('Reviews error:', error);
         content.innerHTML = '<p class="text-red-500 text-center py-8">রিভিউ লোড করতে ব্যর্থ হয়েছে</p>';
+      } finally {
+        hideLoading();
       }
     }
 
@@ -2657,7 +2798,7 @@
         }
       } catch (error) {
         console.error('Filter reviews error:', error);
-        showNotification('রিভিউ ফিল্টার করতে ব্যর্থ', 'error');
+        showPopup('রিভিউ ফিল্টার করতে ব্যর্থ', 'error');
       }
     };
 
@@ -2673,16 +2814,16 @@
         });
 
         if (res.ok) {
-          showNotification(`রিভিউ ${status === 'approved' ? 'অনুমোদিত' : 'বাতিল'} হয়েছে`, 'success');
+          showPopup(`রিভিউ ${status === 'approved' ? 'অনুমোদিত' : 'বাতিল'} হয়েছে`, 'success');
           loadReviews();
           loadUnreadCounts();
         } else {
           const error = await res.json();
-          showNotification(error.error || 'আপডেট ব্যর্থ', 'error');
+          showPopup(error.error || 'আপডেট ব্যর্থ', 'error');
         }
       } catch (error) {
         console.error('Update review error:', error);
-        showNotification('আপডেট ব্যর্থ', 'error');
+        showPopup('আপডেট ব্যর্থ', 'error');
       }
     };
 
@@ -2695,6 +2836,7 @@
     };
 
     window.deleteReview = async (id) => {
+      showLoading('মুছে ফেলা হচ্ছে...');
       try {
         const res = await fetch(`${API_BASE}/admin/reviews/${id}`, {
           method: 'DELETE',
@@ -2702,23 +2844,25 @@
         });
 
         if (res.ok) {
-          showNotification('রিভিউ মুছে ফেলা হয়েছে', 'success');
+          showPopup('রিভিউ মুছে ফেলা হয়েছে', 'success');
           loadReviews();
           loadUnreadCounts();
         } else {
           const error = await res.json();
-          showNotification(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
+          showPopup(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
         }
       } catch (error) {
         console.error('Delete review error:', error);
-        showNotification('মুছতে সমস্যা হয়েছে', 'error');
+        showPopup('মুছতে সমস্যা হয়েছে', 'error');
+      } finally {
+        hideLoading();
       }
     };
 
     // ========== SLIDERS ==========
     async function loadSliders() {
+      showLoading('স্লাইডার লোড হচ্ছে...');
       const content = document.getElementById('pageContent');
-      content.innerHTML = '<div class="flex justify-center p-8"><div class="loading-spinner"></div></div>';
 
       try {
         const res = await fetch(`${API_BASE}/admin/sliders`, {
@@ -2772,6 +2916,8 @@
       } catch (error) {
         console.error('Sliders error:', error);
         content.innerHTML = '<p class="text-red-500 text-center py-8">স্লাইডার লোড করতে ব্যর্থ হয়েছে</p>';
+      } finally {
+        hideLoading();
       }
     }
 
@@ -2801,7 +2947,7 @@
             <label class="form-label">ব্যাজ রঙ</label>
             <input type="color" class="form-input" name="badgeColor" value="${slider?.badgeColor || '#1877F2'}" required>
           </div>
-          <div class="form-group">
+                  <div class="form-group">
             <label class="form-label">বাটন টেক্সট</label>
             <input type="text" class="form-input" name="buttonText" value="${slider?.buttonText || 'এখনই কিনুন'}" required>
           </div>
@@ -2837,6 +2983,7 @@
     window.saveSlider = async (e, id) => {
       e.preventDefault();
       const formData = new FormData(e.target);
+      const submitBtn = e.target.querySelector('button[type="submit"]');
       
       const data = {
         title: formData.get('title'),
@@ -2855,6 +3002,10 @@
         formDataToSend.append('image', formData.get('image'));
       }
 
+      submitBtn.disabled = true;
+      submitBtn.classList.add('loading');
+      submitBtn.innerHTML = 'সংরক্ষণ হচ্ছে...';
+
       try {
         const url = id ? `${API_BASE}/admin/sliders/${id}` : `${API_BASE}/admin/sliders`;
         const method = id ? 'PUT' : 'POST';
@@ -2866,16 +3017,20 @@
         });
 
         if (res.ok) {
-          showNotification(id ? 'স্লাইডার আপডেট হয়েছে' : 'স্লাইডার তৈরি হয়েছে', 'success');
+          showPopup(id ? 'স্লাইডার আপডেট হয়েছে' : 'স্লাইডার তৈরি হয়েছে', 'success');
           closeModal();
           loadSliders();
         } else {
           const error = await res.json();
-          showNotification(error.error || 'ব্যর্থ হয়েছে', 'error');
+          showPopup(error.error || 'ব্যর্থ হয়েছে', 'error');
         }
       } catch (error) {
         console.error('Save slider error:', error);
-        showNotification('সার্ভার সংযোগ ব্যর্থ', 'error');
+        showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
+        submitBtn.innerHTML = 'সংরক্ষণ';
       }
     };
 
@@ -2888,6 +3043,7 @@
     };
 
     window.deleteSlider = async (id) => {
+      showLoading('মুছে ফেলা হচ্ছে...');
       try {
         const res = await fetch(`${API_BASE}/admin/sliders/${id}`, {
           method: 'DELETE',
@@ -2895,22 +3051,24 @@
         });
 
         if (res.ok) {
-          showNotification('স্লাইডার মুছে ফেলা হয়েছে', 'success');
+          showPopup('স্লাইডার মুছে ফেলা হয়েছে', 'success');
           loadSliders();
         } else {
           const error = await res.json();
-          showNotification(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
+          showPopup(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
         }
       } catch (error) {
         console.error('Delete slider error:', error);
-        showNotification('মুছতে সমস্যা হয়েছে', 'error');
+        showPopup('মুছতে সমস্যা হয়েছে', 'error');
+      } finally {
+        hideLoading();
       }
     };
 
     // ========== SETTINGS ==========
     async function loadSettings() {
+      showLoading('সেটিংস লোড হচ্ছে...');
       const content = document.getElementById('pageContent');
-      content.innerHTML = '<div class="flex justify-center p-8"><div class="loading-spinner"></div></div>';
 
       try {
         const res = await fetch(`${API_BASE}/admin/settings`, {
@@ -2939,31 +3097,40 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="form-group">
                   <label class="form-label">সাইট নাম</label>
-                  <input type="text" class="form-input" name="siteName" value="${settings.siteName || ''}" required>
+                  <input type="text" class="form-input" name="siteName" value="${settings.siteName || 'AMAYRA'}" required>
                 </div>
                 <div class="form-group">
                   <label class="form-label">সাইট টাইটেল</label>
-                  <input type="text" class="form-input" name="siteTitle" value="${settings.siteTitle || ''}" required>
+                  <input type="text" class="form-input" name="siteTitle" value="${settings.siteTitle || 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন'}" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">সাইট সাবটাইটেল</label>
+                  <input type="text" class="form-input" name="siteSubtitle" value="${settings.siteSubtitle || 'PREMIUM SHIRT COLLECTION'}" required>
+                  <p class="text-xs text-gray-500 mt-1">হেডারে "PREMIUM SHIRT COLLECTION" এই অংশটি পরিবর্তন হবে</p>
                 </div>
                 <div class="form-group">
                   <label class="form-label">ফোন নম্বর</label>
-                  <input type="text" class="form-input" name="phoneNumber" value="${settings.phoneNumber || ''}" required>
+                  <input type="text" class="form-input" name="phoneNumber" value="${settings.phoneNumber || '01712345678'}" required>
                 </div>
                 <div class="form-group">
                   <label class="form-label">হোয়াটসঅ্যাপ নম্বর</label>
-                  <input type="text" class="form-input" name="whatsappNumber" value="${settings.whatsappNumber || ''}" required>
+                  <input type="text" class="form-input" name="whatsappNumber" value="${settings.whatsappNumber || '8801712345678'}" required>
                 </div>
                 <div class="form-group">
                   <label class="form-label">ইমেইল</label>
-                  <input type="email" class="form-input" name="email" value="${settings.email || ''}" required>
+                  <input type="email" class="form-input" name="email" value="${settings.email || 'info@amayra.com'}" required>
                 </div>
                 <div class="form-group">
                   <label class="form-label">ফেসবুক পেজ</label>
-                  <input type="text" class="form-input" name="facebook" value="${settings.facebook || ''}" required>
+                  <input type="text" class="form-input" name="facebook" value="${settings.facebook || '@amayra.shirt'}" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">ইনস্টাগ্রাম</label>
+                  <input type="text" class="form-input" name="instagram" value="${settings.instagram || '@amayra'}" required>
                 </div>
                 <div class="form-group">
                   <label class="form-label">ঠিকানা</label>
-                  <input type="text" class="form-input" name="address" value="${settings.address || ''}" required>
+                  <input type="text" class="form-input" name="address" value="${settings.address || 'Dhaka, Bangladesh'}" required>
                 </div>
                 <div class="form-group">
                   <label class="form-label">ঢাকার ভেতরে ডেলিভারি চার্জ</label>
@@ -2979,7 +3146,15 @@
                 </div>
                 <div class="form-group md:col-span-2">
                   <label class="form-label">ফুটার টেক্সট</label>
-                  <input type="text" class="form-input" name="footerText" value="${settings.footerText || ''}" required>
+                  <input type="text" class="form-input" name="footerText" value="${settings.footerText || 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন · ২০২৫'}" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">কারেন্সি</label>
+                  <input type="text" class="form-input" name="currency" value="${settings.currency || '৳'}" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">থিম কালার</label>
+                  <input type="color" class="form-input" name="themeColor" value="${settings.themeColor || '#1877F2'}" required>
                 </div>
               </div>
               
@@ -2992,18 +3167,26 @@
       } catch (error) {
         console.error('Settings error:', error);
         content.innerHTML = '<p class="text-red-500 text-center py-8">সেটিংস লোড করতে ব্যর্থ হয়েছে</p>';
+      } finally {
+        hideLoading();
       }
     }
 
     window.saveSettings = async (e) => {
       e.preventDefault();
       const formData = new FormData(e.target);
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      
       const data = Object.fromEntries(formData.entries());
 
       // Convert numeric values
       data.deliveryChargeDhaka = parseInt(data.deliveryChargeDhaka) || 60;
       data.deliveryChargeOutside = parseInt(data.deliveryChargeOutside) || 120;
       data.freeDeliveryThreshold = parseInt(data.freeDeliveryThreshold) || 2000;
+
+      submitBtn.disabled = true;
+      submitBtn.classList.add('loading');
+      submitBtn.innerHTML = 'সংরক্ষণ হচ্ছে...';
 
       try {
         const res = await fetch(`${API_BASE}/admin/settings`, {
@@ -3016,14 +3199,18 @@
         });
 
         if (res.ok) {
-          showNotification('সেটিংস সংরক্ষিত হয়েছে', 'success');
+          showPopup('সেটিংস সংরক্ষিত হয়েছে', 'success');
         } else {
           const error = await res.json();
-          showNotification(error.error || 'ব্যর্থ হয়েছে', 'error');
+          showPopup(error.error || 'ব্যর্থ হয়েছে', 'error');
         }
       } catch (error) {
         console.error('Save settings error:', error);
-        showNotification('সার্ভার সংযোগ ব্যর্থ', 'error');
+        showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
+        submitBtn.innerHTML = 'সেটিংস সংরক্ষণ';
       }
     };
 
@@ -3056,14 +3243,20 @@
     window.changePassword = async (e) => {
       e.preventDefault();
       const formData = new FormData(e.target);
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      
       const currentPassword = formData.get('currentPassword');
       const newPassword = formData.get('newPassword');
       const confirmPassword = formData.get('confirmPassword');
 
       if (newPassword !== confirmPassword) {
-        showNotification('নতুন পাসওয়ার্ড মেলেনি', 'error');
+        showPopup('নতুন পাসওয়ার্ড মেলেনি', 'error');
         return;
       }
+
+      submitBtn.disabled = true;
+      submitBtn.classList.add('loading');
+      submitBtn.innerHTML = 'পরিবর্তন হচ্ছে...';
 
       try {
         const res = await fetch(`${API_BASE}/admin/change-password`, {
@@ -3076,15 +3269,19 @@
         });
 
         if (res.ok) {
-          showNotification('পাসওয়ার্ড পরিবর্তন হয়েছে', 'success');
+          showPopup('পাসওয়ার্ড পরিবর্তন হয়েছে', 'success');
           e.target.reset();
         } else {
           const data = await res.json();
-          showNotification(data.error || 'ব্যর্থ হয়েছে', 'error');
+          showPopup(data.error || 'ব্যর্থ হয়েছে', 'error');
         }
       } catch (error) {
         console.error('Change password error:', error);
-        showNotification('সার্ভার সংযোগ ব্যর্থ', 'error');
+        showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
+        submitBtn.innerHTML = 'পাসওয়ার্ড পরিবর্তন করুন';
       }
     };
 
@@ -3120,6 +3317,96 @@
       } catch (error) {
         console.error('Error loading unread counts:', error);
       }
+    }
+
+    // ========== ORDER DETAILS BY ID ==========
+    window.showOrderDetails = async (orderId) => {
+      if (typeof orderId === 'string') {
+        try {
+          const res = await fetch(`${API_BASE}/admin/orders/${orderId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const order = await res.json();
+          showOrderDetailsModal(order);
+        } catch (error) {
+          console.error('Error loading order details:', error);
+          showPopup('অর্ডার ডিটেইলস লোড করতে ব্যর্থ', 'error');
+        }
+      } else {
+        showOrderDetailsModal(orderId);
+      }
+    };
+
+    function showOrderDetailsModal(order) {
+      const modalContent = document.getElementById('orderDetails');
+      if (!modalContent) return;
+
+      modalContent.innerHTML = `
+        <div class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <h4 class="font-bold mb-2">গ্রাহকের তথ্য</h4>
+              <p><span class="text-gray-600">নাম:</span> ${order.customerName || 'N/A'}</p>
+              <p><span class="text-gray-600">ফোন:</span> ${order.phone || 'N/A'}</p>
+              <p><span class="text-gray-600">ঠিকানা:</span> ${order.address || 'N/A'}</p>
+            </div>
+            
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <h4 class="font-bold mb-2">অর্ডারের তথ্য</h4>
+              <p><span class="text-gray-600">অর্ডার ID:</span> ${order.orderId || 'N/A'}</p>
+              <p><span class="text-gray-600">তারিখ:</span> ${order.createdAt ? new Date(order.createdAt).toLocaleString('bn-BD') : 'N/A'}</p>
+              <p><span class="text-gray-600">স্ট্যাটাস:</span> <span class="status-badge status-${order.status || 'pending'}">${order.status === 'pending' ? 'অপেক্ষমাণ' : order.status || 'pending'}</span></p>
+            </div>
+          </div>
+
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <h4 class="font-bold mb-2">পণ্যের তালিকা</h4>
+            <div class="space-y-2">
+              ${(order.items || []).map(item => `
+                <div class="flex justify-between items-center border-b pb-2">
+                  <div>
+                    <p class="font-medium">${item.name || 'N/A'}</p>
+                    <p class="text-sm text-gray-600">৳${item.price || 0} × ${item.quantity || 0}</p>
+                  </div>
+                  <p class="font-bold">৳${(item.price || 0) * (item.quantity || 0)}</p>
+                </div>
+              `).join('')}
+              ${(!order.items || order.items.length === 0) ? '<p class="text-gray-500 text-center">কোন পণ্য নেই</p>' : ''}
+            </div>
+            
+            <div class="mt-4 pt-2 border-t">
+              <div class="flex justify-between">
+                <span>সাবটোটাল:</span>
+                <span class="font-bold">৳${order.subtotal || 0}</span>
+              </div>
+              <div class="flex justify-between">
+                <span>ডেলিভারি চার্জ:</span>
+                <span class="font-bold">৳${order.deliveryCharge || 0}</span>
+              </div>
+              <div class="flex justify-between text-lg">
+                <span>মোট:</span>
+                <span class="font-bold text-[#1877F2]">৳${order.total || 0}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-3">
+            <select id="orderStatusUpdate" class="form-select w-auto">
+              <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>অপেক্ষমাণ</option>
+              <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>নিশ্চিত</option>
+              <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>প্রক্রিয়াধীন</option>
+              <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>পাঠানো হয়েছে</option>
+              <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>ডেলিভারি হয়েছে</option>
+              <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>বাতিল</option>
+            </select>
+            <button onclick="updateOrderStatus('${order._id}')" class="btn-primary px-4 py-2">
+              আপডেট করুন
+            </button>
+          </div>
+        </div>
+      `;
+
+      openOrderModal();
     }
   </script>
 </body>
