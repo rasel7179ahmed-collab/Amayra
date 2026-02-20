@@ -3227,61 +3227,58 @@
     modal.classList.add('active');
   };
 
- window.saveSlider = async (e, id) => {
-  e.preventDefault();
-  const formData = new FormData(e.target);
-  const submitBtn = e.target.querySelector('button[type="submit"]');
-  
-  const data = {
-    title: formData.get('title'),
-    subtitle: formData.get('subtitle'),
-    badge: formData.get('badge'),
-    badgeColor: formData.get('badgeColor'),
-    buttonText: formData.get('buttonText'),
-    productId: parseInt(formData.get('productId')) || 0,
-    order: parseInt(formData.get('order')) || 1,
-    active: formData.get('active') === 'on',
-    imageUrl: slideImage // আগের ছবির URL পাঠানো হচ্ছে, নতুন না থাকলে কাজে লাগবে
+  window.saveSlider = async (e, id) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    
+    const data = {
+      title: formData.get('title'),
+      subtitle: formData.get('subtitle'),
+      badge: formData.get('badge'),
+      badgeColor: formData.get('badgeColor'),
+      buttonText: formData.get('buttonText'),
+      productId: parseInt(formData.get('productId')) || 0,
+      order: parseInt(formData.get('order')) || 1,
+      active: formData.get('active') === 'on'
+    };
+
+    const formDataToSend = new FormData();
+    formDataToSend.append('data', JSON.stringify(data));
+    if (formData.get('image').size > 0) {
+      formDataToSend.append('image', formData.get('image'));
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'সংরক্ষণ হচ্ছে...';
+
+    try {
+      const url = id ? `${API_BASE}/admin/sliders/${id}` : `${API_BASE}/admin/sliders`;
+      const method = id ? 'PUT' : 'POST';
+
+      const res = await fetchWithRetry(url, {
+        method,
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formDataToSend
+      }, 2);
+
+      if (res.ok) {
+        showPopup(id ? 'স্লাইডার আপডেট হয়েছে' : 'স্লাইডার তৈরি হয়েছে', 'success');
+        closeModal();
+        loadSliders();
+      } else {
+        const error = await res.json();
+        showPopup(error.error || 'ব্যর্থ হয়েছে', 'error');
+      }
+    } catch (error) {
+      console.error('Save slider error:', error);
+      showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'সংরক্ষণ';
+    }
   };
 
-  const formDataToSend = new FormData();
-  formDataToSend.append('data', JSON.stringify(data));
-  
-  // নিরাপদে ফাইল চেক করা হচ্ছে
-  const imageFile = formData.get('image');
-  if (imageFile && imageFile.size > 0) {
-    formDataToSend.append('image', imageFile);
-  }
-
-  submitBtn.disabled = true;
-  submitBtn.innerHTML = 'সংরক্ষণ হচ্ছে...';
-
-  try {
-    const url = id ? `${API_BASE}/admin/sliders/${id}` : `${API_BASE}/admin/sliders`;
-    const method = id ? 'PUT' : 'POST';
-
-    const res = await fetchWithRetry(url, {
-      method,
-      headers: { 'Authorization': `Bearer ${token}` },
-      body: formDataToSend
-    }, 2);
-
-    if (res.ok) {
-      showPopup(id ? 'স্লাইডার আপডেট হয়েছে' : 'স্লাইডার তৈরি হয়েছে', 'success');
-      closeModal();
-      loadSliders();
-    } else {
-      const error = await res.json();
-      showPopup(error.error || 'ব্যর্থ হয়েছে', 'error');
-    }
-  } catch (error) {
-    console.error('Save slider error:', error);
-    showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = 'সংরক্ষণ';
-  }
-};
   window.confirmDeleteSlider = (id) => {
     openConfirmModal(
       'স্লাইডার মুছবেন?',
