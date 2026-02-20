@@ -127,10 +127,70 @@
       border: 1px solid #F0F2F5;
       box-shadow: 0 10px 25px -10px rgba(24, 119, 242, 0.1);
       overflow: hidden;
+      padding: 1rem;
     }
     .product-tile:hover {
       border-radius: 1.5rem 3rem 1.5rem 3rem;
       box-shadow: 0 25px 35px -14px rgba(24, 119, 242, 0.2);
+    }
+
+    /* প্রোডাক্ট ইমেজ কন্টেইনার - মোবাইলে ফুল ইমেজ দেখানোর জন্য */
+    .product-gallery {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 3/4;
+      overflow: hidden;
+      border-radius: 2rem 0.8rem 2rem 0.8rem;
+      background: #f5f5f5;
+    }
+    
+    .main-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+    .main-image:hover {
+      transform: scale(1.02);
+    }
+    
+    /* থাম্বনেইল কন্টেইনার */
+    .thumbnail-container {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      overflow-x: auto;
+      padding-bottom: 0.25rem;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+    .thumbnail-container img {
+      width: 60px;
+      height: 60px;
+      border-radius: 15px 4px 15px 4px;
+      object-fit: cover;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .thumbnail-container img:hover,
+    .thumbnail-container img.active {
+      border-color: #1877F2;
+      transform: scale(1.05);
+    }
+
+    /* মোবাইলে প্রোডাক্ট ইমেজ আরও বড় দেখানোর জন্য */
+    @media (max-width: 640px) {
+      .product-gallery {
+        aspect-ratio: 4/5;
+      }
+      .main-image {
+        object-fit: contain;
+        background: #f8f9fa;
+      }
     }
 
     .morph-header {
@@ -262,19 +322,6 @@
       }
     }
 
-    .img-loading-spinner {
-      position: absolute;
-      inset: 0;
-      background: rgba(240, 242, 245, 0.7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 5;
-      backdrop-filter: blur(2px);
-      border-radius: 40px 4px 40px 4px;
-    }
-    .img-loading-spinner.hidden { display: none; }
-
     .cart-item-new {
       background: #F0F2F5;
       border-radius: 30px 8px 30px 8px;
@@ -327,15 +374,17 @@
     .reviews-scroll::-webkit-scrollbar-track { background: #F0F2F5; border-radius: 10px; }
     .reviews-scroll::-webkit-scrollbar-thumb { background: #1877F2; border-radius: 10px; }
 
-    @media (max-width: 768px) {
-      .cat-pill { padding: 0.4rem 1rem; font-size: 0.9rem; }
-      .desktop-only { display: none; }
-    }
-    
-    @media (min-width: 769px) {
-      .desktop-only { display: block; }
+    /* ডেস্কটপে সর্বাধিক বিক্রিত এবং রিভিউ সেকশন নিচের অংশ হাইড */
+    @media (min-width: 992px) {
+      .desktop-hide-section {
+        display: none !important;
+      }
     }
 
+    @media (max-width: 768px) {
+      .cat-pill { padding: 0.4rem 1rem; font-size: 0.9rem; }
+    }
+    
     .hamburger {
       width: 32px;
       height: 32px;
@@ -485,12 +534,6 @@
       }
     }
 
-    .hero-slide-1200 {
-      max-width: 1200px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
     .review-location-icon {
       color: #1877F2;
       margin-right: 4px;
@@ -522,6 +565,7 @@
       border-radius: 20px 4px 20px 4px;
       font-size: 0.8rem;
       font-weight: 600;
+      z-index: 10;
     }
 
     .order-section-wrapper {
@@ -547,13 +591,6 @@
       height: fit-content;
       position: relative;
       overflow: hidden;
-      display: none;
-    }
-    
-    @media (min-width: 992px) {
-      .bestseller-slider {
-        display: block;
-      }
     }
     
     .bestseller-slider::before {
@@ -613,26 +650,10 @@
       overflow: hidden;
     }
     
-    .bestseller-item::after {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -50%;
-      width: 100%;
-      height: 200%;
-      background: linear-gradient(45deg, transparent, rgba(24, 119, 242, 0.03), transparent);
-      transform: rotate(45deg);
-      transition: transform 0.6s;
-    }
-    
     .bestseller-item:hover {
       transform: translateY(-5px) scale(1.02);
       box-shadow: 0 20px 30px -10px rgba(24, 119, 242, 0.25);
       border-color: #1877F2;
-    }
-    
-    .bestseller-item:hover::after {
-      transform: rotate(45deg) translate(50%, 50%);
     }
     
     .bestseller-item img {
@@ -712,10 +733,6 @@
       transform: translateY(-2px);
       box-shadow: 0 10px 20px -5px #1877F2;
     }
-    
-    .bestseller-btn i {
-      font-size: 1rem;
-    }
 
     .bestseller-nav {
       display: flex;
@@ -756,46 +773,6 @@
       background: #f0f2f5;
       padding: 0.5rem 1.5rem;
       border-radius: 30px;
-    }
-
-    .product-gallery {
-      position: relative;
-      width: 100%;
-    }
-    .main-image {
-      width: 100%;
-      height: 200px;
-      object-fit: cover;
-      border-radius: 30px 8px 30px 8px;
-      cursor: pointer;
-      transition: transform 0.3s;
-    }
-    .main-image:hover {
-      transform: scale(1.02);
-    }
-    .thumbnail-container {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 0.5rem;
-      overflow-x: auto;
-      padding-bottom: 0.25rem;
-    }
-    .thumbnail-container img {
-      width: 60px;
-      height: 60px;
-      border-radius: 15px 4px 15px 4px;
-      object-fit: cover;
-      cursor: pointer;
-      border: 2px solid transparent;
-      transition: all 0.2s;
-    }
-    .thumbnail-container img:hover {
-      border-color: #1877F2;
-      transform: scale(1.05);
-    }
-    .thumbnail-container img.active {
-      border-color: #1877F2;
-      transform: scale(1.05);
     }
 
     .fullscreen-modal {
@@ -1035,7 +1012,7 @@
       </form>
     </div>
 
-    <div class="desktop-only bestseller-slider">
+    <div class="bestseller-slider">
       <div class="bestseller-header">
         <i class="fas fa-fire"></i>
         <h3>সর্বাধিক বিক্রিত</h3>
@@ -1050,7 +1027,8 @@
   </div>
 </section>
 
-<section id="reviews" class="container-1200 px-4 py-10">
+<!-- ডেস্কটপে এই অংশ হাইড থাকবে, মোবাইলে দেখাবে -->
+<section id="reviews" class="container-1200 px-4 py-10 desktop-hide-section">
   <div class="review-section-wrapper">
     <div class="bg-[#F0F2F5] p-8 rounded-[70px_20px_70px_20px] review-form-card">
       <h3 class="text-2xl font-bold mb-4">আপনার <span class="text-[#1877F2]">মতামত</span> দিন</h3>
@@ -1122,6 +1100,7 @@
   let fullscreenCurrentIndex = 0;
   let lastAddedItemId = null;
 
+  // ---------- Utility: fetch with retry ----------
   async function fetchWithRetry(url, options = {}, retries = 3, delay = 1000) {
     for (let i = 0; i < retries; i++) {
       try {
@@ -1180,6 +1159,7 @@
       
     } catch (error) {
       console.error('Error loading settings:', error);
+      // ডিফল্ট সেটিংস
       settings = {
         siteName: 'AMAYRA',
         phoneNumber: '01712345678',
@@ -1200,7 +1180,7 @@
       renderSliders();
     } catch (error) {
       console.error('Error loading sliders:', error);
-      renderSliders();
+      renderSliders(); // ডিফল্ট স্লাইডার দেখাবে
     }
   }
 
@@ -1300,22 +1280,22 @@
 
     let html = '';
     filtered.forEach(product => {
-      const discount = product.discountPercent || Math.round((1 - product.price / product.original) * 100);
+      const discount = Math.round((1 - product.price / product.original) * 100);
       const isSoldOut = product.stock <= 0;
       const images = product.images && product.images.length ? product.images : [product.img];
       const currentIndex = currentProductImages[product.id] || 0;
       
       html += `
-        <div class="product-tile p-4">
+        <div class="product-tile">
           <div class="product-gallery">
             <img src="${images[currentIndex]}" class="main-image" id="mainImg-${product.id}" onclick="openFullscreen('${product.id}')" onerror="this.src='https://via.placeholder.com/300x400?text=AMAYRA'">
-            ${isSoldOut ? '<span class="sold-out">স্টক আউট</span>' : `<span class="absolute top-2 right-2 bg-[#FF7A00] text-white px-3 py-1 rounded-full text-xs">-${discount}%</span>`}
-            
-            <div class="thumbnail-container" id="thumbs-${product.id}">
-              ${images.map((img, i) => `
-                <img src="${img}" class="${i === currentIndex ? 'active' : ''}" onclick="changeProductImage(${product.id}, ${i}, event)" onerror="this.src='https://via.placeholder.com/60?text=IMG'">
-              `).join('')}
-            </div>
+            ${isSoldOut ? '<span class="sold-out">স্টক আউট</span>' : `<span class="absolute top-2 right-2 bg-[#FF7A00] text-white px-3 py-1 rounded-full text-xs z-10">-${discount}%</span>`}
+          </div>
+          
+          <div class="thumbnail-container" id="thumbs-${product.id}">
+            ${images.map((img, i) => `
+              <img src="${img}" class="${i === currentIndex ? 'active' : ''}" onclick="changeProductImage(${product.id}, ${i}, event)" onerror="this.src='https://via.placeholder.com/60?text=IMG'">
+            `).join('')}
           </div>
           
           <div class="mt-2">
@@ -1428,7 +1408,7 @@
     if (!product) return;
     
     const images = product.images && product.images.length ? product.images : [product.img];
-    const discount = product.discountPercent || Math.round((1 - product.price / product.original) * 100);
+    const discount = Math.round((1 - product.price / product.original) * 100);
     
     const container = document.getElementById('bestsellerContainer');
     container.innerHTML = `
@@ -1735,7 +1715,7 @@
         updateCart();
         e.target.reset();
 
-        await loadProducts();
+        await loadProducts(); // stock আপডেট
       } else {
         throw new Error('Order failed');
       }
@@ -1860,7 +1840,7 @@
         e.target.reset();
         ratingInput.value = 0;
         starContainer.querySelectorAll('i').forEach(s => s.className = 'fa-regular fa-star');
-        await loadReviews();
+        await loadReviews(); // নতুন রিভিউ দেখান
       } else {
         throw new Error('Review submission failed');
       }
