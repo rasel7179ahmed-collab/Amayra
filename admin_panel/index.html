@@ -817,6 +817,55 @@
     ::-webkit-scrollbar-thumb:hover {
       background: #1877F2;
     }
+
+    .category-stat-card {
+      background: #f8fafc;
+      border-radius: 20px 4px 20px 4px;
+      padding: 0.75rem;
+      transition: all 0.3s;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+
+    .category-stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .category-stat-card.active {
+      background: #1877F2;
+      color: white;
+      border-color: #1877F2;
+    }
+
+    .category-stat-card.active .text-gray-600 {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .notification-popup {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: white;
+      border-radius: 30px 8px 30px 8px;
+      padding: 1rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      z-index: 10000;
+      animation: slideInRight 0.3s ease forwards;
+      border-left: 4px solid #1877F2;
+      min-width: 280px;
+    }
+
+    @keyframes slideInRight {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1056,6 +1105,7 @@
   let chartInstance2 = null;
   let allOrders = [];
   let allReviews = [];
+  let notificationSettings = { sound: true, browser: true };
 
   async function fetchWithRetry(url, options = {}, retries = 3, delay = 1000) {
     for (let i = 0; i < retries; i++) {
@@ -1134,19 +1184,79 @@
     document.getElementById('sidebarAdminName').textContent = adminUsername || 'অ্যাডমিন';
     loadDashboard();
     loadUnreadCounts();
+    loadNotificationSettings();
     startNotificationChecker();
+  }
+
+  function loadNotificationSettings() {
+    const saved = localStorage.getItem('notificationSettings');
+    if (saved) {
+      notificationSettings = JSON.parse(saved);
+    }
+  }
+
+  function playNotificationSound() {
+    if (!notificationSettings.sound) return;
+    
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+    
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.5);
+  }
+
+  function showNotificationPopup(message, type) {
+    if (notificationSettings.browser && Notification.permission === 'granted') {
+      new Notification('AMAYRA অ্যাডমিন', {
+        body: message,
+        icon: 'https://via.placeholder.com/64/1877F2/ffffff?text=AM'
+      });
+    }
+    
+    const popup = document.createElement('div');
+    popup.className = 'notification-popup';
+    popup.innerHTML = `
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-[#1877F2] flex items-center justify-center text-white">
+          <i class="fas ${type === 'order' ? 'fa-truck' : 'fa-star'}"></i>
+        </div>
+        <div class="flex-1">
+          <div class="font-bold">${type === 'order' ? 'নতুন অর্ডার' : 'নতুন রিভিউ'}</div>
+          <div class="text-sm text-gray-600">${message}</div>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(popup);
+    
+    setTimeout(() => {
+      popup.style.animation = 'slideInRight 0.3s ease reverse';
+      setTimeout(() => popup.remove(), 300);
+    }, 4000);
   }
 
   function startNotificationChecker() {
     if (notificationInterval) clearInterval(notificationInterval);
     checkNotifications();
-    notificationInterval = setInterval(checkNotifications, 5000);
+    notificationInterval = setInterval(checkNotifications, 3000);
   }
 
   async function checkNotifications() {
     if (!token) return;
     
     try {
+      const previousOrderCount = parseInt(document.getElementById('orderBadge').textContent) || 0;
+      const previousReviewCount = parseInt(document.getElementById('reviewBadge').textContent) || 0;
+      
       const [ordersRes, reviewsRes] = await Promise.allSettled([
         fetchWithRetry(`${API_BASE}/admin/orders/unread-count`, {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -1172,6 +1282,17 @@
 
       const totalUnread = (ordersData.count || 0) + (reviewsData.count || 0);
 
+      // নতুন নোটিফিকেশন চেক করুন
+      if (ordersData.count > previousOrderCount) {
+        playNotificationSound();
+        showNotificationPopup(`${ordersData.count - previousOrderCount}টি নতুন অর্ডার এসেছে`, 'order');
+      }
+      
+      if (reviewsData.count > previousReviewCount) {
+        playNotificationSound();
+        showNotificationPopup(`${reviewsData.count - previousReviewCount}টি নতুন রিভিউ এসেছে`, 'review');
+      }
+
       if (ordersData.count > 0) {
         orderBadge.style.display = 'flex';
         orderBadge.textContent = ordersData.count;
@@ -1189,8 +1310,10 @@
       if (totalUnread > 0) {
         totalBadge.style.display = 'flex';
         totalBadge.textContent = totalUnread;
+        document.title = `(${totalUnread}) AMAYRA · অ্যাডমিন প্যানেল`;
       } else {
         totalBadge.style.display = 'none';
+        document.title = 'AMAYRA · অ্যাডমিন প্যানেল';
       }
 
       const dropdown = document.getElementById('notificationDropdown');
@@ -1225,6 +1348,11 @@
         token = data.token;
         localStorage.setItem('token', token);
         localStorage.setItem('adminUsername', username);
+        
+        if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+          Notification.requestPermission();
+        }
+        
         document.getElementById('loginPage').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'block';
         document.getElementById('adminNameDisplay').textContent = username;
@@ -2057,21 +2185,56 @@
     showLoading('প্রোডাক্ট লোড হচ্ছে...');
 
     try {
-      const res = await fetchWithRetry(`${API_BASE}/admin/products`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const products = await res.json();
+      const [productsRes, categoriesRes] = await Promise.all([
+        fetchWithRetry(`${API_BASE}/admin/products`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetchWithRetry(`${API_BASE}/categories`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ]);
+
+      const products = await productsRes.json();
+      const categories = await categoriesRes.json();
 
       document.getElementById('productCount').textContent = products.length;
+      window.allProducts = products;
+
+      // ক্যাটাগরি অনুযায়ী প্রোডাক্ট কাউন্ট
+      const categoryCounts = {};
+      products.forEach(p => {
+        categoryCounts[p.category] = (categoryCounts[p.category] || 0) + 1;
+      });
 
       content.innerHTML = `
         <div class="section-card">
           <div class="section-header">
             <h3 class="text-xl font-bold">প্রোডাক্ট পরিচালনা</h3>
-            <button class="btn-primary" onclick="showProductForm()">
-              <i class="fas fa-plus mr-2"></i>নতুন প্রোডাক্ট
-            </button>
+            <div class="flex gap-2 flex-wrap">
+              <select id="categoryFilter" class="form-select w-auto" onchange="filterProductsByCategory(this.value)">
+                <option value="all">সব ক্যাটাগরি (${products.length})</option>
+                ${categories.map(cat => `
+                  <option value="${cat.name}">${cat.banglaName || cat.name} (${categoryCounts[cat.name] || 0})</option>
+                `).join('')}
+              </select>
+              <button class="btn-primary" onclick="showProductForm()">
+                <i class="fas fa-plus mr-2"></i>নতুন প্রোডাক্ট
+              </button>
+            </div>
           </div>
+          
+          <div id="categoryStats" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
+            ${categories.map(cat => {
+              const count = categoryCounts[cat.name] || 0;
+              return `
+                <div class="category-stat-card" onclick="selectCategory('${cat.name}')" id="cat-${cat.name}">
+                  <div class="font-medium">${cat.banglaName || cat.name}</div>
+                  <div class="text-sm text-gray-600">${count} টি প্রোডাক্ট</div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
           <div class="data-table">
             <table>
               <thead>
@@ -2086,29 +2249,16 @@
                   <th>অ্যাকশন</th>
                 </tr>
               </thead>
-              <tbody>
-                ${products.map(product => `
-                  <tr>
-                    <td><img src="${product.img || product.images?.[0] || ''}" class="image-preview w-12 h-12" onerror="this.src='https://via.placeholder.com/50'"></td>
-                    <td>${product.name || ''}</td>
-                    <td>${product.category || ''}</td>
-                    <td>৳${product.price || 0}</td>
-                    <td><span class="status-badge bg-[#FF7A00] text-white">${product.discountPercent || Math.round(((product.original - product.price) / product.original) * 100)}%</span></td>
-                    <td>${product.stock || 0}</td>
-                    <td>${product.sold || 0}</td>
-                    <td>
-                      <button onclick='showProductForm(${JSON.stringify(product).replace(/'/g, "\\'")})' class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-edit"></i></button>
-                      <button onclick="confirmDeleteProduct('${product._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
-                    </td>
-                  </tr>
-                `).join('')}
-                ${products.length === 0 ? '<tr><td colspan="8" class="text-center py-4">কোন প্রোডাক্ট নেই</td></tr>' : ''}
+              <tbody id="productsTableBody">
+                ${renderProductRows(products)}
               </tbody>
             </table>
           </div>
         </div>
       `;
+
     } catch (error) {
+      console.error('Error loading products:', error);
       content.innerHTML = `
         <div class="text-center py-8">
           <p class="text-red-500 mb-4">প্রোডাক্ট লোড করতে ব্যর্থ হয়েছে</p>
@@ -2121,6 +2271,54 @@
       hideLoading();
     }
   }
+
+  function renderProductRows(products) {
+    if (!products || products.length === 0) {
+      return '<tr><td colspan="8" class="text-center py-4">কোন প্রোডাক্ট নেই</td></tr>';
+    }
+    
+    return products.map(product => `
+      <tr>
+        <td><img src="${product.img || product.images?.[0] || ''}" class="image-preview w-12 h-12" onerror="this.src='https://via.placeholder.com/50'"></td>
+        <td>${product.name || ''}</td>
+        <td>${product.category || ''}</td>
+        <td>৳${product.price || 0}</td>
+        <td><span class="status-badge bg-[#FF7A00] text-white">${product.discountPercent || Math.round(((product.original - product.price) / product.original) * 100) || 0}%</span></td>
+        <td>${product.stock || 0}</td>
+        <td>${product.sold || 0}</td>
+        <td>
+          <button onclick='showProductForm(${JSON.stringify(product).replace(/'/g, "\\'")})' class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-edit"></i></button>
+          <button onclick="confirmDeleteProduct('${product._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  window.selectCategory = function(category) {
+    document.getElementById('categoryFilter').value = category;
+    filterProductsByCategory(category);
+    
+    // হাইলাইট করা
+    document.querySelectorAll('.category-stat-card').forEach(el => {
+      el.classList.remove('active', 'bg-[#1877F2]', 'text-white');
+    });
+    const selected = document.getElementById(`cat-${category}`);
+    if (selected) {
+      selected.classList.add('active', 'bg-[#1877F2]', 'text-white');
+    }
+  };
+
+  window.filterProductsByCategory = function(category) {
+    const tbody = document.getElementById('productsTableBody');
+    if (!tbody || !window.allProducts) return;
+    
+    if (category === 'all') {
+      tbody.innerHTML = renderProductRows(window.allProducts);
+    } else {
+      const filtered = window.allProducts.filter(p => p.category === category);
+      tbody.innerHTML = renderProductRows(filtered);
+    }
+  };
 
   window.calculateDiscount = function() {
     const original = parseFloat(document.getElementById('originalPrice')?.value) || 0;
