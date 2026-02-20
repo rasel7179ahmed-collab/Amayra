@@ -39,7 +39,6 @@ if (process.env.RENDER) {
 }
 
 // ========== হেল্থ চেক এন্ডপয়েন্ট ==========
-// এই এন্ডপয়েন্টটি সেলফ-পিং এবং UptimeRobot-এর জন্যও ব্যবহার করা যাবে
 app.get('/api/health', (req, res) => {
   res.status(200).json({ 
     status: 'ok', 
@@ -95,11 +94,9 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
-// ========== MongoDB সংযোগ ==========
+// ========== MongoDB সংযোগ (Deprecated অপশন বাদ দেওয়া) ==========
 mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000
+  serverSelectionTimeoutMS: 5000   // শুধু প্রয়োজনীয় অপশন রাখা হয়েছে
 }).then(() => {
   console.log('✅ MongoDB Connected');
 }).catch(err => {
@@ -264,9 +261,7 @@ async function initializeDatabase() {
   }
 }
 
-// ========== API ROUTES ==========
-// (এখানে আপনার সব API রুট অপরিবর্তিত থাকবে)
-
+// ========== API ROUTES (সব রুট আগের মতোই) ==========
 // Auth
 app.post('/api/admin/login', async (req, res) => {
   try {
