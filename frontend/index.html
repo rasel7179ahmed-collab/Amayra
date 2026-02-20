@@ -140,6 +140,7 @@
       position: sticky;
       top: 0;
       z-index: 40;
+      width: 100%;
     }
 
     .dropdown-sidebar {
@@ -260,11 +261,13 @@
     .reviews-scroll::-webkit-scrollbar-track { background: #F0F2F5; border-radius: 10px; }
     .reviews-scroll::-webkit-scrollbar-thumb { background: #1877F2; border-radius: 10px; }
 
-    @media (max-width: 500px) {
+    @media (max-width: 768px) {
       .cat-pill { padding: 0.4rem 1rem; font-size: 0.9rem; }
+      .desktop-only { display: none; }
     }
     
-    @media (min-width: 1024px) {
+    @media (min-width: 769px) {
+      .desktop-only { display: block; }
       .product-grid-4 {
         grid-template-columns: repeat(4, minmax(0, 1fr));
       }
@@ -324,6 +327,7 @@
 
     .footer-custom {
       background: #0A192F;
+      width: 100%;
     }
     .footer-text {
       color: #E6EDF3;
@@ -396,6 +400,8 @@
       margin-left: auto;
       margin-right: auto;
       width: 100%;
+      padding-left: 1rem;
+      padding-right: 1rem;
     }
 
     .product-grid-1200 {
@@ -454,11 +460,151 @@
       font-size: 0.8rem;
       font-weight: 600;
     }
+
+    .order-section-wrapper {
+      display: block;
+    }
+    
+    @media (min-width: 992px) {
+      .order-section-wrapper {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 1.5rem;
+        align-items: start;
+      }
+    }
+
+    .bestseller-slider {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 40px 12px 40px 12px;
+      padding: 1.5rem;
+      border: 1px solid rgba(24, 119, 242, 0.2);
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+    }
+
+    .bestseller-item {
+      background: white;
+      border-radius: 30px 8px 30px 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border: 1px solid #e2e8f0;
+      transition: all 0.3s;
+    }
+    .bestseller-item:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px -5px rgba(24, 119, 242, 0.2);
+      border-color: #1877F2;
+    }
+    .bestseller-item img {
+      width: 60px;
+      height: 60px;
+      border-radius: 20px 4px 20px 4px;
+      object-fit: cover;
+    }
+
+    .bestseller-nav {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .bestseller-nav button {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: white;
+      border: 1px solid #e2e8f0;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .bestseller-nav button:hover {
+      background: #1877F2;
+      color: white;
+      border-color: #1877F2;
+    }
+
+    .product-gallery {
+      position: relative;
+      width: 100%;
+    }
+    .main-image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 30px 8px 30px 8px;
+      cursor: pointer;
+    }
+    .thumbnail-container {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      overflow-x: auto;
+      padding-bottom: 0.25rem;
+    }
+    .thumbnail-container img {
+      width: 60px;
+      height: 60px;
+      border-radius: 15px 4px 15px 4px;
+      object-fit: cover;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .thumbnail-container img:hover {
+      border-color: #1877F2;
+    }
+    .thumbnail-container img.active {
+      border-color: #1877F2;
+      transform: scale(1.05);
+    }
+
+    .fullscreen-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+    .fullscreen-modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .fullscreen-modal img {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+    }
+    .fullscreen-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      color: white;
+      font-size: 2rem;
+      cursor: pointer;
+    }
+    .fullscreen-prev, .fullscreen-next {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      color: white;
+      font-size: 2rem;
+      cursor: pointer;
+      padding: 1rem;
+    }
+    .fullscreen-prev { left: 20px; }
+    .fullscreen-next { right: 20px; }
   </style>
 </head>
 <body class="text-[#1C1E21]">
 
-<!-- ===== DROPDOWN SIDEBAR ===== -->
 <div class="dropdown-sidebar" id="dropdownSidebar">
   <div class="flex justify-between items-center mb-6">
     <a href="#home" class="brand-logo">
@@ -484,8 +630,7 @@
 </div>
 <div class="dropdown-overlay" id="dropdownOverlay"></div>
 
-<!-- HEADER -->
-<header class="morph-header px-5 py-3">
+<header class="morph-header py-3">
   <div class="header-container flex justify-between items-center">
     <a href="#home" class="brand-logo">
       <img src="images/Amayra.jpg" alt="AMAYRA Logo">
@@ -513,7 +658,6 @@
   </div>
 </header>
 
-<!-- HERO SLIDER -->
 <section id="home" class="pt-6 pb-4 px-4 container-1200">
   <div class="relative hero-slide">
     <div class="flex transition-transform duration-500 ease-out" id="sliderTrack"></div>
@@ -523,19 +667,16 @@
   </div>
 </section>
 
-<!-- COLLECTION -->
 <section id="collection" class="container-1200 px-4 py-10">
   <div class="text-center">
     <h2 class="text-4xl font-bold text-[#1C1E21]">আমাদের <span class="text-[#1877F2]" id="collectionTitle">সংকলন</span></h2>
     <p class="text-[#1C1E21] opacity-70" id="collectionSubtitle">প্রিমিয়াম কোয়ালিটির শার্ট সেরা দামে</p>
   </div>
   
-  <!-- category pills -->
   <div class="flex flex-wrap justify-center gap-3 my-8" id="categoryPills">
     <span class="cat-pill active" onclick="filterProducts('all', this)">সকল</span>
   </div>
 
-  <!-- product grid -->
   <div id="productGrid" class="product-grid-1200">
     <div class="col-span-full text-center py-10">
       <div class="loading-spinner"></div>
@@ -544,50 +685,62 @@
   </div>
 </section>
 
-<!-- ORDER SECTION -->
 <section id="order" class="container-1200 px-4 py-10">
-  <div class="glass-card p-6 md:p-8 border-t-4 border-t-[#1877F2]">
-    <h2 class="text-3xl font-bold flex items-center gap-3"><i class="fa-regular fa-pen-to-square text-[#1877F2]"></i> অর্ডার <span class="text-[#1877F2]">ফর্ম</span></h2>
-    <div class="bg-[#F0F2F5]/90 rounded-[30px_8px_30px_8px] p-5 my-5">
-      <div id="cartItems" class="space-y-2 max-h-64 overflow-auto reviews-scroll pr-2"></div>
-      <div class="flex justify-between items-center mt-4 pt-3 border-t border-[#1C1E21]/20 text-2xl font-bold">
-        <span>সাবটোটাল:</span>
-        <span id="subtotal" class="text-[#1C1E21]">৳০</span>
+  <div class="order-section-wrapper">
+    <div class="glass-card p-6 md:p-8 border-t-4 border-t-[#1877F2]">
+      <h2 class="text-3xl font-bold flex items-center gap-3"><i class="fa-regular fa-pen-to-square text-[#1877F2]"></i> অর্ডার <span class="text-[#1877F2]">ফর্ম</span></h2>
+      <div class="bg-[#F0F2F5]/90 rounded-[30px_8px_30px_8px] p-5 my-5">
+        <div id="cartItems" class="space-y-2 max-h-64 overflow-auto reviews-scroll pr-2"></div>
+        <div class="flex justify-between items-center mt-4 pt-3 border-t border-[#1C1E21]/20 text-2xl font-bold">
+          <span>সাবটোটাল:</span>
+          <span id="subtotal" class="text-[#1C1E21]">৳০</span>
+        </div>
+        <div class="flex justify-between items-center mt-2 text-lg">
+          <span>ডেলিভারি চার্জ:</span>
+          <span id="deliveryCharge" class="text-[#FF7A00]">৳০</span>
+        </div>
+        <div class="flex justify-between items-center mt-2 pt-2 border-t border-dashed border-[#1C1E21]/20 text-2xl font-bold">
+          <span>মোট:</span>
+          <span id="total" class="text-[#FF7A00]">৳০</span>
+        </div>
+        <p class="text-xs text-[#1C1E21]/70 mt-2 bg-white p-2 rounded-[20px_4px_20px_4px]" id="deliveryNote">
+          <i class="fa-solid fa-truck text-[#1877F2] mr-1"></i> ঢাকার মধ্যে ৬০ টাকা, বাইরে ১২০ টাকা। ২০০০ টাকার বেশি অর্ডারে ডেলিভারি ফ্রি!
+        </p>
       </div>
-      <div class="flex justify-between items-center mt-2 text-lg">
-        <span>ডেলিভারি চার্জ:</span>
-        <span id="deliveryCharge" class="text-[#FF7A00]">৳০</span>
-      </div>
-      <div class="flex justify-between items-center mt-2 pt-2 border-t border-dashed border-[#1C1E21]/20 text-2xl font-bold">
-        <span>মোট:</span>
-        <span id="total" class="text-[#FF7A00]">৳০</span>
-      </div>
-      <p class="text-xs text-[#1C1E21]/70 mt-2 bg-white p-2 rounded-[20px_4px_20px_4px]" id="deliveryNote">
-        <i class="fa-solid fa-truck text-[#1877F2] mr-1"></i> ঢাকার মধ্যে ৬০ টাকা, বাইরে ১২০ টাকা। ২০০০ টাকার বেশি অর্ডারে ডেলিভারি ফ্রি!
-      </p>
+
+      <form id="orderForm" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <input type="text" id="name" placeholder="আপনার নাম *" required class="p-4 rounded-[40px_6px_40px_6px] border border-[#F0F2F5] bg-white focus:outline-none focus:border-[#1877F2] transition">
+        <input type="tel" id="phone" placeholder="মোবাইল *" required class="p-4 rounded-[40px_6px_40px_6px] border border-[#F0F2F5] bg-white focus:outline-none focus:border-[#1877F2] transition">
+        
+        <select id="district" required class="md:col-span-2 p-4 rounded-[40px_6px_40px_6px] border border-[#F0F2F5] bg-white focus:outline-none focus:border-[#1877F2] transition">
+          <option value="" disabled selected>আপনার জেলা নির্বাচন করুন *</option>
+          <option value="dhaka">ঢাকা (ভেতরে)</option>
+          <option value="outside">ঢাকার বাইরে</option>
+        </select>
+
+        <textarea id="address" placeholder="বিস্তারিত ঠিকানা *" rows="2" required class="md:col-span-2 p-4 rounded-[40px_6px_40px_6px] border border-[#F0F2F5] bg-white focus:outline-none focus:border-[#1877F2] transition"></textarea>
+        
+        <button type="submit" class="btn-cta md:col-span-2 py-4 text-xl hover:shadow-2xl">অর্ডার কনফার্ম করুন</button>
+      </form>
     </div>
 
-    <form id="orderForm" class="grid grid-cols-1 md:grid-cols-2 gap-5">
-      <input type="text" id="name" placeholder="আপনার নাম *" required class="p-4 rounded-[40px_6px_40px_6px] border border-[#F0F2F5] bg-white focus:outline-none focus:border-[#1877F2] transition">
-      <input type="tel" id="phone" placeholder="মোবাইল *" required class="p-4 rounded-[40px_6px_40px_6px] border border-[#F0F2F5] bg-white focus:outline-none focus:border-[#1877F2] transition">
-      
-      <select id="district" required class="md:col-span-2 p-4 rounded-[40px_6px_40px_6px] border border-[#F0F2F5] bg-white focus:outline-none focus:border-[#1877F2] transition">
-        <option value="" disabled selected>আপনার জেলা নির্বাচন করুন *</option>
-        <option value="dhaka">ঢাকা (ভেতরে)</option>
-        <option value="outside">ঢাকার বাইরে</option>
-      </select>
-
-      <textarea id="address" placeholder="বিস্তারিত ঠিকানা *" rows="2" required class="md:col-span-2 p-4 rounded-[40px_6px_40px_6px] border border-[#F0F2F5] bg-white focus:outline-none focus:border-[#1877F2] transition"></textarea>
-      
-      <button type="submit" class="btn-cta md:col-span-2 py-4 text-xl hover:shadow-2xl">অর্ডার কনফার্ম করুন</button>
-    </form>
+    <div class="desktop-only bestseller-slider">
+      <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+        <i class="fas fa-fire text-[#FF7A00]"></i>
+        <span>সর্বাধিক বিক্রিত</span>
+      </h3>
+      <div id="bestsellerContainer" class="space-y-4">
+        <div class="text-center py-8">
+          <div class="loading-spinner mx-auto"></div>
+        </div>
+      </div>
+      <div class="bestseller-nav" id="bestsellerNav"></div>
+    </div>
   </div>
 </section>
 
-<!-- REVIEWS -->
 <section id="reviews" class="container-1200 px-4 py-10">
   <div class="grid md:grid-cols-2 gap-8 items-start">
-    <!-- review form -->
     <div class="bg-[#F0F2F5] p-8 rounded-[70px_20px_70px_20px]">
       <h3 class="text-2xl font-bold mb-4">আপনার <span class="text-[#1877F2]">মতামত</span> দিন</h3>
       <form id="reviewForm">
@@ -612,7 +765,6 @@
         <button type="submit" class="btn-primary w-full py-3 text-lg hover:shadow-xl">রিভিউ জমা দিন</button>
       </form>
     </div>
-    <!-- reviews list -->
     <div class="bg-white/60 backdrop-blur-sm p-6 rounded-[70px_20px_70px_20px] max-h-[400px] overflow-y-auto reviews-scroll border border-[#F0F2F5]" id="reviewsList">
       <div class="text-center py-10">
         <div class="loading-spinner"></div>
@@ -622,7 +774,6 @@
   </div>
 </section>
 
-<!-- FOOTER -->
 <footer class="footer-custom text-center py-5 footer-text mt-6">
   <div class="container-1200">
     <p class="text-[#E6EDF3]" id="footerText">AMAYRA · প্রিমিয়াম শার্ট কালেকশন · ২০২৫</p>
@@ -630,17 +781,20 @@
   </div>
 </footer>
 
-<!-- Floating WhatsApp Button -->
 <a href="#" target="_blank" class="whatsapp-float" id="whatsappButton" aria-label="WhatsApp">
   <i class="fab fa-whatsapp"></i>
 </a>
 
-<script>
-  // ========== কনফিগারেশন ==========
-  // আপনার Render ব্যাকএন্ড URL এখানে বসান (যেমন: https://amayra-backend.onrender.com/api)
-  const API_BASE = 'https://amayra-8hsr.onrender.com/api';   // <-- এই অংশ পরিবর্তন করুন
+<div class="fullscreen-modal" id="fullscreenModal">
+  <span class="fullscreen-close" onclick="closeFullscreen()">&times;</span>
+  <span class="fullscreen-prev" onclick="prevFullscreen()">&#10094;</span>
+  <span class="fullscreen-next" onclick="nextFullscreen()">&#10095;</span>
+  <img id="fullscreenImage" src="" alt="">
+</div>
 
-  // Global variables
+<script>
+  const API_BASE = 'https://amayra-8hsr.onrender.com/api';
+  
   let products = [];
   let categories = [];
   let sliders = [];
@@ -649,8 +803,13 @@
   let currentFilter = 'all';
   let currentSlide = 0;
   let slideInterval;
+  let bestsellerProducts = [];
+  let currentBestsellerIndex = 0;
+  let bestsellerInterval;
+  let currentProductImages = {};
+  let fullscreenImages = [];
+  let fullscreenCurrentIndex = 0;
 
-  // Load settings on page load
   document.addEventListener('DOMContentLoaded', async function() {
     await loadSettings();
     await loadSliders();
@@ -658,18 +817,15 @@
     await loadProducts();
     await loadReviews();
     
-    // Setup event listeners
     setupEventListeners();
     startSlideShow();
   });
 
-  // Load settings from API
   async function loadSettings() {
     try {
       const res = await fetch(`${API_BASE}/settings`);
       settings = await res.json();
       
-      // Update UI with settings
       document.getElementById('headerBrandName').textContent = settings.siteName || 'AMAYRA';
       document.getElementById('headerBrandSubtitle').textContent = 'PREMIUM SHIRT COLLECTION';
       document.getElementById('sidebarBrandName').textContent = settings.siteName || 'AMAYRA';
@@ -683,7 +839,6 @@
       document.getElementById('footerText').textContent = settings.footerText || 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন · ২০২৫';
       document.getElementById('footerSocial').innerHTML = `ফেসবুক: ${settings.facebook || '@amayra.shirt'} | হটলাইন: ${settings.phoneNumber || '01712-345678'}`;
       
-      // Update delivery note
       document.getElementById('deliveryNote').innerHTML = `<i class="fa-solid fa-truck text-[#1877F2] mr-1"></i> ঢাকার মধ্যে ${settings.deliveryChargeDhaka || 60} টাকা, বাইরে ${settings.deliveryChargeOutside || 120} টাকা। ${settings.freeDeliveryThreshold || 2000} টাকার বেশি অর্ডারে ডেলিভারি ফ্রি!`;
       
     } catch (error) {
@@ -691,7 +846,6 @@
     }
   }
 
-  // Load sliders from API
   async function loadSliders() {
     try {
       const res = await fetch(`${API_BASE}/sliders`);
@@ -702,7 +856,6 @@
     }
   }
 
-  // Render sliders
   function renderSliders() {
     const track = document.getElementById('sliderTrack');
     const dots = document.getElementById('sliderDots');
@@ -742,7 +895,6 @@
     `).join('');
   }
 
-  // Load categories from API
   async function loadCategories() {
     try {
       const res = await fetch(`${API_BASE}/categories`);
@@ -753,7 +905,6 @@
     }
   }
 
-  // Render category pills
   function renderCategoryPills() {
     const container = document.getElementById('categoryPills');
     container.innerHTML = '<span class="cat-pill active" onclick="filterProducts(\'all\', this)">সকল</span>';
@@ -765,19 +916,23 @@
     });
   }
 
-  // Load products from API
   async function loadProducts() {
     try {
       const res = await fetch(`${API_BASE}/products`);
       products = await res.json();
+      
+      products.forEach(product => {
+        currentProductImages[product.id] = 0;
+      });
+      
       renderProducts();
+      loadBestsellers();
     } catch (error) {
       console.error('Error loading products:', error);
       document.getElementById('productGrid').innerHTML = '<div class="col-span-full text-center text-red-500">প্রোডাক্ট লোড করতে ব্যর্থ হয়েছে</div>';
     }
   }
 
-  // Render products
   function renderProducts() {
     const filtered = currentFilter === 'all' ? products : products.filter(p => p.category === currentFilter);
     
@@ -790,18 +945,22 @@
     filtered.forEach(product => {
       const discount = Math.round((1 - product.price / product.original) * 100);
       const isSoldOut = product.stock <= 0;
+      const images = product.images && product.images.length ? product.images : [product.img];
+      const currentIndex = currentProductImages[product.id] || 0;
       
       html += `
         <div class="product-tile p-4">
-          <div class="relative" id="product-${product.id}">
-            <img src="${product.images[0]}" class="w-full h-48 object-cover rounded-[40px_4px_40px_4px]" id="mainImg-${product.id}" onerror="this.src='https://via.placeholder.com/300x400?text=AMAYRA'">
+          <div class="product-gallery">
+            <img src="${images[currentIndex]}" class="main-image" id="mainImg-${product.id}" onclick="openFullscreen('${product.id}')" onerror="this.src='https://via.placeholder.com/300x400?text=AMAYRA'">
             ${isSoldOut ? '<span class="sold-out">স্টক আউট</span>' : `<span class="absolute top-2 right-2 bg-[#FF7A00] text-white px-3 py-1 rounded-full text-xs">-${discount}%</span>`}
+            
+            <div class="thumbnail-container" id="thumbs-${product.id}">
+              ${images.map((img, i) => `
+                <img src="${img}" class="${i === currentIndex ? 'active' : ''}" onclick="changeProductImage(${product.id}, ${i}, event)" onerror="this.src='https://via.placeholder.com/60?text=IMG'">
+              `).join('')}
+            </div>
           </div>
-          <div class="flex gap-2 mt-2 overflow-x-auto">
-            ${product.images.slice(0, 3).map((img, i) => `
-              <img src="${img}" class="gallery-thumb w-10 h-10" onclick="changeImage(${product.id}, '${img}', this)" onerror="this.src='https://via.placeholder.com/50x50?text=IMG'">
-            `).join('')}
-          </div>
+          
           <div class="mt-2">
             <h4 class="font-bold text-lg text-[#1C1E21]">${product.name}</h4>
             <p class="text-sm text-[#1C1E21]/70">${product.desc}</p>
@@ -826,24 +985,147 @@
     document.getElementById('productGrid').innerHTML = html;
   }
 
-  // Change product image
-  window.changeImage = (id, src, element) => {
-    const mainImg = document.getElementById(`mainImg-${id}`);
-    if (mainImg) {
-      mainImg.src = src;
+  window.changeProductImage = (productId, index, event) => {
+    event.stopPropagation();
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+    
+    const images = product.images && product.images.length ? product.images : [product.img];
+    const mainImg = document.getElementById(`mainImg-${productId}`);
+    if (mainImg && images[index]) {
+      mainImg.src = images[index];
+      currentProductImages[productId] = index;
       
-      // Update active class
-      const container = element.parentElement;
-      if (container) {
-        container.querySelectorAll('.gallery-thumb').forEach(thumb => {
+      const thumbs = document.querySelectorAll(`#thumbs-${productId} img`);
+      thumbs.forEach((thumb, i) => {
+        if (i === index) {
+          thumb.classList.add('active');
+        } else {
           thumb.classList.remove('active');
-        });
-        element.classList.add('active');
-      }
+        }
+      });
     }
   };
 
-  // Filter products
+  window.openFullscreen = (productId) => {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+    
+    fullscreenImages = product.images && product.images.length ? product.images : [product.img];
+    fullscreenCurrentIndex = currentProductImages[productId] || 0;
+    
+    const modal = document.getElementById('fullscreenModal');
+    const img = document.getElementById('fullscreenImage');
+    img.src = fullscreenImages[fullscreenCurrentIndex];
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeFullscreen = () => {
+    document.getElementById('fullscreenModal').classList.remove('active');
+    document.body.style.overflow = '';
+  };
+
+  window.prevFullscreen = () => {
+    if (fullscreenImages.length <= 1) return;
+    fullscreenCurrentIndex = (fullscreenCurrentIndex - 1 + fullscreenImages.length) % fullscreenImages.length;
+    document.getElementById('fullscreenImage').src = fullscreenImages[fullscreenCurrentIndex];
+  };
+
+  window.nextFullscreen = () => {
+    if (fullscreenImages.length <= 1) return;
+    fullscreenCurrentIndex = (fullscreenCurrentIndex + 1) % fullscreenImages.length;
+    document.getElementById('fullscreenImage').src = fullscreenImages[fullscreenCurrentIndex];
+  };
+
+  document.addEventListener('keydown', (e) => {
+    if (!document.getElementById('fullscreenModal').classList.contains('active')) return;
+    
+    if (e.key === 'Escape') {
+      closeFullscreen();
+    } else if (e.key === 'ArrowLeft') {
+      prevFullscreen();
+    } else if (e.key === 'ArrowRight') {
+      nextFullscreen();
+    }
+  });
+
+  function loadBestsellers() {
+    bestsellerProducts = [...products]
+      .sort((a, b) => (b.sold || 0) - (a.sold || 0))
+      .slice(0, 5);
+    
+    if (bestsellerProducts.length === 0) {
+      document.getElementById('bestsellerContainer').innerHTML = '<p class="text-center text-gray-500 py-4">কোন প্রোডাক্ট নেই</p>';
+      return;
+    }
+    
+    updateBestsellerDisplay();
+    startBestsellerSlide();
+  }
+
+  function updateBestsellerDisplay() {
+    if (bestsellerProducts.length === 0) return;
+    
+    const product = bestsellerProducts[currentBestsellerIndex];
+    if (!product) return;
+    
+    const images = product.images && product.images.length ? product.images : [product.img];
+    const discount = Math.round((1 - product.price / product.original) * 100);
+    
+    const container = document.getElementById('bestsellerContainer');
+    container.innerHTML = `
+      <div class="bestseller-item">
+        <div class="flex gap-3">
+          <img src="${images[0]}" class="w-20 h-20 object-cover rounded-[20px_4px_20px_4px]" onerror="this.src='https://via.placeholder.com/80'">
+          <div class="flex-1">
+            <h4 class="font-bold text-[#1C1E21]">${product.name}</h4>
+            <p class="text-xs text-gray-500 mb-1">${product.desc}</p>
+            <div class="flex items-center gap-2">
+              <span class="text-lg font-bold text-[#FF7A00]">৳${product.price}</span>
+              <span class="text-xs line-through text-gray-400">৳${product.original}</span>
+              <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">-${discount}%</span>
+            </div>
+            <button onclick="addToCart(${product.id})" class="btn-primary text-sm px-3 py-1 mt-2 w-full" ${product.stock <= 0 ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>
+              <i class="fa-solid fa-bag-shopping mr-1"></i> অর্ডার করুন
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const nav = document.getElementById('bestsellerNav');
+    if (bestsellerProducts.length > 1) {
+      nav.innerHTML = `
+        <button onclick="changeBestseller(-1)"><i class="fas fa-chevron-left"></i></button>
+        <span class="text-sm text-gray-600">${currentBestsellerIndex + 1}/${bestsellerProducts.length}</span>
+        <button onclick="changeBestseller(1)"><i class="fas fa-chevron-right"></i></button>
+      `;
+    } else {
+      nav.innerHTML = '';
+    }
+  }
+
+  window.changeBestseller = (direction) => {
+    if (bestsellerProducts.length <= 1) return;
+    currentBestsellerIndex = (currentBestsellerIndex + direction + bestsellerProducts.length) % bestsellerProducts.length;
+    updateBestsellerDisplay();
+    restartBestsellerInterval();
+  };
+
+  function startBestsellerSlide() {
+    if (bestsellerProducts.length <= 1) return;
+    if (bestsellerInterval) clearInterval(bestsellerInterval);
+    bestsellerInterval = setInterval(() => {
+      changeBestseller(1);
+    }, 4000);
+  }
+
+  function restartBestsellerInterval() {
+    if (bestsellerInterval) clearInterval(bestsellerInterval);
+    startBestsellerSlide();
+  }
+
   window.filterProducts = (category, element) => {
     document.querySelectorAll('.cat-pill').forEach(pill => {
       pill.classList.remove('active');
@@ -853,7 +1135,6 @@
     renderProducts();
   };
 
-  // Add to cart
   window.addToCart = (productId) => {
     const product = products.find(p => p.id === productId);
     if (!product || product.stock <= 0) {
@@ -904,12 +1185,10 @@
     }, 300);
   };
 
-  // Quick order from slider
   window.quickOrder = (productId) => {
     addToCart(productId);
   };
 
-  // Update cart display
   function updateCart() {
     const cartContainer = document.getElementById('cartItems');
     
@@ -959,7 +1238,6 @@
     document.getElementById('total').innerText = `৳${total}`;
   }
 
-  // Calculate delivery charge
   function calculateDelivery(subtotal, district) {
     const freeThreshold = settings.freeDeliveryThreshold || 2000;
     const dhakaCharge = settings.deliveryChargeDhaka || 60;
@@ -971,7 +1249,6 @@
     return 0;
   }
 
-  // Update quantity
   window.updateQuantity = (index, delta) => {
     const item = cart[index];
     const product = products.find(p => p.id === item.id);
@@ -991,13 +1268,11 @@
     }
   };
 
-  // Remove from cart
   window.removeFromCart = (index) => {
     cart.splice(index, 1);
     updateCart();
   };
 
-  // Order form submit
   document.getElementById('orderForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -1077,12 +1352,10 @@
           confirmButtonColor: '#1877F2'
         });
 
-        // Clear cart and form
         cart = [];
         updateCart();
         e.target.reset();
 
-        // Reload products to update stock
         await loadProducts();
       } else {
         throw new Error('Order failed');
@@ -1097,7 +1370,6 @@
     }
   });
 
-  // Load reviews from API
   async function loadReviews() {
     try {
       const res = await fetch(`${API_BASE}/reviews`);
@@ -1109,7 +1381,6 @@
     }
   }
 
-  // Display reviews
   function displayReviews(reviews) {
     if (!reviews.length) {
       document.getElementById('reviewsList').innerHTML = '<p class="text-center p-4 text-gray-500">কোন রিভিউ পাওয়া যায়নি</p>';
@@ -1132,7 +1403,6 @@
     document.getElementById('reviewsList').innerHTML = html;
   }
 
-  // Star rating setup
   const starContainer = document.getElementById('starRating');
   const ratingInput = document.getElementById('rating');
 
@@ -1164,7 +1434,6 @@
     });
   });
 
-  // Review form submit
   document.getElementById('reviewForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -1217,12 +1486,10 @@
     }
   });
 
-  // District change handler
   document.getElementById('district').addEventListener('change', () => {
     updateCart();
   });
 
-  // Mobile menu functionality
   function setupEventListeners() {
     const sidebar = document.getElementById('dropdownSidebar');
     const overlay = document.getElementById('dropdownOverlay');
@@ -1266,7 +1533,6 @@
       }
     });
 
-    // Smooth scroll for anchor links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener('click', function (e) {
         e.preventDefault();
@@ -1278,7 +1544,6 @@
     });
   }
 
-  // Slider functions
   window.slideChange = (direction) => {
     if (!sliders.length) return;
     
@@ -1311,7 +1576,6 @@
     }, 5000);
   }
 
-  // Pause slideshow on hover
   document.querySelector('.hero-slide')?.addEventListener('mouseenter', () => {
     clearInterval(slideInterval);
   });

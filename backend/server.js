@@ -9,12 +9,10 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const { body, validationResult } = require('express-validator');
-const path = require('path');
 require('dotenv').config();
 
 const app = express();
 
-// ========== Render Self‑Ping (স্লিপ প্রতিরোধ) ==========
 if (process.env.RENDER) {
   const PING_INTERVAL = 5 * 60 * 1000;
   const port = process.env.PORT || 5000;
@@ -36,7 +34,6 @@ if (process.env.RENDER) {
   console.log('🔄 Self‑ping system activated (interval: 5 minutes)');
 }
 
-// ========== হেল্থ চেক এন্ডপয়েন্ট ==========
 app.get('/api/health', (req, res) => {
   res.status(200).json({ 
     status: 'ok', 
@@ -45,7 +42,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// ========== CORS কনফিগারেশন ==========
 const allowedOrigins = [
   process.env.CLIENT_URL_1,
   process.env.CLIENT_URL_2,
@@ -73,7 +69,6 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// ========== রেট লিমিটিং ==========
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 200,
@@ -81,14 +76,12 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// ========== Cloudinary কনফিগার ==========
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// ========== মুল্টার স্টোরেজ ==========
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
@@ -97,12 +90,12 @@ const storage = new CloudinaryStorage({
     transformation: [{ width: 1200, height: 1200, crop: 'limit' }]
   }
 });
+
 const upload = multer({ 
   storage, 
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+  limits: { fileSize: 10 * 1024 * 1024 }
 });
 
-// ========== MongoDB সংযোগ ==========
 mongoose.connect(process.env.MONGODB_URI, {
   serverSelectionTimeoutMS: 5000,
   useNewUrlParser: true,
@@ -114,9 +107,6 @@ mongoose.connect(process.env.MONGODB_URI, {
   process.exit(1);
 });
 
-// ========== SCHEMAS ==========
-
-// Admin Schema
 const AdminSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
@@ -126,7 +116,6 @@ const AdminSchema = new mongoose.Schema({
   lastLogin: { type: Date }
 });
 
-// Category Schema
 const CategorySchema = new mongoose.Schema({
   name: { type: String, required: true },
   slug: { type: String, required: true, unique: true },
@@ -138,7 +127,6 @@ const CategorySchema = new mongoose.Schema({
   active: { type: Boolean, default: true }
 });
 
-// Slider Schema
 const SliderSchema = new mongoose.Schema({
   title: { type: String, required: true },
   subtitle: { type: String, required: true },
@@ -153,7 +141,6 @@ const SliderSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-// Product Schema
 const ProductSchema = new mongoose.Schema({
   id: { type: Number, required: true, unique: true },
   name: { type: String, required: true },
@@ -172,7 +159,6 @@ const ProductSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
-// Order Schema
 const OrderSchema = new mongoose.Schema({
   orderId: { type: String, required: true, unique: true },
   customerName: { type: String, required: true },
@@ -202,7 +188,6 @@ const OrderSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
-// Review Schema
 const ReviewSchema = new mongoose.Schema({
   name: { type: String, required: true },
   address: { type: String, required: true },
@@ -218,10 +203,10 @@ const ReviewSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-// Settings Schema
 const SettingsSchema = new mongoose.Schema({
   siteName: { type: String, default: 'AMAYRA' },
   siteTitle: { type: String, default: 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন' },
+  siteSubtitle: { type: String, default: 'PREMIUM SHIRT COLLECTION' },
   phoneNumber: { type: String, default: '01712345678' },
   whatsappNumber: { type: String, default: '8801712345678' },
   email: { type: String, default: 'info@amayra.com' },
@@ -246,9 +231,6 @@ const Order = mongoose.model('Order', OrderSchema);
 const Review = mongoose.model('Review', ReviewSchema);
 const Settings = mongoose.model('Settings', SettingsSchema);
 
-// ========== MIDDLEWARE ==========
-
-// Validation Middleware
 const validate = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -257,7 +239,6 @@ const validate = (req, res, next) => {
   next();
 };
 
-// Auth Middleware
 const auth = async (req, res, next) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
@@ -272,11 +253,8 @@ const auth = async (req, res, next) => {
   }
 };
 
-// ========== INITIAL SETUP ==========
-
 async function initializeDatabase() {
   try {
-    // Create default admin
     const adminExists = await Admin.findOne({ username: process.env.ADMIN_USERNAME });
     if (!adminExists) {
       const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
@@ -288,14 +266,12 @@ async function initializeDatabase() {
       console.log('✅ Default admin created');
     }
 
-    // Create default settings
     const settingsExists = await Settings.findOne();
     if (!settingsExists) {
       await Settings.create({});
       console.log('✅ Default settings created');
     }
 
-    // Create default categories
     const categoriesExist = await Category.countDocuments();
     if (categoriesExist === 0) {
       const defaultCategories = [
@@ -307,7 +283,6 @@ async function initializeDatabase() {
       console.log('✅ Default categories created');
     }
 
-    // Create default sliders
     const slidersExist = await Slider.countDocuments();
     if (slidersExist === 0) {
       const defaultSliders = [
@@ -346,8 +321,6 @@ async function initializeDatabase() {
     console.error('Database initialization error:', error);
   }
 }
-
-// ========== AUTH ROUTES ==========
 
 app.post('/api/admin/login', [
   body('username').notEmpty(),
@@ -415,8 +388,6 @@ app.post('/api/admin/change-password', auth, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
-// ========== CATEGORY ROUTES ==========
 
 app.get('/api/categories', async (req, res) => {
   try {
@@ -493,8 +464,6 @@ app.delete('/api/admin/categories/:id', auth, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
-// ========== SLIDER ROUTES ==========
 
 app.get('/api/sliders', async (req, res) => {
   try {
@@ -582,8 +551,6 @@ app.delete('/api/admin/sliders/:id', auth, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
-// ========== PRODUCT ROUTES ==========
 
 app.get('/api/products', async (req, res) => {
   try {
@@ -694,7 +661,6 @@ app.put('/api/admin/products/:id', auth, upload.array('images', 10), async (req,
     let publicIds = product.publicIds;
 
     if (req.files && req.files.length > 0) {
-      // Delete old images from Cloudinary
       if (product.publicIds && product.publicIds.length > 0) {
         for (const publicId of product.publicIds) {
           await cloudinary.uploader.destroy(publicId);
@@ -703,6 +669,8 @@ app.put('/api/admin/products/:id', auth, upload.array('images', 10), async (req,
       
       imageUrls = req.files.map(f => f.path);
       publicIds = req.files.map(f => f.filename);
+    } else if (productData.images && productData.images.length > 0) {
+      imageUrls = productData.images;
     }
 
     const updatedProduct = await Product.findByIdAndUpdate(
@@ -747,8 +715,6 @@ app.delete('/api/admin/products/:id', auth, async (req, res) => {
   }
 });
 
-// ========== ORDER ROUTES ==========
-
 function generateOrderId() {
   return 'ORD' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 5).toUpperCase();
 }
@@ -779,7 +745,6 @@ app.post('/api/orders', [
     
     await order.save();
 
-    // Update product stock and sold count
     for (const item of items) {
       await Product.findOneAndUpdate(
         { id: item.id }, 
@@ -880,8 +845,6 @@ app.delete('/api/admin/orders/:id', auth, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
-// ========== REVIEW ROUTES ==========
 
 app.get('/api/reviews', async (req, res) => {
   try {
@@ -984,8 +947,6 @@ app.delete('/api/admin/reviews/:id', auth, async (req, res) => {
   }
 });
 
-// ========== SETTINGS ROUTES ==========
-
 app.get('/api/settings', async (req, res) => {
   try {
     let settings = await Settings.findOne();
@@ -1023,30 +984,15 @@ app.put('/api/admin/settings', auth, async (req, res) => {
   }
 });
 
-app.post('/api/admin/settings/logo', auth, upload.single('logo'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'Logo is required' });
-    }
-
-    const settings = await Settings.findOneAndUpdate(
-      {},
-      { logo: req.file.path, updatedAt: Date.now() },
-      { new: true, upsert: true }
-    );
-
-    res.json({ logo: settings.logo });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// ========== DASHBOARD STATS ==========
-
 app.get('/api/admin/dashboard', auth, async (req, res) => {
   try {
     const totalOrders = await Order.countDocuments();
     const pendingOrders = await Order.countDocuments({ status: 'pending' });
+    const confirmedOrders = await Order.countDocuments({ status: 'confirmed' });
+    const processingOrders = await Order.countDocuments({ status: 'processing' });
+    const shippedOrders = await Order.countDocuments({ status: 'shipped' });
+    const deliveredOrders = await Order.countDocuments({ status: 'delivered' });
+    const cancelledOrders = await Order.countDocuments({ status: 'cancelled' });
     const totalProducts = await Product.countDocuments();
     const totalReviews = await Review.countDocuments();
     const pendingReviews = await Review.countDocuments({ status: 'pending' });
@@ -1069,7 +1015,12 @@ app.get('/api/admin/dashboard', auth, async (req, res) => {
     res.json({
       stats: { 
         totalOrders, 
-        pendingOrders, 
+        pendingOrders,
+        confirmedOrders,
+        processingOrders,
+        shippedOrders,
+        deliveredOrders,
+        cancelledOrders,
         totalProducts, 
         totalReviews, 
         pendingReviews, 
@@ -1117,8 +1068,6 @@ app.get('/api/admin/chart-data', auth, async (req, res) => {
   }
 });
 
-// ========== NOTIFICATION ROUTES ==========
-
 app.get('/api/admin/notifications/unread', auth, async (req, res) => {
   try {
     const [pendingOrders, pendingReviews] = await Promise.all([
@@ -1162,8 +1111,6 @@ app.get('/api/admin/notifications/unread', auth, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
-// ========== ইনিশিয়ালাইজ ও সার্ভার চালু ==========
 
 initializeDatabase().then(() => {
   const PORT = process.env.PORT || 5000;

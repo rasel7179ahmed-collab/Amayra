@@ -20,7 +20,6 @@
       --silver: #C0C0C2;
     }
     
-    /* Login Page Styles */
     .login-container {
       min-height: 100vh;
       background: linear-gradient(135deg, #0A192F 0%, #1a2f4a 100%);
@@ -89,7 +88,6 @@
       box-shadow: 0 10px 25px -5px rgba(24, 119, 242, 0.5);
     }
     
-    /* Admin Panel Styles */
     .admin-container { display: none; }
     
     .sidebar {
@@ -245,16 +243,8 @@
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
       position: sticky;
       top: 0;
-      left: 260px;
-      right: 0;
       z-index: 40;
       border-radius: 0;
-    }
-    
-    @media (max-width: 768px) {
-      .top-bar {
-        left: 0;
-      }
     }
     
     .menu-toggle {
@@ -270,7 +260,6 @@
       }
     }
     
-    /* Stats Cards */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -335,7 +324,6 @@
       color: #1e293b;
     }
     
-    /* Chart Cards */
     .chart-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -365,7 +353,6 @@
       padding-bottom: 0.75rem;
     }
     
-    /* Notification Badge */
     .notification-badge {
       position: relative;
     }
@@ -423,7 +410,6 @@
       color: #718096;
     }
     
-    /* Cards and Tables */
     .section-card {
       background: white;
       border-radius: 40px 12px 40px 12px;
@@ -441,7 +427,6 @@
       gap: 1rem;
     }
     
-    /* Buttons */
     .btn-primary {
       background: #1877F2;
       color: white;
@@ -451,7 +436,6 @@
       cursor: pointer;
       transition: all 0.3s;
       border: none;
-      position: relative;
     }
     
     .btn-primary:hover {
@@ -463,25 +447,6 @@
     .btn-primary.loading {
       pointer-events: none;
       opacity: 0.7;
-    }
-    
-    .btn-primary.loading::after {
-      content: '';
-      position: absolute;
-      width: 16px;
-      height: 16px;
-      top: 50%;
-      left: 50%;
-      margin-left: 20px;
-      margin-top: -8px;
-      border: 2px solid #ffffff;
-      border-top-color: transparent;
-      border-radius: 50%;
-      animation: button-spin 0.8s linear infinite;
-    }
-    
-    @keyframes button-spin {
-      to { transform: rotate(360deg); }
     }
     
     .btn-warning {
@@ -516,7 +481,6 @@
       cursor: pointer;
     }
     
-    /* Status Badges */
     .status-badge {
       padding: 0.25rem 0.75rem;
       border-radius: 20px 4px 20px 4px;
@@ -534,7 +498,6 @@
     .status-approved { background: #d1fae5; color: #065f46; }
     .status-rejected { background: #fee2e2; color: #991b1b; }
     
-    /* Tables */
     .data-table {
       width: 100%;
       overflow-x: auto;
@@ -568,7 +531,6 @@
       cursor: pointer;
     }
     
-    /* Modal Styles */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -608,7 +570,6 @@
       transform: scale(1);
     }
     
-    /* Form Elements */
     .form-group {
       margin-bottom: 1.5rem;
     }
@@ -635,7 +596,6 @@
       box-shadow: 0 0 0 3px rgba(24, 119, 242, 0.1);
     }
     
-    /* Image Gallery */
     .image-preview {
       width: 100px;
       height: 100px;
@@ -679,7 +639,6 @@
       object-fit: cover;
     }
     
-    /* Drop Zone */
     .drop-zone {
       border: 2px dashed #e2e8f0;
       border-radius: 1rem;
@@ -694,7 +653,6 @@
       background: rgba(24, 119, 242, 0.05);
     }
     
-    /* Loading Spinner */
     .loading-spinner {
       border: 3px solid #f3f3f3;
       border-top: 3px solid #1877F2;
@@ -710,7 +668,6 @@
       100% { transform: rotate(360deg); }
     }
     
-    /* Custom Popup (SweetAlert2 like) */
     .popup-message {
       position: fixed;
       top: 20px;
@@ -773,54 +730,32 @@
       }
     }
     
-    /* Loading Overlay */
     .loading-overlay {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.9);
       backdrop-filter: blur(4px);
       z-index: 9998;
-      display: flex;
+      display: none;
       align-items: center;
       justify-content: center;
       flex-direction: column;
       gap: 1rem;
-      opacity: 0;
-      visibility: hidden;
-      transition: all 0.3s;
     }
     
     .loading-overlay.active {
-      opacity: 1;
-      visibility: visible;
+      display: flex;
     }
     
-    .loading-text {
-      font-size: 1.1rem;
-      color: #1877F2;
-      font-weight: 500;
-    }
-    
-    /* Product Gallery */
     .product-gallery {
       position: relative;
       width: 100%;
       height: 200px;
       overflow: hidden;
       border-radius: 30px 8px 30px 8px;
-    }
-    
-    .gallery-image {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: opacity 0.3s;
     }
     
     .gallery-controls {
@@ -832,47 +767,6 @@
       z-index: 10;
     }
     
-    .gallery-btn {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      background: rgba(0,0,0,0.5);
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      border: none;
-      transition: all 0.2s;
-    }
-    
-    .gallery-btn:hover {
-      background: #1877F2;
-    }
-    
-    .image-indicator {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      display: flex;
-      gap: 5px;
-      z-index: 10;
-    }
-    
-    .indicator-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.5);
-      transition: all 0.2s;
-    }
-    
-    .indicator-dot.active {
-      background: #1877F2;
-      transform: scale(1.2);
-    }
-    
-    /* Order Details */
     .order-detail-item {
       background: #f9fafb;
       padding: 0.75rem;
@@ -880,14 +774,12 @@
       margin-bottom: 0.5rem;
     }
     
-    /* Chart Container */
     .chart-container {
       position: relative;
       height: 300px;
       width: 100%;
     }
     
-    /* Tabs */
     .tab {
       padding: 0.75rem 1.5rem;
       cursor: pointer;
@@ -901,7 +793,6 @@
       font-weight: 600;
     }
     
-    /* Scrollbar */
     ::-webkit-scrollbar {
       width: 8px;
       height: 8px;
@@ -922,13 +813,11 @@
   </style>
 </head>
 <body>
-  <!-- Loading Overlay -->
   <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-spinner"></div>
-    <div class="loading-text" id="loadingText">লোড হচ্ছে...</div>
+    <div class="loading-text" id="loadingText">অপেক্ষা করুন...</div>
   </div>
 
-  <!-- Login Page -->
   <div class="login-container" id="loginPage">
     <div class="login-card">
       <div class="login-header text-center mb-8">
@@ -954,12 +843,9 @@
     </div>
   </div>
 
-  <!-- Admin Panel -->
   <div class="admin-container" id="adminPanel">
-    <!-- Sidebar Overlay (Mobile) -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden" onclick="closeSidebar()"></div>
     
-    <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
       <div class="sidebar-logo">
         <h2>AMAYRA</h2>
@@ -992,16 +878,14 @@
           <span class="menu-badge" id="productCount">0</span>
         </div>
         <div class="menu-item" data-page="orders" id="ordersMenuItem">
-          <i class="fas fa-truck notification-badge">
-            <span class="badge" id="orderBadge" style="display: none;">0</span>
-          </i>
+          <i class="fas fa-truck notification-badge"></i>
           <span>অর্ডার</span>
+          <span class="menu-badge" id="orderBadge" style="display: none;">0</span>
         </div>
         <div class="menu-item" data-page="reviews" id="reviewsMenuItem">
-          <i class="fas fa-star notification-badge">
-            <span class="badge" id="reviewBadge" style="display: none;">0</span>
-          </i>
+          <i class="fas fa-star notification-badge"></i>
           <span>রিভিউ</span>
+          <span class="menu-badge" id="reviewBadge" style="display: none;">0</span>
         </div>
         <div class="menu-item" data-page="sliders">
           <i class="fas fa-images"></i>
@@ -1026,7 +910,6 @@
       </div>
     </div>
 
-    <!-- Main Content -->
     <div class="main-content" id="mainContent">
       <div class="top-bar">
         <div class="flex items-center gap-4">
@@ -1048,7 +931,6 @@
         </div>
       </div>
 
-      <!-- Notification Dropdown -->
       <div class="notification-dropdown" id="notificationDropdown">
         <div class="p-3 border-b border-gray-200 flex justify-between items-center">
           <h4 class="font-bold">নতুন নোটিফিকেশন</h4>
@@ -1059,17 +941,14 @@
         </div>
       </div>
 
-      <!-- Dynamic Content -->
       <div id="pageContent"></div>
     </div>
   </div>
 
-  <!-- Main Modal (for forms) -->
   <div class="modal-overlay" id="modal">
     <div class="modal-content" id="modalContent"></div>
   </div>
 
-  <!-- Image Upload Modal -->
   <div class="modal-overlay" id="imageModal">
     <div class="modal-content w-full max-w-2xl p-6">
       <div class="flex justify-between items-center mb-6">
@@ -1102,7 +981,6 @@
     </div>
   </div>
 
-  <!-- Order Details Modal -->
   <div class="modal-overlay" id="orderModal">
     <div class="modal-content w-full max-w-4xl p-6">
       <div class="flex justify-between items-center mb-6">
@@ -1115,7 +993,6 @@
     </div>
   </div>
 
-  <!-- Confirmation Modal -->
   <div class="modal-overlay" id="confirmModal">
     <div class="modal-content w-full max-w-md p-6 text-center">
       <div class="text-6xl text-yellow-500 mb-4">
@@ -1134,7 +1011,6 @@
     </div>
   </div>
 
-  <!-- Gallery Preview Modal -->
   <div class="modal-overlay" id="galleryModal">
     <div class="modal-content w-full max-w-2xl p-6">
       <div class="flex justify-between items-center mb-6">
@@ -1152,41 +1028,9 @@
     </div>
   </div>
 
-  <!-- Logo Upload Modal -->
-  <div class="modal-overlay" id="logoModal">
-    <div class="modal-content w-full max-w-md p-6">
-      <div class="flex justify-between items-center mb-6">
-        <h3 class="text-2xl font-bold">লোগো আপলোড</h3>
-        <button onclick="closeLogoModal()" class="text-gray-500 hover:text-red-500 text-2xl">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      
-      <div class="drop-zone" id="logoDropZone">
-        <i class="fas fa-cloud-upload-alt text-5xl text-[#1877F2] mb-4"></i>
-        <p class="text-lg font-medium text-gray-700">PNG লোগো নির্বাচন করুন</p>
-        <p class="text-sm text-gray-500 mt-2">শুধুমাত্র PNG ফাইল</p>
-        <input type="file" id="logoFileInput" accept="image/png" class="hidden">
-      </div>
-      
-      <div id="logoPreviewContainer" class="flex justify-center mt-6"></div>
-      
-      <div class="flex justify-end gap-3 mt-6">
-        <button onclick="closeLogoModal()" class="px-6 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">
-          বাতিল
-        </button>
-        <button onclick="uploadLogo()" id="uploadLogoBtn" class="px-6 py-2 bg-[#1877F2] text-white rounded-lg hover:bg-[#0a5bc4]">
-          <i class="fas fa-upload mr-2"></i>আপলোড
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Popup Container -->
   <div id="popupContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
 
   <script>
-    // ========== কনফিগারেশন ==========
     const API_BASE = 'https://amayra-8hsr.onrender.com/api';
     
     let token = localStorage.getItem('token');
@@ -1200,9 +1044,7 @@
     let notificationInterval = null;
     let chartInstance1 = null;
     let chartInstance2 = null;
-    let chartInstance3 = null;
 
-    // ========== POPUP FUNCTION ==========
     function showPopup(message, type = 'info', title = '') {
       const container = document.getElementById('popupContainer');
       const id = Date.now() + Math.random();
@@ -1240,8 +1082,7 @@
       }, 3000);
     }
 
-    // ========== LOADING OVERLAY ==========
-    function showLoading(message = 'লোড হচ্ছে...') {
+    function showLoading(message = 'অপেক্ষা করুন...') {
       document.getElementById('loadingText').textContent = message;
       document.getElementById('loadingOverlay').classList.add('active');
     }
@@ -1250,7 +1091,6 @@
       document.getElementById('loadingOverlay').classList.remove('active');
     }
 
-    // ========== CHECK LOGIN ==========
     if (token) {
       document.getElementById('loginPage').style.display = 'none';
       document.getElementById('adminPanel').style.display = 'block';
@@ -1262,7 +1102,6 @@
       startNotificationChecker();
     }
 
-    // ========== NOTIFICATION FUNCTIONS ==========
     function startNotificationChecker() {
       if (notificationInterval) clearInterval(notificationInterval);
       checkNotifications();
@@ -1291,32 +1130,19 @@
 
         const totalUnread = (ordersData.count || 0) + (reviewsData.count || 0);
 
-        if (ordersData.count > 0) {
-          orderBadge.style.display = 'flex';
-          orderBadge.textContent = ordersData.count;
-        } else {
-          orderBadge.style.display = 'none';
-        }
-
-        if (reviewsData.count > 0) {
-          reviewBadge.style.display = 'flex';
-          reviewBadge.textContent = reviewsData.count;
-        } else {
-          reviewBadge.style.display = 'none';
-        }
-
-        if (totalUnread > 0) {
-          totalBadge.style.display = 'flex';
-          totalBadge.textContent = totalUnread;
-        } else {
-          totalBadge.style.display = 'none';
-        }
+        orderBadge.style.display = ordersData.count > 0 ? 'flex' : 'none';
+        orderBadge.textContent = ordersData.count || 0;
+        
+        reviewBadge.style.display = reviewsData.count > 0 ? 'flex' : 'none';
+        reviewBadge.textContent = reviewsData.count || 0;
+        
+        totalBadge.style.display = totalUnread > 0 ? 'flex' : 'none';
+        totalBadge.textContent = totalUnread;
       } catch (error) {
         console.error('Error checking notifications:', error);
       }
     }
 
-    // ========== LOGIN ==========
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const username = document.getElementById('username').value;
@@ -1364,7 +1190,6 @@
       }
     });
 
-    // ========== LOGOUT ==========
     document.getElementById('logoutBtn').addEventListener('click', () => {
       localStorage.removeItem('token');
       localStorage.removeItem('adminUsername');
@@ -1375,7 +1200,6 @@
       showPopup('লগআউট করা হয়েছে', 'info');
     });
 
-    // ========== SIDEBAR TOGGLE ==========
     document.getElementById('menuToggle').addEventListener('click', () => {
       document.getElementById('sidebar').classList.add('open');
       document.getElementById('sidebarOverlay').classList.remove('hidden');
@@ -1386,7 +1210,6 @@
       document.getElementById('sidebarOverlay').classList.add('hidden');
     };
 
-    // ========== MENU NAVIGATION ==========
     document.querySelectorAll('.menu-item').forEach(item => {
       if (item.id !== 'logoutBtn') {
         item.addEventListener('click', async () => {
@@ -1424,7 +1247,6 @@
       }
     });
 
-    // ========== NOTIFICATION BELL ==========
     const bell = document.getElementById('notificationBell');
     const dropdown = document.getElementById('notificationDropdown');
     
@@ -1532,7 +1354,6 @@
       dropdown.classList.remove('show');
     });
 
-    // ========== MODAL FUNCTIONS ==========
     window.openImageModal = () => {
       document.getElementById('imageModal').classList.add('active');
     };
@@ -1542,16 +1363,6 @@
       document.getElementById('fileInput').value = '';
       document.getElementById('previewContainer').innerHTML = '';
       document.getElementById('uploadStatus').innerHTML = '';
-    };
-
-    window.openLogoModal = () => {
-      document.getElementById('logoModal').classList.add('active');
-    };
-
-    window.closeLogoModal = () => {
-      document.getElementById('logoModal').classList.remove('active');
-      document.getElementById('logoFileInput').value = '';
-      document.getElementById('logoPreviewContainer').innerHTML = '';
     };
 
     window.openGalleryModal = (images, callback) => {
@@ -1613,7 +1424,6 @@
       document.getElementById('modal').classList.remove('active');
     };
 
-    // ========== DROPZONE HANDLING ==========
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
 
@@ -1657,54 +1467,6 @@
             `;
           };
           reader.readAsDataURL(file);
-        }
-      }
-    }
-
-    // Logo DropZone
-    const logoDropZone = document.getElementById('logoDropZone');
-    const logoFileInput = document.getElementById('logoFileInput');
-
-    logoDropZone.addEventListener('click', () => {
-      logoFileInput.click();
-    });
-
-    logoDropZone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      logoDropZone.classList.add('dragover');
-    });
-
-    logoDropZone.addEventListener('dragleave', (e) => {
-      e.preventDefault();
-      logoDropZone.classList.remove('dragover');
-    });
-
-    logoDropZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      logoDropZone.classList.remove('dragover');
-      handleLogoFile(e.dataTransfer.files);
-    });
-
-    logoFileInput.addEventListener('change', (e) => {
-      handleLogoFile(e.target.files);
-    });
-
-    function handleLogoFile(files) {
-      const preview = document.getElementById('logoPreviewContainer');
-      preview.innerHTML = '';
-      
-      if (files.length > 0) {
-        const file = files[0];
-        if (file.type === 'image/png') {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            preview.innerHTML = `
-              <img src="${e.target.result}" class="image-preview w-32 h-32 object-contain border-2 border-[#1877F2]">
-            `;
-          };
-          reader.readAsDataURL(file);
-        } else {
-          showPopup('শুধুমাত্র PNG ফাইল গ্রহণযোগ্য', 'error');
         }
       }
     }
@@ -1754,53 +1516,6 @@
       }
     };
 
-    window.uploadLogo = async function() {
-      const files = logoFileInput.files;
-      if (files.length === 0) {
-        showPopup('লোগো নির্বাচন করুন', 'error');
-        return;
-      }
-
-      const file = files[0];
-      if (file.type !== 'image/png') {
-        showPopup('শুধুমাত্র PNG ফাইল গ্রহণযোগ্য', 'error');
-        return;
-      }
-
-      const uploadBtn = document.getElementById('uploadLogoBtn');
-      const originalText = uploadBtn.innerHTML;
-      
-      uploadBtn.disabled = true;
-      uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>আপলোড হচ্ছে...';
-
-      const formData = new FormData();
-      formData.append('logo', file);
-
-      try {
-        const res = await fetch(`${API_BASE}/admin/settings/logo`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` },
-          body: formData
-        });
-
-        const data = await res.json();
-        
-        if (res.ok) {
-          closeLogoModal();
-          showPopup('লোগো আপলোড সফল হয়েছে', 'success');
-          loadSettings();
-        } else {
-          showPopup(data.error || 'লোগো আপলোড ব্যর্থ হয়েছে', 'error');
-        }
-      } catch (error) {
-        console.error('Logo upload error:', error);
-        showPopup('লোগো আপলোড করতে সমস্যা হয়েছে', 'error');
-      } finally {
-        uploadBtn.disabled = false;
-        uploadBtn.innerHTML = originalText;
-      }
-    };
-
     function updateImagePreview() {
       const container = document.getElementById('imagePreviewContainer');
       if (container) {
@@ -1820,9 +1535,7 @@
       updateImagePreview();
     };
 
-    // ========== DASHBOARD ==========
     async function loadDashboard() {
-      showLoading('ড্যাশবোর্ড লোড হচ্ছে...');
       const content = document.getElementById('pageContent');
 
       try {
@@ -2028,14 +1741,10 @@
       } catch (error) {
         console.error('Dashboard error:', error);
         content.innerHTML = '<p class="text-red-500 text-center py-8">ডেটা লোড করতে ব্যর্থ হয়েছে</p>';
-      } finally {
-        hideLoading();
       }
     }
 
-    // ========== CATEGORIES ==========
     async function loadCategories() {
-      showLoading('ক্যাটাগরি লোড হচ্ছে...');
       const content = document.getElementById('pageContent');
 
       try {
@@ -2090,8 +1799,6 @@
       } catch (error) {
         console.error('Categories error:', error);
         content.innerHTML = '<p class="text-red-500 text-center py-8">ক্যাটাগরি লোড করতে ব্যর্থ হয়েছে</p>';
-      } finally {
-        hideLoading();
       }
     }
 
@@ -2148,7 +1855,6 @@
       };
 
       submitBtn.disabled = true;
-      submitBtn.classList.add('loading');
       submitBtn.innerHTML = 'সংরক্ষণ হচ্ছে...';
 
       try {
@@ -2177,7 +1883,6 @@
         showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
       } finally {
         submitBtn.disabled = false;
-        submitBtn.classList.remove('loading');
         submitBtn.innerHTML = 'সংরক্ষণ';
       }
     };
@@ -2191,7 +1896,6 @@
     };
 
     window.deleteCategory = async (id) => {
-      showLoading('মুছে ফেলা হচ্ছে...');
       try {
         const res = await fetch(`${API_BASE}/admin/categories/${id}`, {
           method: 'DELETE',
@@ -2208,14 +1912,10 @@
       } catch (error) {
         console.error('Delete category error:', error);
         showPopup('মুছতে সমস্যা হয়েছে', 'error');
-      } finally {
-        hideLoading();
       }
     };
 
-    // ========== PRODUCTS ==========
     async function loadProducts() {
-      showLoading('প্রোডাক্ট লোড হচ্ছে...');
       const content = document.getElementById('pageContent');
 
       try {
@@ -2274,8 +1974,6 @@
       } catch (error) {
         console.error('Products error:', error);
         content.innerHTML = '<p class="text-red-500 text-center py-8">প্রোডাক্ট লোড করতে ব্যর্থ হয়েছে</p>';
-      } finally {
-        hideLoading();
       }
     }
 
@@ -2330,14 +2028,14 @@
           </div>
           <div class="form-group">
             <label class="form-label">ছবি (সর্বোচ্চ ১০টি)</label>
-            <button type="button" onclick="openImageModal()" class="bg-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300">
+            <button type="button" onclick="openImageModal()" class="bg-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300 mb-2">
               <i class="fas fa-upload mr-2"></i>ছবি আপলোড
             </button>
-            <div id="imagePreviewContainer" class="flex flex-wrap gap-3 mt-4">
+            <div id="imagePreviewContainer" class="flex flex-wrap gap-3 mt-2">
               ${productImages.map(img => `
                 <div class="relative group">
                   <img src="${img}" class="image-preview w-24 h-24" onerror="this.src='https://via.placeholder.com/100'">
-                  <button type="button" onclick="removeImage('${img}')" class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full">×</button>
+                  <button type="button" onclick="removeImage('${img}')" class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full hover:bg-red-600">×</button>
                 </div>
               `).join('')}
             </div>
@@ -2381,20 +2079,27 @@
       };
 
       submitBtn.disabled = true;
-      submitBtn.classList.add('loading');
       submitBtn.innerHTML = 'সংরক্ষণ হচ্ছে...';
 
       try {
         const url = id ? `${API_BASE}/admin/products/${id}` : `${API_BASE}/admin/products`;
         const method = id ? 'PUT' : 'POST';
 
+        const formDataToSend = new FormData();
+        formDataToSend.append('data', JSON.stringify(data));
+        
+        for (let i = 0; i < productImages.length; i++) {
+          if (productImages[i].startsWith('blob:')) {
+            const response = await fetch(productImages[i]);
+            const blob = await response.blob();
+            formDataToSend.append('images', blob, `image-${i}.jpg`);
+          }
+        }
+
         const res = await fetch(url, {
           method,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(data)
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formDataToSend
         });
 
         if (res.ok) {
@@ -2410,7 +2115,6 @@
         showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
       } finally {
         submitBtn.disabled = false;
-        submitBtn.classList.remove('loading');
         submitBtn.innerHTML = 'সংরক্ষণ';
       }
     };
@@ -2424,7 +2128,6 @@
     };
 
     window.deleteProduct = async (id) => {
-      showLoading('মুছে ফেলা হচ্ছে...');
       try {
         const res = await fetch(`${API_BASE}/admin/products/${id}`, {
           method: 'DELETE',
@@ -2441,14 +2144,10 @@
       } catch (error) {
         console.error('Delete product error:', error);
         showPopup('মুছতে সমস্যা হয়েছে', 'error');
-      } finally {
-        hideLoading();
       }
     };
 
-    // ========== ORDERS ==========
     async function loadOrders() {
-      showLoading('অর্ডার লোড হচ্ছে...');
       const content = document.getElementById('pageContent');
 
       try {
@@ -2517,8 +2216,6 @@
       } catch (error) {
         console.error('Orders error:', error);
         content.innerHTML = '<p class="text-red-500 text-center py-8">অর্ডার লোড করতে ব্যর্থ হয়েছে</p>';
-      } finally {
-        hideLoading();
       }
     }
 
@@ -2671,7 +2368,6 @@
     };
 
     window.deleteOrder = async (id) => {
-      showLoading('মুছে ফেলা হচ্ছে...');
       try {
         const res = await fetch(`${API_BASE}/admin/orders/${id}`, {
           method: 'DELETE',
@@ -2689,14 +2385,10 @@
       } catch (error) {
         console.error('Delete order error:', error);
         showPopup('মুছতে সমস্যা হয়েছে', 'error');
-      } finally {
-        hideLoading();
       }
     };
 
-    // ========== REVIEWS ==========
     async function loadReviews() {
-      showLoading('রিভিউ লোড হচ্ছে...');
       const content = document.getElementById('pageContent');
 
       try {
@@ -2759,8 +2451,6 @@
       } catch (error) {
         console.error('Reviews error:', error);
         content.innerHTML = '<p class="text-red-500 text-center py-8">রিভিউ লোড করতে ব্যর্থ হয়েছে</p>';
-      } finally {
-        hideLoading();
       }
     }
 
@@ -2836,7 +2526,6 @@
     };
 
     window.deleteReview = async (id) => {
-      showLoading('মুছে ফেলা হচ্ছে...');
       try {
         const res = await fetch(`${API_BASE}/admin/reviews/${id}`, {
           method: 'DELETE',
@@ -2854,14 +2543,10 @@
       } catch (error) {
         console.error('Delete review error:', error);
         showPopup('মুছতে সমস্যা হয়েছে', 'error');
-      } finally {
-        hideLoading();
       }
     };
 
-    // ========== SLIDERS ==========
     async function loadSliders() {
-      showLoading('স্লাইডার লোড হচ্ছে...');
       const content = document.getElementById('pageContent');
 
       try {
@@ -2916,8 +2601,6 @@
       } catch (error) {
         console.error('Sliders error:', error);
         content.innerHTML = '<p class="text-red-500 text-center py-8">স্লাইডার লোড করতে ব্যর্থ হয়েছে</p>';
-      } finally {
-        hideLoading();
       }
     }
 
@@ -2947,7 +2630,7 @@
             <label class="form-label">ব্যাজ রঙ</label>
             <input type="color" class="form-input" name="badgeColor" value="${slider?.badgeColor || '#1877F2'}" required>
           </div>
-                  <div class="form-group">
+          <div class="form-group">
             <label class="form-label">বাটন টেক্সট</label>
             <input type="text" class="form-input" name="buttonText" value="${slider?.buttonText || 'এখনই কিনুন'}" required>
           </div>
@@ -3003,7 +2686,6 @@
       }
 
       submitBtn.disabled = true;
-      submitBtn.classList.add('loading');
       submitBtn.innerHTML = 'সংরক্ষণ হচ্ছে...';
 
       try {
@@ -3029,7 +2711,6 @@
         showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
       } finally {
         submitBtn.disabled = false;
-        submitBtn.classList.remove('loading');
         submitBtn.innerHTML = 'সংরক্ষণ';
       }
     };
@@ -3043,7 +2724,6 @@
     };
 
     window.deleteSlider = async (id) => {
-      showLoading('মুছে ফেলা হচ্ছে...');
       try {
         const res = await fetch(`${API_BASE}/admin/sliders/${id}`, {
           method: 'DELETE',
@@ -3060,14 +2740,10 @@
       } catch (error) {
         console.error('Delete slider error:', error);
         showPopup('মুছতে সমস্যা হয়েছে', 'error');
-      } finally {
-        hideLoading();
       }
     };
 
-    // ========== SETTINGS ==========
     async function loadSettings() {
-      showLoading('সেটিংস লোড হচ্ছে...');
       const content = document.getElementById('pageContent');
 
       try {
@@ -3083,16 +2759,7 @@
           <div class="section-card">
             <div class="section-header">
               <h3 class="text-xl font-bold">সাইট সেটিংস</h3>
-              <button class="btn-primary" onclick="openLogoModal()">
-                <i class="fas fa-image mr-2"></i>লোগো আপলোড
-              </button>
             </div>
-            ${settings.logo ? `
-              <div class="mb-6 p-4 bg-gray-50 rounded-lg flex items-center gap-4">
-                <img src="${settings.logo}" class="h-16 object-contain">
-                <span class="text-gray-600">বর্তমান লোগো</span>
-              </div>
-            ` : ''}
             <form id="settingsForm" onsubmit="saveSettings(event)">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="form-group">
@@ -3106,7 +2773,6 @@
                 <div class="form-group">
                   <label class="form-label">সাইট সাবটাইটেল</label>
                   <input type="text" class="form-input" name="siteSubtitle" value="${settings.siteSubtitle || 'PREMIUM SHIRT COLLECTION'}" required>
-                  <p class="text-xs text-gray-500 mt-1">হেডারে "PREMIUM SHIRT COLLECTION" এই অংশটি পরিবর্তন হবে</p>
                 </div>
                 <div class="form-group">
                   <label class="form-label">ফোন নম্বর</label>
@@ -3167,8 +2833,6 @@
       } catch (error) {
         console.error('Settings error:', error);
         content.innerHTML = '<p class="text-red-500 text-center py-8">সেটিংস লোড করতে ব্যর্থ হয়েছে</p>';
-      } finally {
-        hideLoading();
       }
     }
 
@@ -3179,13 +2843,11 @@
       
       const data = Object.fromEntries(formData.entries());
 
-      // Convert numeric values
       data.deliveryChargeDhaka = parseInt(data.deliveryChargeDhaka) || 60;
       data.deliveryChargeOutside = parseInt(data.deliveryChargeOutside) || 120;
       data.freeDeliveryThreshold = parseInt(data.freeDeliveryThreshold) || 2000;
 
       submitBtn.disabled = true;
-      submitBtn.classList.add('loading');
       submitBtn.innerHTML = 'সংরক্ষণ হচ্ছে...';
 
       try {
@@ -3209,12 +2871,10 @@
         showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
       } finally {
         submitBtn.disabled = false;
-        submitBtn.classList.remove('loading');
         submitBtn.innerHTML = 'সেটিংস সংরক্ষণ';
       }
     };
 
-    // ========== CHANGE PASSWORD ==========
     function loadChangePassword() {
       const content = document.getElementById('pageContent');
       
@@ -3255,7 +2915,6 @@
       }
 
       submitBtn.disabled = true;
-      submitBtn.classList.add('loading');
       submitBtn.innerHTML = 'পরিবর্তন হচ্ছে...';
 
       try {
@@ -3280,12 +2939,10 @@
         showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
       } finally {
         submitBtn.disabled = false;
-        submitBtn.classList.remove('loading');
         submitBtn.innerHTML = 'পাসওয়ার্ড পরিবর্তন করুন';
       }
     };
 
-    // ========== UTILITY FUNCTIONS ==========
     async function loadUnreadCounts() {
       try {
         const [ordersRes, reviewsRes] = await Promise.all([
@@ -3319,7 +2976,6 @@
       }
     }
 
-    // ========== ORDER DETAILS BY ID ==========
     window.showOrderDetails = async (orderId) => {
       if (typeof orderId === 'string') {
         try {
