@@ -281,6 +281,29 @@
       padding: 0.8rem 1rem;
       margin-bottom: 0.6rem;
       border-left: 5px solid #1877F2;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .cart-item-new.highlight {
+      animation: highlight-pulse 1s ease;
+      border-left-color: #FF7A00;
+      background: #fff3e0;
+    }
+    .cart-item-image {
+      width: 50px;
+      height: 50px;
+      border-radius: 15px 4px 15px 4px;
+      object-fit: cover;
+      border: 2px solid white;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    @keyframes highlight-pulse {
+      0% { transform: scale(1); background-color: #fff3e0; }
+      50% { transform: scale(1.02); background-color: #ffe4b5; }
+      100% { transform: scale(1); background-color: #fff3e0; }
     }
 
     .star-organic i { 
@@ -311,9 +334,6 @@
     
     @media (min-width: 769px) {
       .desktop-only { display: block; }
-      .product-grid-4 {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-      }
     }
 
     .hamburger {
@@ -505,27 +525,35 @@
     }
 
     .order-section-wrapper {
-      display: block;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      align-items: start;
     }
     
     @media (min-width: 992px) {
       .order-section-wrapper {
-        display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 1.5rem;
-        align-items: start;
+        gap: 2rem;
       }
     }
 
     .bestseller-slider {
       background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
       border-radius: 40px 12px 40px 12px;
-      padding: 1.8rem;
+      padding: 2rem;
       border: 2px solid rgba(24, 119, 242, 0.15);
       box-shadow: 0 15px 30px -10px rgba(0,0,0,0.1);
       height: fit-content;
       position: relative;
       overflow: hidden;
+      display: none;
+    }
+    
+    @media (min-width: 992px) {
+      .bestseller-slider {
+        display: block;
+      }
     }
     
     .bestseller-slider::before {
@@ -549,13 +577,13 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 1.8rem;
+      margin-bottom: 2rem;
       padding-bottom: 1rem;
       border-bottom: 2px dashed rgba(24, 119, 242, 0.2);
     }
     
     .bestseller-header i {
-      font-size: 2.2rem;
+      font-size: 2.5rem;
       color: #FF7A00;
       filter: drop-shadow(0 4px 6px rgba(255,122,0,0.3));
       animation: flame 2s ease-in-out infinite;
@@ -608,8 +636,8 @@
     }
     
     .bestseller-item img {
-      width: 90px;
-      height: 90px;
+      width: 100px;
+      height: 100px;
       border-radius: 25px 6px 25px 6px;
       object-fit: cover;
       border: 3px solid white;
@@ -626,7 +654,7 @@
     }
     
     .bestseller-info h4 {
-      font-size: 1.2rem;
+      font-size: 1.3rem;
       font-weight: 700;
       color: #1C1E21;
       margin-bottom: 0.3rem;
@@ -640,13 +668,13 @@
     }
     
     .bestseller-price .current {
-      font-size: 1.5rem;
+      font-size: 1.6rem;
       font-weight: 800;
       color: #FF7A00;
     }
     
     .bestseller-price .original {
-      font-size: 1rem;
+      font-size: 1.1rem;
       color: #a0aec0;
       text-decoration: line-through;
     }
@@ -654,9 +682,9 @@
     .bestseller-discount {
       background: linear-gradient(135deg, #FF7A00, #ff9a3c);
       color: white;
-      padding: 0.2rem 0.8rem;
+      padding: 0.3rem 1rem;
       border-radius: 20px 4px 20px 4px;
-      font-size: 0.8rem;
+      font-size: 0.9rem;
       font-weight: 600;
       display: inline-block;
     }
@@ -666,13 +694,13 @@
       color: white;
       border: none;
       border-radius: 30px 6px 30px 6px;
-      padding: 0.7rem 1.2rem;
-      font-size: 0.9rem;
+      padding: 0.8rem 1.5rem;
+      font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s;
       width: 100%;
-      margin-top: 0.8rem;
+      margin-top: 1rem;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -693,22 +721,22 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 1rem;
-      margin-top: 1.5rem;
+      gap: 1.5rem;
+      margin-top: 2rem;
       padding-top: 1rem;
       border-top: 1px solid rgba(24, 119, 242, 0.1);
     }
     
     .bestseller-nav button {
-      width: 40px;
-      height: 40px;
+      width: 45px;
+      height: 45px;
       border-radius: 50%;
       background: white;
       border: 2px solid #e2e8f0;
       cursor: pointer;
       transition: all 0.3s;
       color: #1877F2;
-      font-size: 1rem;
+      font-size: 1.2rem;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -722,12 +750,12 @@
     }
     
     .bestseller-nav span {
-      font-size: 1rem;
+      font-size: 1.1rem;
       font-weight: 600;
       color: #4a5568;
       background: #f0f2f5;
-      padding: 0.3rem 1rem;
-      border-radius: 20px;
+      padding: 0.5rem 1.5rem;
+      border-radius: 30px;
     }
 
     .product-gallery {
@@ -970,7 +998,7 @@
 
 <section id="order" class="container-1200 px-4 py-10">
   <div class="order-section-wrapper">
-    <div class="glass-card p-6 md:p-8 border-t-4 border-t-[#1877F2]">
+    <div class="glass-card p-6 md:p-8 border-t-4 border-t-[#1877F2]" id="orderFormCard">
       <h2 class="text-3xl font-bold flex items-center gap-3"><i class="fa-regular fa-pen-to-square text-[#1877F2]"></i> অর্ডার <span class="text-[#1877F2]">ফর্ম</span></h2>
       <div class="bg-[#F0F2F5]/90 rounded-[30px_8px_30px_8px] p-5 my-5">
         <div id="cartItems" class="space-y-2 max-h-64 overflow-auto reviews-scroll pr-2"></div>
@@ -1092,6 +1120,7 @@
   let currentProductImages = {};
   let fullscreenImages = [];
   let fullscreenCurrentIndex = 0;
+  let lastAddedItemId = null;
 
   document.addEventListener('DOMContentLoaded', async function() {
     await loadSettings();
@@ -1361,11 +1390,11 @@
     const container = document.getElementById('bestsellerContainer');
     container.innerHTML = `
       <div class="bestseller-item">
-        <div class="flex gap-4">
-          <img src="${images[0]}" class="w-24 h-24 object-cover rounded-[25px_6px_25px_6px]" onerror="this.src='https://via.placeholder.com/90'">
+        <div class="flex flex-col md:flex-row gap-4">
+          <img src="${images[0]}" class="w-full md:w-24 h-48 md:h-24 object-cover rounded-[25px_6px_25px_6px]" onerror="this.src='https://via.placeholder.com/90'">
           <div class="bestseller-info">
             <h4>${product.name}</h4>
-            <p class="text-sm text-gray-500 mb-2">${product.desc.substring(0, 40)}${product.desc.length > 40 ? '...' : ''}</p>
+            <p class="text-sm text-gray-500 mb-2">${product.desc.substring(0, 50)}${product.desc.length > 50 ? '...' : ''}</p>
             <div class="bestseller-price">
               <span class="current">৳${product.price}</span>
               <span class="original">৳${product.original}</span>
@@ -1437,10 +1466,12 @@
     
     setTimeout(() => {
       const existingItem = cart.find(item => item.id === productId);
+      const productImage = product.images && product.images.length ? product.images[0] : product.img;
       
       if (existingItem) {
         if (existingItem.quantity < product.stock) {
           existingItem.quantity++;
+          lastAddedItemId = productId;
         } else {
           Swal.fire({
             icon: 'error',
@@ -1455,11 +1486,26 @@
           name: product.name,
           price: product.price,
           quantity: 1,
-          stock: product.stock
+          stock: product.stock,
+          image: productImage
         });
+        lastAddedItemId = productId;
       }
       
       updateCart();
+      
+      document.getElementById('orderFormCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      setTimeout(() => {
+        const addedItem = document.querySelector(`.cart-item-new[data-product-id="${productId}"]`);
+        if (addedItem) {
+          addedItem.classList.add('highlight');
+          setTimeout(() => {
+            addedItem.classList.remove('highlight');
+          }, 1000);
+        }
+      }, 100);
+      
       Swal.fire({
         icon: 'success',
         text: 'কার্টে যুক্ত হয়েছে',
@@ -1491,11 +1537,15 @@
 
     cart.forEach((item, index) => {
       subtotal += item.price * item.quantity;
+      const product = products.find(p => p.id === item.id);
+      const productImage = item.image || (product ? (product.images && product.images.length ? product.images[0] : product.img) : 'https://via.placeholder.com/50');
+      
       html += `
-        <div class="cart-item-new flex justify-between items-center">
-          <div>
-            <span class="font-medium text-[#1C1E21]">${item.name}</span>
-            <span class="text-sm block text-[#1C1E21]/70">৳${item.price} x ${item.quantity}</span>
+        <div class="cart-item-new flex items-center gap-3" data-product-id="${item.id}">
+          <img src="${productImage}" class="cart-item-image" onerror="this.src='https://via.placeholder.com/50'">
+          <div class="flex-1">
+            <span class="font-medium text-[#1C1E21] block">${item.name}</span>
+            <span class="text-sm text-[#1C1E21]/70">৳${item.price} x ${item.quantity}</span>
           </div>
           <div class="flex gap-2 items-center">
             <button onclick="updateQuantity(${index}, -1)" class="bg-white w-8 h-8 rounded-[12px_2px_12px_2px] hover:bg-[#F0F2F5] transition text-[#1877F2]">

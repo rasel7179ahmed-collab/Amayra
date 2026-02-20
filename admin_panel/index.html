@@ -219,6 +219,8 @@
       font-size: 0.7rem;
       padding: 0.2rem 0.5rem;
       border-radius: 20px;
+      min-width: 20px;
+      text-align: center;
     }
     
     .main-content {
@@ -399,11 +401,20 @@
     
     .notification-item.unread {
       background: #ebf5ff;
+      border-left: 3px solid #1877F2;
     }
     
     .notification-time {
       font-size: 0.7rem;
       color: #718096;
+    }
+    
+    .notification-type {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 12px;
+      background: #e2e8f0;
+      color: #4a5568;
     }
     
     .section-card {
@@ -935,6 +946,9 @@
         <div id="notificationList" class="max-h-80 overflow-y-auto">
           <div class="p-4 text-center text-gray-500">কোন নতুন নোটিফিকেশন নেই</div>
         </div>
+        <div class="p-2 border-t border-gray-200 text-center">
+          <button class="text-sm text-[#1877F2] hover:underline" onclick="viewAllNotifications()">সব দেখুন</button>
+        </div>
       </div>
 
       <div id="pageContent"></div>
@@ -1040,6 +1054,8 @@
     let notificationInterval = null;
     let chartInstance1 = null;
     let chartInstance2 = null;
+    let allOrders = [];
+    let allReviews = [];
 
     function showPopup(message, type = 'info', title = '') {
       const container = document.getElementById('popupContainer');
@@ -1101,7 +1117,7 @@
     function startNotificationChecker() {
       if (notificationInterval) clearInterval(notificationInterval);
       checkNotifications();
-      notificationInterval = setInterval(checkNotifications, 10000);
+      notificationInterval = setInterval(checkNotifications, 5000);
     }
 
     async function checkNotifications() {
@@ -1145,6 +1161,10 @@
           totalBadge.textContent = totalUnread;
         } else {
           totalBadge.style.display = 'none';
+        }
+
+        if (dropdown.classList.contains('show')) {
+          loadNotifications();
         }
       } catch (error) {
         console.error('Error checking notifications:', error);
@@ -1289,10 +1309,13 @@
         const ordersData = await ordersRes.json();
         const reviewsData = await reviewsRes.json();
 
+        allOrders = ordersData.orders || [];
+        allReviews = reviewsData.reviews || [];
+
         const notifications = [];
 
-        if (ordersData.orders && ordersData.orders.length > 0) {
-          ordersData.orders.forEach(order => {
+        if (allOrders.length > 0) {
+          allOrders.forEach(order => {
             notifications.push({
               type: 'order',
               id: order._id,
@@ -1300,6 +1323,7 @@
               description: `${order.customerName || 'N/A'} - ৳${order.total || 0}`,
               time: order.createdAt,
               orderId: order._id,
+              read: false,
               onClick: () => {
                 showOrderDetails(order);
                 markOrderAsRead(order._id);
@@ -1312,14 +1336,15 @@
           });
         }
 
-        if (reviewsData.reviews && reviewsData.reviews.length > 0) {
-          reviewsData.reviews.forEach(review => {
+        if (allReviews.length > 0) {
+          allReviews.forEach(review => {
             notifications.push({
               type: 'review',
               id: review._id,
               title: `নতুন রিভিউ (${review.rating || 0}★)`,
               description: `${review.name || 'N/A'} - ${review.address || 'N/A'}`,
               time: review.createdAt,
+              read: false,
               onClick: () => {
                 markReviewAsRead(review._id);
                 dropdown.classList.remove('show');
@@ -1340,11 +1365,16 @@
 
         listDiv.innerHTML = notifications.map(n => `
           <div class="notification-item unread" onclick="(${n.onClick})()">
-            <div class="flex justify-between">
-              <span class="font-medium">${n.title}</span>
-              <span class="notification-time">${new Date(n.time).toLocaleTimeString('bn-BD')}</span>
+            <div class="flex justify-between items-start">
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <span class="font-medium">${n.title}</span>
+                  <span class="notification-type">${n.type === 'order' ? 'অর্ডার' : 'রিভিউ'}</span>
+                </div>
+                <p class="text-sm text-gray-600 mt-1">${n.description}</p>
+                <p class="notification-time mt-1">${new Date(n.time).toLocaleString('bn-BD')}</p>
+              </div>
             </div>
-            <p class="text-sm text-gray-600">${n.description}</p>
           </div>
         `).join('');
 
@@ -1353,6 +1383,11 @@
         listDiv.innerHTML = '<div class="p-4 text-center text-red-500">নোটিফিকেশন লোড করতে ব্যর্থ</div>';
       }
     }
+
+    window.viewAllNotifications = () => {
+      dropdown.classList.remove('show');
+      document.querySelector('[data-page="orders"]').click();
+    };
 
     async function markOrderAsRead(orderId) {
       try {
@@ -2190,6 +2225,7 @@
         if (!res.ok) throw new Error('Failed to load orders');
 
         const data = await res.json();
+        allOrders = data.orders || [];
 
         content.innerHTML = `
           <div class="section-card">
@@ -2223,7 +2259,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  ${(data.orders || []).map(order => `
+                  ${allOrders.map(order => `
                     <tr>
                       <td>${order.orderId || 'N/A'}</td>
                       <td>${order.customerName || 'N/A'}</td>
@@ -2239,7 +2275,7 @@
                       </td>
                     </tr>
                   `).join('')}
-                  ${(!data.orders || data.orders.length === 0) ? '<tr><td colspan="9" class="text-center py-4">কোন অর্ডার নেই</td></tr>' : ''}
+                  ${allOrders.length === 0 ? '<tr><td colspan="9" class="text-center py-4">কোন অর্ডার নেই</td></tr>' : ''}
                 </tbody>
               </table>
             </div>
@@ -2260,10 +2296,11 @@
         if (!res.ok) throw new Error('Failed to filter orders');
 
         const data = await res.json();
+        allOrders = data.orders || [];
 
         const tbody = document.querySelector('tbody');
         if (tbody) {
-          tbody.innerHTML = (data.orders || []).map(order => `
+          tbody.innerHTML = allOrders.map(order => `
             <tr>
               <td>${order.orderId || 'N/A'}</td>
               <td>${order.customerName || 'N/A'}</td>
@@ -2280,7 +2317,7 @@
             </tr>
           `).join('');
           
-          if (data.orders.length === 0) {
+          if (allOrders.length === 0) {
             tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4">কোন অর্ডার নেই</td></tr>';
           }
         }
@@ -2432,6 +2469,7 @@
         if (!res.ok) throw new Error('Failed to load reviews');
 
         const data = await res.json();
+        allReviews = data.reviews || [];
 
         content.innerHTML = `
           <div class="section-card">
@@ -2460,7 +2498,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  ${(data.reviews || []).map(review => `
+                  ${allReviews.map(review => `
                     <tr>
                       <td>${review.name || ''}</td>
                       <td>${review.address || ''}</td>
@@ -2475,7 +2513,7 @@
                       </td>
                     </tr>
                   `).join('')}
-                  ${(!data.reviews || data.reviews.length === 0) ? '<tr><td colspan="7" class="text-center py-4">কোন রিভিউ নেই</td></tr>' : ''}
+                  ${allReviews.length === 0 ? '<tr><td colspan="7" class="text-center py-4">কোন রিভিউ নেই</td></tr>' : ''}
                 </tbody>
               </table>
             </div>
@@ -2496,10 +2534,11 @@
         if (!res.ok) throw new Error('Failed to filter reviews');
 
         const data = await res.json();
+        allReviews = data.reviews || [];
 
         const tbody = document.querySelector('tbody');
         if (tbody) {
-          tbody.innerHTML = (data.reviews || []).map(review => `
+          tbody.innerHTML = allReviews.map(review => `
             <tr>
               <td>${review.name || ''}</td>
               <td>${review.address || ''}</td>
@@ -2515,7 +2554,7 @@
             </tr>
           `).join('');
           
-          if (data.reviews.length === 0) {
+          if (allReviews.length === 0) {
             tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">কোন রিভিউ নেই</td></tr>';
           }
         }
