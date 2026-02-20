@@ -1442,198 +1442,81 @@
       }
     });
 
-   // ========== NOTIFICATION FUNCTIONS ==========
-async function loadNotifications() {
-  const listDiv = document.getElementById('notificationList');
-  listDiv.innerHTML = '<div class="p-4 text-center"><div class="loading-spinner mx-auto"></div></div>';
-  
-  try {
-    // সব আনরিড অর্ডার এবং পেন্ডিং রিভিউ লোড করা হচ্ছে
-    const [ordersRes, reviewsRes] = await Promise.all([
-      fetch(`${API_BASE}/admin/orders?limit=50&isRead=false`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      }),
-      fetch(`${API_BASE}/admin/reviews?status=pending&limit=50`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-    ]);
+    async function loadNotifications() {
+      const listDiv = document.getElementById('notificationList');
+      listDiv.innerHTML = '<div class="p-4 text-center"><div class="loading-spinner mx-auto"></div></div>';
+      
+      try {
+        const [ordersRes, reviewsRes] = await Promise.all([
+          fetch(`${API_BASE}/admin/orders?limit=10&isRead=false`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }),
+          fetch(`${API_BASE}/admin/reviews?status=pending&limit=5`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+        ]);
 
-    const ordersData = await ordersRes.json();
-    const reviewsData = await reviewsRes.json();
+        const ordersData = await ordersRes.json();
+        const reviewsData = await reviewsRes.json();
 
-    const notifications = [];
+        const notifications = [];
 
-    // অর্ডার নোটিফিকেশন
-    if (ordersData.orders && ordersData.orders.length > 0) {
-      ordersData.orders.forEach(order => {
-        notifications.push({
-          type: 'order',
-          id: order._id,
-          title: `নতুন অর্ডার #${order.orderId}`,
-          description: `${order.customerName || 'N/A'} - ৳${order.total || 0}`,
-          time: order.createdAt,
-          data: order,
-          onClick: () => {
-            showOrderDetails(order);
-            markNotificationRead('order', order._id);
-            dropdown.classList.remove('show');
-          }
-        });
-      });
-    }
+        if (ordersData.orders && ordersData.orders.length > 0) {
+          ordersData.orders.forEach(order => {
+            notifications.push({
+              type: 'order',
+              id: order._id,
+              title: `নতুন অর্ডার #${order.orderId}`,
+              description: `${order.customerName || 'N/A'} - ৳${order.total || 0}`,
+              time: order.createdAt,
+              onClick: () => {
+                showOrderDetails(order);
+                markNotificationRead('order', order._id);
+                dropdown.classList.remove('show');
+              }
+            });
+          });
+        }
 
-    // রিভিউ নোটিফিকেশন
-    if (reviewsData.reviews && reviewsData.reviews.length > 0) {
-      reviewsData.reviews.forEach(review => {
-        notifications.push({
-          type: 'review',
-          id: review._id,
-          title: `নতুন রিভিউ (${review.rating || 0}★)`,
-          description: `${review.name || 'N/A'} - ${review.address || 'N/A'}`,
-          time: review.createdAt,
-          data: review,
-          onClick: () => {
-            currentPage = 'reviews';
-            loadReviews();
-            dropdown.classList.remove('show');
-          }
-        });
-      });
-    }
+        if (reviewsData.reviews && reviewsData.reviews.length > 0) {
+          reviewsData.reviews.forEach(review => {
+            notifications.push({
+              type: 'review',
+              id: review._id,
+              title: `নতুন রিভিউ (${review.rating || 0}★)`,
+              description: `${review.name || 'N/A'} - ${review.address || 'N/A'}`,
+              time: review.createdAt,
+              onClick: () => {
+                currentPage = 'reviews';
+                loadReviews();
+                dropdown.classList.remove('show');
+              }
+            });
+          });
+        }
 
-    // সময় অনুযায়ী সাজানো (নতুনগুলো আগে)
-    notifications.sort((a, b) => new Date(b.time) - new Date(a.time));
+        notifications.sort((a,b) => new Date(b.time) - new Date(a.time));
 
-    if (notifications.length === 0) {
-      listDiv.innerHTML = '<div class="p-4 text-center text-gray-500">কোন নতুন নোটিফিকেশন নেই</div>';
-      return;
-    }
+        if (notifications.length === 0) {
+          listDiv.innerHTML = '<div class="p-4 text-center text-gray-500">কোন নতুন নোটিফিকেশন নেই</div>';
+          return;
+        }
 
-    // নোটিফিকেশন লিস্ট দেখানো
-    listDiv.innerHTML = notifications.map(n => `
-      <div class="notification-item unread" onclick="(${n.onClick})()">
-        <div class="flex justify-between">
-          <span class="font-medium">${n.title}</span>
-          <span class="notification-time">${new Date(n.time).toLocaleTimeString('bn-BD')}</span>
-        </div>
-        <p class="text-sm text-gray-600">${n.description}</p>
-      </div>
-    `).join('');
-
-  } catch (error) {
-    console.error('Error loading notifications:', error);
-    listDiv.innerHTML = '<div class="p-4 text-center text-red-500">নোটিফিকেশন লোড করতে ব্যর্থ</div>';
-  }
-}
-
-// সব নোটিফিকেশন দেখা ফাংশন
-function viewAllNotifications() {
-  dropdown.classList.remove('show');
-  
-  // একটি মডালে সব নোটিফিকেশন দেখানো
-  const modal = document.getElementById('modal');
-  const modalContent = document.getElementById('modalContent');
-  
-  showLoading('নোটিফিকেশন লোড হচ্ছে...');
-  
-  Promise.all([
-    fetch(`${API_BASE}/admin/orders?limit=100&isRead=false`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    }),
-    fetch(`${API_BASE}/admin/reviews?status=pending&limit=100`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-  ])
-  .then(async ([ordersRes, reviewsRes]) => {
-    const ordersData = await ordersRes.json();
-    const reviewsData = await reviewsRes.json();
-    
-    const allNotifications = [];
-    
-    // সব অর্ডার
-    if (ordersData.orders) {
-      ordersData.orders.forEach(order => {
-        allNotifications.push({
-          type: 'order',
-          title: `অর্ডার #${order.orderId}`,
-          description: `${order.customerName} - ৳${order.total}`,
-          time: order.createdAt,
-          status: order.status,
-          data: order
-        });
-      });
-    }
-    
-    // সব রিভিউ
-    if (reviewsData.reviews) {
-      reviewsData.reviews.forEach(review => {
-        allNotifications.push({
-          type: 'review',
-          title: `রিভিউ (${review.rating}★)`,
-          description: `${review.name} - ${review.address}`,
-          time: review.createdAt,
-          status: review.status,
-          data: review
-        });
-      });
-    }
-    
-    // সময় অনুযায়ী সাজানো
-    allNotifications.sort((a, b) => new Date(b.time) - new Date(a.time));
-    
-    hideLoading();
-    
-    modalContent.innerHTML = `
-      <div class="flex justify-between items-center mb-6">
-        <h3 class="text-2xl font-bold">সকল নোটিফিকেশন</h3>
-        <button onclick="closeModal()" class="text-gray-500 hover:text-red-500 text-2xl">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="max-h-96 overflow-y-auto">
-        ${allNotifications.map(n => `
-          <div class="border-b border-gray-200 p-4 hover:bg-gray-50 cursor-pointer" 
-               onclick="gotoNotification('${n.type}', ${JSON.stringify(n.data).replace(/'/g, "\\'")})">
-            <div class="flex justify-between items-start">
-              <div>
-                <span class="font-medium">${n.title}</span>
-                <span class="ml-2 text-xs px-2 py-1 rounded-full ${n.type === 'order' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}">
-                  ${n.type === 'order' ? 'অর্ডার' : 'রিভিউ'}
-                </span>
-              </div>
-              <span class="text-xs text-gray-500">${new Date(n.time).toLocaleString('bn-BD')}</span>
+        listDiv.innerHTML = notifications.map(n => `
+          <div class="notification-item unread" onclick="(${n.onClick})()">
+            <div class="flex justify-between">
+              <span class="font-medium">${n.title}</span>
+              <span class="notification-time">${new Date(n.time).toLocaleTimeString('bn-BD')}</span>
             </div>
-            <p class="text-sm text-gray-600 mt-1">${n.description}</p>
-            ${n.status ? `<p class="text-xs mt-1">স্ট্যাটাস: <span class="status-badge status-${n.status}">${n.status}</span></p>` : ''}
+            <p class="text-sm text-gray-600">${n.description}</p>
           </div>
-        `).join('')}
-      </div>
-    `;
-    
-    modal.classList.add('active');
-  })
-  .catch(error => {
-    console.error('Error loading all notifications:', error);
-    hideLoading();
-    showPopup('নোটিফিকেশন লোড করতে ব্যর্থ', 'error');
-  });
-}
+        `).join('');
 
-// নোটিফিকেশন থেকে গমনের ফাংশন
-window.gotoNotification = (type, data) => {
-  closeModal();
-  
-  if (type === 'order') {
-    showOrderDetails(data);
-  } else {
-    currentPage = 'reviews';
-    loadReviews();
-  }
-};
-
-// নোটিফিকেশন বাটনের ইভেন্ট লিসেনার আপডেট
-document.getElementById('markAllRead').addEventListener('click', viewAllNotifications);
-document.getElementById('markAllRead').textContent = 'সব দেখুন';
+      } catch (error) {
+        console.error('Error loading notifications:', error);
+        listDiv.innerHTML = '<div class="p-4 text-center text-red-500">নোটিফিকেশন লোড করতে ব্যর্থ</div>';
+      }
+    }
 
     async function markNotificationRead(type, id) {
       if (type === 'order') {
@@ -1826,51 +1709,52 @@ document.getElementById('markAllRead').textContent = 'সব দেখুন';
       }
     }
 
- window.uploadImages = async function() {
-  const files = fileInput.files;
-  if (files.length === 0) {
-    showPopup('কমপক্ষে একটি ছবি নির্বাচন করুন', 'error');
-    return;
-  }
+    window.uploadImages = async function() {
+      const files = fileInput.files;
+      if (files.length === 0) {
+        showPopup('কমপক্ষে একটি ছবি নির্বাচন করুন', 'error');
+        return;
+      }
 
-  const uploadBtn = document.getElementById('uploadBtn');
-  const originalText = uploadBtn.innerHTML;
-  
-  uploadBtn.disabled = true;
-  uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>আপলোড হচ্ছে...';
-  document.getElementById('uploadStatus').innerHTML = 'ছবি আপলোড হচ্ছে...';
+      const uploadBtn = document.getElementById('uploadBtn');
+      const originalText = uploadBtn.innerHTML;
+      
+      uploadBtn.disabled = true;
+      uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>আপলোড হচ্ছে...';
+      document.getElementById('uploadStatus').innerHTML = 'ছবি আপলোড হচ্ছে...';
 
-  const formData = new FormData();
-  for (let file of files) {
-    formData.append('images', file);
-  }
+      const formData = new FormData();
+      for (let file of files) {
+        formData.append('images', file);
+      }
 
-  try {
-    const res = await fetch(`${API_BASE}/admin/products/temp-upload`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` },
-      body: formData
-    });
+      try {
+        const res = await fetch(`${API_BASE}/admin/products/temp-upload`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        });
 
-    const data = await res.json();
-    
-    if (res.ok) {
-      productImages = [...productImages, ...data.urls];
-      console.log('Updated productImages:', productImages); // ডিবাগ
-      updateImagePreview();
-      closeImageModal();
-      showPopup(`${data.urls.length} টি ছবি আপলোড সফল হয়েছে`, 'success');
-    } else {
-      showPopup(data.error || 'ছবি আপলোড ব্যর্থ হয়েছে', 'error');
-    }
-  } catch (error) {
-    console.error('Upload error:', error);
-    showPopup('ছবি আপলোড করতে সমস্যা হয়েছে', 'error');
-  } finally {
-    uploadBtn.disabled = false;
-    uploadBtn.innerHTML = originalText;
-  }
-};    window.uploadLogo = async function() {
+        const data = await res.json();
+        
+        if (res.ok) {
+          productImages = [...productImages, ...data.urls];
+          updateImagePreview();
+          closeImageModal();
+          showPopup(`${data.urls.length} টি ছবি আপলোড সফল হয়েছে`, 'success');
+        } else {
+          showPopup(data.error || 'ছবি আপলোড ব্যর্থ হয়েছে', 'error');
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+        showPopup('ছবি আপলোড করতে সমস্যা হয়েছে', 'error');
+      } finally {
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = originalText;
+      }
+    };
+
+    window.uploadLogo = async function() {
       const files = logoFileInput.files;
       if (files.length === 0) {
         showPopup('লোগো নির্বাচন করুন', 'error');
@@ -1931,16 +1815,11 @@ document.getElementById('markAllRead').textContent = 'সব দেখুন';
       }
     }
 
-   window.removeImage = function(imageUrl) {
-  productImages = productImages.filter(img => img !== imageUrl);
-  updateImagePreview();
-  
-  // কাউন্ট আপডেট
-  const countText = document.querySelector('#imagePreviewContainer + p.text-xs');
-  if (countText) {
-    countText.textContent = `${productImages.length} টি ছবি নির্বাচিত`;
-  }
-};
+    window.removeImage = function(imageUrl) {
+      productImages = productImages.filter(img => img !== imageUrl);
+      updateImagePreview();
+    };
+
     // ========== DASHBOARD ==========
     async function loadDashboard() {
       showLoading('ড্যাশবোর্ড লোড হচ্ছে...');
@@ -2400,150 +2279,142 @@ document.getElementById('markAllRead').textContent = 'সব দেখুন';
       }
     }
 
-   window.showProductForm = async (product = null) => {
-  currentProductId = product?._id || null;
-  productImages = product?.images || (product?.img ? [product.img] : []);
-  
-  console.log('Product images loaded:', productImages); // ডিবাগ
+    window.showProductForm = async (product = null) => {
+      currentProductId = product?._id || null;
+      productImages = product?.images || (product?.img ? [product.img] : []);
 
-  const modal = document.getElementById('modal');
-  const modalContent = document.getElementById('modalContent');
+      const modal = document.getElementById('modal');
+      const modalContent = document.getElementById('modalContent');
 
-  let categories = [];
-  try {
-    const res = await fetch(`${API_BASE}/categories`);
-    categories = await res.json();
-  } catch (error) {
-    console.error('Failed to load categories:', error);
-  }
+      let categories = [];
+      try {
+        const res = await fetch(`${API_BASE}/categories`);
+        categories = await res.json();
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+      }
 
-  modalContent.innerHTML = `
-    <h3 class="text-2xl font-bold mb-6">${product ? 'প্রোডাক্ট সম্পাদনা' : 'নতুন প্রোডাক্ট'}</h3>
-    <form id="productForm" onsubmit="saveProduct(event, '${product?._id || ''}')">
-      <div class="form-group">
-        <label class="form-label">প্রোডাক্ট নাম</label>
-        <input type="text" class="form-input" name="name" value="${product?.name || ''}" required>
-      </div>
-      <div class="form-group">
-        <label class="form-label">বিবরণ</label>
-        <input type="text" class="form-input" name="desc" value="${product?.desc || ''}" required>
-      </div>
-      <div class="form-group">
-        <label class="form-label">ক্যাটাগরি</label>
-        <select class="form-select" name="category" required>
-          <option value="">ক্যাটাগরি নির্বাচন করুন</option>
-          ${categories.map(cat => `<option value="${cat.name}" ${product?.category === cat.name ? 'selected' : ''}>${cat.banglaName || cat.name}</option>`).join('')}
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">মূল মূল্য</label>
-        <input type="number" class="form-input" name="original" value="${product?.original || ''}" required>
-      </div>
-      <div class="form-group">
-        <label class="form-label">বিক্রয় মূল্য</label>
-        <input type="number" class="form-input" name="price" value="${product?.price || ''}" required>
-      </div>
-      <div class="form-group">
-        <label class="form-label">স্টক</label>
-        <input type="number" class="form-input" name="stock" value="${product?.stock || '10'}" required>
-      </div>
-      <div class="form-group">
-        <label class="form-label">বিক্রি হয়েছে</label>
-        <input type="number" class="form-input" name="sold" value="${product?.sold || '0'}" required>
-      </div>
-      <div class="form-group">
-        <label class="form-label">ছবি (সর্বোচ্চ ১০টি)</label>
-        <button type="button" onclick="openImageModal()" class="bg-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300">
-          <i class="fas fa-upload mr-2"></i>ছবি আপলোড
-        </button>
-        <div id="imagePreviewContainer" class="flex flex-wrap gap-3 mt-4">
-          ${productImages.map(img => `
-            <div class="relative group">
-              <img src="${img}" class="image-preview w-24 h-24 object-cover rounded-lg border-2 border-[#1877F2]" onerror="this.src='https://via.placeholder.com/100'">
-              <button type="button" onclick="removeImage('${img}')" class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full hover:bg-red-600 flex items-center justify-center">
-                <i class="fas fa-times text-sm"></i>
-              </button>
+      modalContent.innerHTML = `
+        <h3 class="text-2xl font-bold mb-6">${product ? 'প্রোডাক্ট সম্পাদনা' : 'নতুন প্রোডাক্ট'}</h3>
+        <form id="productForm" onsubmit="saveProduct(event, '${product?._id || ''}')">
+          <div class="form-group">
+            <label class="form-label">প্রোডাক্ট নাম</label>
+            <input type="text" class="form-input" name="name" value="${product?.name || ''}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">বিবরণ</label>
+            <input type="text" class="form-input" name="desc" value="${product?.desc || ''}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">ক্যাটাগরি</label>
+            <select class="form-select" name="category" required>
+              <option value="">ক্যাটাগরি নির্বাচন করুন</option>
+              ${categories.map(cat => `<option value="${cat.name}" ${product?.category === cat.name ? 'selected' : ''}>${cat.banglaName || cat.name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">মূল মূল্য</label>
+            <input type="number" class="form-input" name="original" value="${product?.original || ''}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">বিক্রয় মূল্য</label>
+            <input type="number" class="form-input" name="price" value="${product?.price || ''}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">স্টক</label>
+            <input type="number" class="form-input" name="stock" value="${product?.stock || '10'}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">বিক্রি হয়েছে</label>
+            <input type="number" class="form-input" name="sold" value="${product?.sold || '0'}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">ছবি (সর্বোচ্চ ১০টি)</label>
+            <button type="button" onclick="openImageModal()" class="bg-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300">
+              <i class="fas fa-upload mr-2"></i>ছবি আপলোড
+            </button>
+            <div id="imagePreviewContainer" class="flex flex-wrap gap-3 mt-4">
+              ${productImages.map(img => `
+                <div class="relative group">
+                  <img src="${img}" class="image-preview w-24 h-24" onerror="this.src='https://via.placeholder.com/100'">
+                  <button type="button" onclick="removeImage('${img}')" class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full">×</button>
+                </div>
+              `).join('')}
             </div>
-          `).join('')}
-        </div>
-        <p class="text-xs text-gray-500 mt-2">${productImages.length} টি ছবি নির্বাচিত</p>
-      </div>
-      <div class="form-group">
-        <label class="flex items-center gap-2">
-          <input type="checkbox" name="featured" ${product?.featured ? 'checked' : ''}>
-          <span>ফিচার্ড</span>
-        </label>
-      </div>
-      <div class="flex justify-end gap-3 mt-6">
-        <button type="button" class="btn-secondary px-6 py-2" onclick="closeModal()">বাতিল</button>
-        <button type="submit" class="btn-primary px-6 py-2">সংরক্ষণ</button>
-      </div>
-    </form>
-  `;
+          </div>
+          <div class="form-group">
+            <label class="flex items-center gap-2">
+              <input type="checkbox" name="featured" ${product?.featured ? 'checked' : ''}>
+              <span>ফিচার্ড</span>
+            </label>
+          </div>
+          <div class="flex justify-end gap-3 mt-6">
+            <button type="button" class="btn-secondary px-6 py-2" onclick="closeModal()">বাতিল</button>
+            <button type="submit" class="btn-primary px-6 py-2">সংরক্ষণ</button>
+          </div>
+        </form>
+      `;
 
-  modal.classList.add('active');
-};
-   window.saveProduct = async (e, id) => {
-  e.preventDefault();
-  const formData = new FormData(e.target);
-  const submitBtn = e.target.querySelector('button[type="submit"]');
-  
-  // productImages গ্লোবাল ভেরিয়েবল চেক করা হচ্ছে
-  console.log('Product Images before save:', productImages); // ডিবাগ করার জন্য
-  
-  if (!productImages || productImages.length === 0) {
-    showPopup('কমপক্ষে একটি ছবি আপলোড করুন', 'error', 'ছবি প্রয়োজন');
-    return;
-  }
+      modal.classList.add('active');
+    };
 
-  const data = {
-    name: formData.get('name'),
-    desc: formData.get('desc'),
-    category: formData.get('category'),
-    original: parseInt(formData.get('original')) || 0,
-    price: parseInt(formData.get('price')) || 0,
-    stock: parseInt(formData.get('stock')) || 10,
-    sold: parseInt(formData.get('sold')) || 0,
-    featured: formData.get('featured') === 'on',
-    images: productImages  // এখানে images array পাঠানো হচ্ছে
-  };
+    window.saveProduct = async (e, id) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      
+      if (productImages.length === 0) {
+        showPopup('কমপক্ষে একটি ছবি আপলোড করুন', 'error');
+        return;
+      }
 
-  submitBtn.disabled = true;
-  submitBtn.classList.add('loading');
-  submitBtn.innerHTML = 'সংরক্ষণ হচ্ছে...';
+      const data = {
+        name: formData.get('name'),
+        desc: formData.get('desc'),
+        category: formData.get('category'),
+        original: parseInt(formData.get('original')) || 0,
+        price: parseInt(formData.get('price')) || 0,
+        stock: parseInt(formData.get('stock')) || 10,
+        sold: parseInt(formData.get('sold')) || 0,
+        featured: formData.get('featured') === 'on',
+        images: productImages
+      };
 
-  try {
-    const url = id ? `${API_BASE}/admin/products/${id}` : `${API_BASE}/admin/products`;
-    const method = id ? 'PUT' : 'POST';
+      submitBtn.disabled = true;
+      submitBtn.classList.add('loading');
+      submitBtn.innerHTML = 'সংরক্ষণ হচ্ছে...';
 
-    const res = await fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(data)
-    });
+      try {
+        const url = id ? `${API_BASE}/admin/products/${id}` : `${API_BASE}/admin/products`;
+        const method = id ? 'PUT' : 'POST';
 
-    const responseData = await res.json();
-    console.log('Server response:', responseData); // ডিবাগ করার জন্য
+        const res = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(data)
+        });
 
-    if (res.ok) {
-      showPopup(id ? 'প্রোডাক্ট আপডেট হয়েছে' : 'প্রোডাক্ট তৈরি হয়েছে', 'success');
-      closeModal();
-      loadProducts();
-    } else {
-      showPopup(responseData.error || 'ব্যর্থ হয়েছে', 'error');
-    }
-  } catch (error) {
-    console.error('Save product error:', error);
-    showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.classList.remove('loading');
-    submitBtn.innerHTML = 'সংরক্ষণ';
-  }
-};
+        if (res.ok) {
+          showPopup(id ? 'প্রোডাক্ট আপডেট হয়েছে' : 'প্রোডাক্ট তৈরি হয়েছে', 'success');
+          closeModal();
+          loadProducts();
+        } else {
+          const error = await res.json();
+          showPopup(error.error || 'ব্যর্থ হয়েছে', 'error');
+        }
+      } catch (error) {
+        console.error('Save product error:', error);
+        showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
+        submitBtn.innerHTML = 'সংরক্ষণ';
+      }
+    };
+
     window.confirmDeleteProduct = (id) => {
       openConfirmModal(
         'প্রোডাক্ট মুছবেন?',
