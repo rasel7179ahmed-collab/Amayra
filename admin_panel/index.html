@@ -353,10 +353,6 @@
       padding-bottom: 0.75rem;
     }
     
-    .notification-badge {
-      position: relative;
-    }
-    
     .badge {
       position: absolute;
       top: -5px;
@@ -878,12 +874,12 @@
           <span class="menu-badge" id="productCount">0</span>
         </div>
         <div class="menu-item" data-page="orders" id="ordersMenuItem">
-          <i class="fas fa-truck notification-badge"></i>
+          <i class="fas fa-truck"></i>
           <span>অর্ডার</span>
           <span class="menu-badge" id="orderBadge" style="display: none;">0</span>
         </div>
         <div class="menu-item" data-page="reviews" id="reviewsMenuItem">
-          <i class="fas fa-star notification-badge"></i>
+          <i class="fas fa-star"></i>
           <span>রিভিউ</span>
           <span class="menu-badge" id="reviewBadge" style="display: none;">0</span>
         </div>
@@ -937,7 +933,7 @@
           <button class="text-xs text-[#1877F2] hover:underline" id="markAllRead">সব দেখা হয়েছে</button>
         </div>
         <div id="notificationList" class="max-h-80 overflow-y-auto">
-          <div class="p-4 text-center text-gray-500">লোড হচ্ছে...</div>
+          <div class="p-4 text-center text-gray-500">কোন নতুন নোটিফিকেশন নেই</div>
         </div>
       </div>
 
@@ -1105,7 +1101,7 @@
     function startNotificationChecker() {
       if (notificationInterval) clearInterval(notificationInterval);
       checkNotifications();
-      notificationInterval = setInterval(checkNotifications, 30000);
+      notificationInterval = setInterval(checkNotifications, 10000);
     }
 
     async function checkNotifications() {
@@ -1130,14 +1126,26 @@
 
         const totalUnread = (ordersData.count || 0) + (reviewsData.count || 0);
 
-        orderBadge.style.display = ordersData.count > 0 ? 'flex' : 'none';
-        orderBadge.textContent = ordersData.count || 0;
-        
-        reviewBadge.style.display = reviewsData.count > 0 ? 'flex' : 'none';
-        reviewBadge.textContent = reviewsData.count || 0;
-        
-        totalBadge.style.display = totalUnread > 0 ? 'flex' : 'none';
-        totalBadge.textContent = totalUnread;
+        if (ordersData.count > 0) {
+          orderBadge.style.display = 'flex';
+          orderBadge.textContent = ordersData.count;
+        } else {
+          orderBadge.style.display = 'none';
+        }
+
+        if (reviewsData.count > 0) {
+          reviewBadge.style.display = 'flex';
+          reviewBadge.textContent = reviewsData.count;
+        } else {
+          reviewBadge.style.display = 'none';
+        }
+
+        if (totalUnread > 0) {
+          totalBadge.style.display = 'flex';
+          totalBadge.textContent = totalUnread;
+        } else {
+          totalBadge.style.display = 'none';
+        }
       } catch (error) {
         console.error('Error checking notifications:', error);
       }
@@ -1291,10 +1299,14 @@
               title: `নতুন অর্ডার #${order.orderId}`,
               description: `${order.customerName || 'N/A'} - ৳${order.total || 0}`,
               time: order.createdAt,
+              orderId: order._id,
               onClick: () => {
                 showOrderDetails(order);
-                markNotificationRead('order', order._id);
+                markOrderAsRead(order._id);
                 dropdown.classList.remove('show');
+                setTimeout(() => {
+                  document.querySelector('[data-page="orders"]').click();
+                }, 300);
               }
             });
           });
@@ -1309,9 +1321,11 @@
               description: `${review.name || 'N/A'} - ${review.address || 'N/A'}`,
               time: review.createdAt,
               onClick: () => {
-                currentPage = 'reviews';
-                loadReviews();
+                markReviewAsRead(review._id);
                 dropdown.classList.remove('show');
+                setTimeout(() => {
+                  document.querySelector('[data-page="reviews"]').click();
+                }, 300);
               }
             });
           });
@@ -1340,14 +1354,32 @@
       }
     }
 
-    async function markNotificationRead(type, id) {
-      if (type === 'order') {
-        await fetch(`${API_BASE}/admin/orders/${id}/read`, {
+    async function markOrderAsRead(orderId) {
+      try {
+        await fetch(`${API_BASE}/admin/orders/${orderId}/read`, {
           method: 'PUT',
           headers: { 'Authorization': `Bearer ${token}` }
         });
+        loadUnreadCounts();
+      } catch (error) {
+        console.error('Error marking order as read:', error);
       }
-      loadUnreadCounts();
+    }
+
+    async function markReviewAsRead(reviewId) {
+      try {
+        await fetch(`${API_BASE}/admin/reviews/${reviewId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ isRead: true })
+        });
+        loadUnreadCounts();
+      } catch (error) {
+        console.error('Error marking review as read:', error);
+      }
     }
 
     document.getElementById('markAllRead').addEventListener('click', () => {
@@ -2327,6 +2359,7 @@
         </div>
       `;
 
+      markOrderAsRead(order._id);
       openOrderModal();
     };
 
@@ -2500,7 +2533,7 @@
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({ status })
+          body: JSON.stringify({ status, isRead: true })
         });
 
         if (res.ok) {
@@ -2984,12 +3017,14 @@
           });
           const order = await res.json();
           showOrderDetailsModal(order);
+          markOrderAsRead(orderId);
         } catch (error) {
           console.error('Error loading order details:', error);
           showPopup('অর্ডার ডিটেইলস লোড করতে ব্যর্থ', 'error');
         }
       } else {
         showOrderDetailsModal(orderId);
+        markOrderAsRead(orderId._id);
       }
     };
 

@@ -208,6 +208,7 @@
       border-radius: 50px 20px 50px 20px;
       overflow: hidden;
       box-shadow: 0 30px 30px -20px rgba(24, 119, 242, 0.2);
+      position: relative;
     }
     .hero-slide .slide-bg {
       background-size: cover;
@@ -217,6 +218,48 @@
     }
     @media (min-width: 768px) {
       .hero-slide .slide-bg { min-height: 400px; }
+    }
+    
+    .slide-nav-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255, 255, 255, 0.9);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      opacity: 0;
+      transition: opacity 0.3s ease, background 0.3s;
+      border: none;
+      color: #1877F2;
+      font-size: 1.2rem;
+      z-index: 5;
+    }
+    .hero-slide:hover .slide-nav-btn {
+      opacity: 1;
+    }
+    .slide-nav-btn:hover {
+      background: white;
+      box-shadow: 0 6px 15px rgba(24, 119, 242, 0.3);
+    }
+    .slide-nav-left {
+      left: 10px;
+    }
+    .slide-nav-right {
+      right: 10px;
+    }
+    @media (max-width: 768px) {
+      .slide-nav-btn {
+        opacity: 1;
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+      }
     }
 
     .img-loading-spinner {
@@ -468,59 +511,223 @@
     @media (min-width: 992px) {
       .order-section-wrapper {
         display: grid;
-        grid-template-columns: 1fr 320px;
+        grid-template-columns: 1fr 1fr;
         gap: 1.5rem;
         align-items: start;
       }
     }
 
     .bestseller-slider {
-      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
       border-radius: 40px 12px 40px 12px;
-      padding: 1.5rem;
-      border: 1px solid rgba(24, 119, 242, 0.2);
-      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+      padding: 1.8rem;
+      border: 2px solid rgba(24, 119, 242, 0.15);
+      box-shadow: 0 15px 30px -10px rgba(0,0,0,0.1);
+      height: fit-content;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .bestseller-slider::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, #1877F2, #FF7A00, #1877F2);
+      background-size: 200% 100%;
+      animation: gradientMove 3s linear infinite;
+    }
+    
+    @keyframes gradientMove {
+      0% { background-position: 0% 0%; }
+      100% { background-position: 200% 0%; }
+    }
+
+    .bestseller-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 1.8rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px dashed rgba(24, 119, 242, 0.2);
+    }
+    
+    .bestseller-header i {
+      font-size: 2.2rem;
+      color: #FF7A00;
+      filter: drop-shadow(0 4px 6px rgba(255,122,0,0.3));
+      animation: flame 2s ease-in-out infinite;
+    }
+    
+    @keyframes flame {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    
+    .bestseller-header h3 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #1877F2, #FF7A00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .bestseller-item {
       background: white;
       border-radius: 30px 8px 30px 8px;
-      padding: 1rem;
+      padding: 1.5rem;
       margin-bottom: 1rem;
-      border: 1px solid #e2e8f0;
-      transition: all 0.3s;
+      border: 1px solid rgba(24, 119, 242, 0.1);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
     }
+    
+    .bestseller-item::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 100%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(24, 119, 242, 0.03), transparent);
+      transform: rotate(45deg);
+      transition: transform 0.6s;
+    }
+    
     .bestseller-item:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 10px 20px -5px rgba(24, 119, 242, 0.2);
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 20px 30px -10px rgba(24, 119, 242, 0.25);
       border-color: #1877F2;
     }
+    
+    .bestseller-item:hover::after {
+      transform: rotate(45deg) translate(50%, 50%);
+    }
+    
     .bestseller-item img {
-      width: 60px;
-      height: 60px;
-      border-radius: 20px 4px 20px 4px;
+      width: 90px;
+      height: 90px;
+      border-radius: 25px 6px 25px 6px;
       object-fit: cover;
+      border: 3px solid white;
+      box-shadow: 0 8px 15px -5px rgba(0,0,0,0.2);
+      transition: transform 0.3s;
+    }
+    
+    .bestseller-item:hover img {
+      transform: scale(1.05);
+    }
+    
+    .bestseller-info {
+      flex: 1;
+    }
+    
+    .bestseller-info h4 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #1C1E21;
+      margin-bottom: 0.3rem;
+    }
+    
+    .bestseller-price {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0.5rem 0;
+    }
+    
+    .bestseller-price .current {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #FF7A00;
+    }
+    
+    .bestseller-price .original {
+      font-size: 1rem;
+      color: #a0aec0;
+      text-decoration: line-through;
+    }
+    
+    .bestseller-discount {
+      background: linear-gradient(135deg, #FF7A00, #ff9a3c);
+      color: white;
+      padding: 0.2rem 0.8rem;
+      border-radius: 20px 4px 20px 4px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+    
+    .bestseller-btn {
+      background: linear-gradient(135deg, #1877F2, #1666d9);
+      color: white;
+      border: none;
+      border-radius: 30px 6px 30px 6px;
+      padding: 0.7rem 1.2rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      width: 100%;
+      margin-top: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .bestseller-btn:hover {
+      background: linear-gradient(135deg, #1666d9, #0a5bc4);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px -5px #1877F2;
+    }
+    
+    .bestseller-btn i {
+      font-size: 1rem;
     }
 
     .bestseller-nav {
       display: flex;
       justify-content: center;
-      gap: 0.5rem;
-      margin-top: 1rem;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(24, 119, 242, 0.1);
     }
+    
     .bestseller-nav button {
-      width: 32px;
-      height: 32px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       background: white;
-      border: 1px solid #e2e8f0;
+      border: 2px solid #e2e8f0;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.3s;
+      color: #1877F2;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
+    
     .bestseller-nav button:hover {
       background: #1877F2;
       color: white;
       border-color: #1877F2;
+      transform: scale(1.1);
+    }
+    
+    .bestseller-nav span {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #4a5568;
+      background: #f0f2f5;
+      padding: 0.3rem 1rem;
+      border-radius: 20px;
     }
 
     .product-gallery {
@@ -533,6 +740,10 @@
       object-fit: cover;
       border-radius: 30px 8px 30px 8px;
       cursor: pointer;
+      transition: transform 0.3s;
+    }
+    .main-image:hover {
+      transform: scale(1.02);
     }
     .thumbnail-container {
       display: flex;
@@ -552,6 +763,7 @@
     }
     .thumbnail-container img:hover {
       border-color: #1877F2;
+      transform: scale(1.05);
     }
     .thumbnail-container img.active {
       border-color: #1877F2;
@@ -564,7 +776,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.9);
+      background: rgba(0,0,0,0.95);
       z-index: 9999;
       display: flex;
       align-items: center;
@@ -589,6 +801,18 @@
       color: white;
       font-size: 2rem;
       cursor: pointer;
+      width: 50px;
+      height: 50px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+    .fullscreen-close:hover {
+      background: rgba(255,255,255,0.2);
+      transform: rotate(90deg);
     }
     .fullscreen-prev, .fullscreen-next {
       position: absolute;
@@ -598,9 +822,65 @@
       font-size: 2rem;
       cursor: pointer;
       padding: 1rem;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+    .fullscreen-prev:hover, .fullscreen-next:hover {
+      background: #1877F2;
     }
     .fullscreen-prev { left: 20px; }
     .fullscreen-next { right: 20px; }
+
+    .review-section-wrapper {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    
+    @media (min-width: 768px) {
+      .review-section-wrapper {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    
+    .review-form-card, .reviews-card {
+      height: 500px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .reviews-card {
+      overflow-y: auto;
+    }
+    
+    .review-form-card {
+      overflow-y: auto;
+    }
+    
+    .call-button {
+      background: linear-gradient(135deg, #FF7A00, #ff9a3c);
+      color: white;
+      padding: 0.6rem 1.5rem;
+      border-radius: 40px 12px 40px 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(255,122,0,0.3);
+    }
+    
+    .call-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(255,122,0,0.4);
+      background: linear-gradient(135deg, #e66e00, #ff8a2b);
+    }
   </style>
 </head>
 <body class="text-[#1C1E21]">
@@ -648,7 +928,10 @@
     </nav>
     
     <div class="flex items-center gap-4">
-      <a href="tel:+8801712345678" class="hidden md:flex items-center gap-2 btn-secondary py-2 px-5 text-sm hover:shadow-md transition" id="headerPhone"><i class="fa-solid fa-phone text-[#1877F2]"></i>কল</a>
+      <a href="tel:+8801712345678" class="hidden md:flex call-button" id="headerPhone">
+        <i class="fa-solid fa-phone"></i>
+        <span>কল করুন</span>
+      </a>
       <div class="hamburger md:hidden" id="hamburgerBtn">
         <span></span>
         <span></span>
@@ -661,8 +944,8 @@
 <section id="home" class="pt-6 pb-4 px-4 container-1200">
   <div class="relative hero-slide">
     <div class="flex transition-transform duration-500 ease-out" id="sliderTrack"></div>
-    <button class="absolute left-3 top-1/2 -translate-y-1/2 bg-white/70 w-12 h-12 rounded-[30px_6px_30px_6px] shadow-xl hover:bg-white transition text-[#1877F2]" onclick="slideChange(-1)"><i class="fa-solid fa-arrow-left"></i></button>
-    <button class="absolute right-3 top-1/2 -translate-y-1/2 bg-white/70 w-12 h-12 rounded-[30px_6px_30px_6px] shadow-xl hover:bg-white transition text-[#1877F2]" onclick="slideChange(1)"><i class="fa-solid fa-arrow-right"></i></button>
+    <button class="slide-nav-btn slide-nav-left" onclick="slideChange(-1)" aria-label="Previous slide"><i class="fa-solid fa-chevron-left"></i></button>
+    <button class="slide-nav-btn slide-nav-right" onclick="slideChange(1)" aria-label="Next slide"><i class="fa-solid fa-chevron-right"></i></button>
     <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-3" id="sliderDots"></div>
   </div>
 </section>
@@ -725,10 +1008,10 @@
     </div>
 
     <div class="desktop-only bestseller-slider">
-      <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
-        <i class="fas fa-fire text-[#FF7A00]"></i>
-        <span>সর্বাধিক বিক্রিত</span>
-      </h3>
+      <div class="bestseller-header">
+        <i class="fas fa-fire"></i>
+        <h3>সর্বাধিক বিক্রিত</h3>
+      </div>
       <div id="bestsellerContainer" class="space-y-4">
         <div class="text-center py-8">
           <div class="loading-spinner mx-auto"></div>
@@ -740,8 +1023,8 @@
 </section>
 
 <section id="reviews" class="container-1200 px-4 py-10">
-  <div class="grid md:grid-cols-2 gap-8 items-start">
-    <div class="bg-[#F0F2F5] p-8 rounded-[70px_20px_70px_20px]">
+  <div class="review-section-wrapper">
+    <div class="bg-[#F0F2F5] p-8 rounded-[70px_20px_70px_20px] review-form-card">
       <h3 class="text-2xl font-bold mb-4">আপনার <span class="text-[#1877F2]">মতামত</span> দিন</h3>
       <form id="reviewForm">
         <input type="text" id="reviewName" placeholder="আপনার নাম *" required class="w-full p-3 rounded-[30px_4px_30px_4px] mb-3 border border-[#FFFFFF] bg-white focus:outline-none focus:border-[#1877F2]">
@@ -765,7 +1048,7 @@
         <button type="submit" class="btn-primary w-full py-3 text-lg hover:shadow-xl">রিভিউ জমা দিন</button>
       </form>
     </div>
-    <div class="bg-white/60 backdrop-blur-sm p-6 rounded-[70px_20px_70px_20px] max-h-[400px] overflow-y-auto reviews-scroll border border-[#F0F2F5]" id="reviewsList">
+    <div class="bg-white/60 backdrop-blur-sm p-6 rounded-[70px_20px_70px_20px] reviews-card border border-[#F0F2F5]" id="reviewsList">
       <div class="text-center py-10">
         <div class="loading-spinner"></div>
         <p class="mt-4 text-gray-600">রিভিউ লোড হচ্ছে...</p>
@@ -834,7 +1117,9 @@
       const phoneNumber = settings.phoneNumber || '01712345678';
       document.getElementById('headerPhone').href = `tel:+88${phoneNumber}`;
       document.getElementById('sidebarPhone').href = `tel:+88${phoneNumber}`;
-      document.getElementById('whatsappButton').href = `https://wa.me/${settings.whatsappNumber || '8801712345678'}?text=হ্যালো,%20AMAYRA%20প্রিমিয়াম%20শার্ট%20কালেকশন%20সম্পর্কে%20জানতে%20চাই।`;
+      
+      const whatsappMessage = encodeURIComponent('হ্যালো, AMAYRA প্রিমিয়াম শার্ট কালেকশন সম্পর্কে জানতে চাই। আমি এই পণ্যটি সম্পর্কে আরও বিস্তারিত জানতে আগ্রহী।');
+      document.getElementById('whatsappButton').href = `https://wa.me/${settings.whatsappNumber || '8801712345678'}?text=${whatsappMessage}`;
       
       document.getElementById('footerText').textContent = settings.footerText || 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন · ২০২৫';
       document.getElementById('footerSocial').innerHTML = `ফেসবুক: ${settings.facebook || '@amayra.shirt'} | হটলাইন: ${settings.phoneNumber || '01712-345678'}`;
@@ -1076,18 +1361,19 @@
     const container = document.getElementById('bestsellerContainer');
     container.innerHTML = `
       <div class="bestseller-item">
-        <div class="flex gap-3">
-          <img src="${images[0]}" class="w-20 h-20 object-cover rounded-[20px_4px_20px_4px]" onerror="this.src='https://via.placeholder.com/80'">
-          <div class="flex-1">
-            <h4 class="font-bold text-[#1C1E21]">${product.name}</h4>
-            <p class="text-xs text-gray-500 mb-1">${product.desc}</p>
-            <div class="flex items-center gap-2">
-              <span class="text-lg font-bold text-[#FF7A00]">৳${product.price}</span>
-              <span class="text-xs line-through text-gray-400">৳${product.original}</span>
-              <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">-${discount}%</span>
+        <div class="flex gap-4">
+          <img src="${images[0]}" class="w-24 h-24 object-cover rounded-[25px_6px_25px_6px]" onerror="this.src='https://via.placeholder.com/90'">
+          <div class="bestseller-info">
+            <h4>${product.name}</h4>
+            <p class="text-sm text-gray-500 mb-2">${product.desc.substring(0, 40)}${product.desc.length > 40 ? '...' : ''}</p>
+            <div class="bestseller-price">
+              <span class="current">৳${product.price}</span>
+              <span class="original">৳${product.original}</span>
             </div>
-            <button onclick="addToCart(${product.id})" class="btn-primary text-sm px-3 py-1 mt-2 w-full" ${product.stock <= 0 ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>
-              <i class="fa-solid fa-bag-shopping mr-1"></i> অর্ডার করুন
+            <span class="bestseller-discount">-${discount}% ছাড়</span>
+            <button onclick="addToCart(${product.id})" class="bestseller-btn" ${product.stock <= 0 ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>
+              <i class="fa-solid fa-bag-shopping"></i>
+              অর্ডার করুন
             </button>
           </div>
         </div>
@@ -1098,7 +1384,7 @@
     if (bestsellerProducts.length > 1) {
       nav.innerHTML = `
         <button onclick="changeBestseller(-1)"><i class="fas fa-chevron-left"></i></button>
-        <span class="text-sm text-gray-600">${currentBestsellerIndex + 1}/${bestsellerProducts.length}</span>
+        <span>${currentBestsellerIndex + 1}/${bestsellerProducts.length}</span>
         <button onclick="changeBestseller(1)"><i class="fas fa-chevron-right"></i></button>
       `;
     } else {
