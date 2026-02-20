@@ -1040,2104 +1040,2147 @@
 
   <div id="popupContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
 
-  <script>
-    const API_BASE = 'https://amayra-8hsr.onrender.com/api';
+<script>
+  const API_BASE = 'https://amayra-8hsr.onrender.com/api';
+  
+  let token = localStorage.getItem('token');
+  let adminUsername = localStorage.getItem('adminUsername');
+  let currentPage = 'dashboard';
+  let currentProductId = null;
+  let productImages = [];
+  let currentSlideId = null;
+  let slideImage = '';
+  let confirmCallback = null;
+  let notificationInterval = null;
+  let chartInstance1 = null;
+  let chartInstance2 = null;
+  let allOrders = [];
+  let allReviews = [];
+
+  // ---------- Utility: fetch with retry ----------
+  async function fetchWithRetry(url, options = {}, retries = 3, delay = 1000) {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const res = await fetch(url, options);
+        if (!res.ok) {
+          if (res.status === 429 && i < retries - 1) {
+            const waitTime = delay * Math.pow(2, i);
+            console.log(`Rate limited. Retrying in ${waitTime}ms...`);
+            await new Promise(r => setTimeout(r, waitTime));
+            continue;
+          }
+          throw new Error(`HTTP error ${res.status}`);
+        }
+        return res;
+      } catch (err) {
+        if (i === retries - 1) throw err;
+        const waitTime = delay * Math.pow(2, i);
+        console.log(`Request failed (${err.message}). Retrying in ${waitTime}ms...`);
+        await new Promise(r => setTimeout(r, waitTime));
+      }
+    }
+  }
+
+  function showPopup(message, type = 'info', title = '') {
+    const container = document.getElementById('popupContainer');
+    const id = Date.now() + Math.random();
     
-    let token = localStorage.getItem('token');
-    let adminUsername = localStorage.getItem('adminUsername');
-    let currentPage = 'dashboard';
-    let currentProductId = null;
-    let productImages = [];
-    let currentSlideId = null;
-    let slideImage = '';
-    let confirmCallback = null;
-    let notificationInterval = null;
-    let chartInstance1 = null;
-    let chartInstance2 = null;
-    let allOrders = [];
-    let allReviews = [];
-
-    function showPopup(message, type = 'info', title = '') {
-      const container = document.getElementById('popupContainer');
-      const id = Date.now() + Math.random();
-      
-      const titles = {
-        success: 'সফল হয়েছে',
-        error: 'ব্যর্থ হয়েছে',
-        info: 'তথ্য',
-        warning: 'সতর্কতা'
-      };
-      
-      const popup = document.createElement('div');
-      popup.className = `popup-message ${type}`;
-      popup.id = `popup-${id}`;
-      popup.innerHTML = `
-        <div class="popup-icon ${type}">
-          <i class="fas ${type === 'success' ? 'fa-check' : type === 'error' ? 'fa-times' : type === 'warning' ? 'fa-exclamation' : 'fa-info'}"></i>
-        </div>
-        <div class="popup-content">
-          <div class="popup-title">${title || titles[type]}</div>
-          <div class="popup-text">${message}</div>
-        </div>
-      `;
-      
-      container.appendChild(popup);
-      
-      setTimeout(() => {
-        const popupElement = document.getElementById(`popup-${id}`);
-        if (popupElement) {
-          popupElement.style.animation = 'popup-slide 0.3s ease reverse';
-          setTimeout(() => {
-            popupElement.remove();
-          }, 300);
-        }
-      }, 3000);
-    }
-
-    function showLoading(message = 'অপেক্ষা করুন...') {
-      document.getElementById('loadingText').textContent = message;
-      document.getElementById('loadingOverlay').classList.add('active');
-    }
-
-    function hideLoading() {
-      document.getElementById('loadingOverlay').classList.remove('active');
-    }
-
-    if (token) {
-      document.getElementById('loginPage').style.display = 'none';
-      document.getElementById('adminPanel').style.display = 'block';
-      document.getElementById('adminNameDisplay').textContent = adminUsername || 'অ্যাডমিন';
-      document.getElementById('adminUsernameDisplay').textContent = adminUsername || 'অ্যাডমিন';
-      document.getElementById('sidebarAdminName').textContent = adminUsername || 'অ্যাডমিন';
-      loadDashboard();
-      loadUnreadCounts();
-      startNotificationChecker();
-    }
-
-    function startNotificationChecker() {
-      if (notificationInterval) clearInterval(notificationInterval);
-      checkNotifications();
-      notificationInterval = setInterval(checkNotifications, 5000);
-    }
-
-    async function checkNotifications() {
-      if (!token) return;
-      
-      try {
-        const [ordersRes, reviewsRes] = await Promise.all([
-          fetch(`${API_BASE}/admin/orders/unread-count`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }),
-          fetch(`${API_BASE}/admin/reviews/unread-count`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          })
-        ]);
-
-        const ordersData = await ordersRes.json();
-        const reviewsData = await reviewsRes.json();
-
-        const orderBadge = document.getElementById('orderBadge');
-        const reviewBadge = document.getElementById('reviewBadge');
-        const totalBadge = document.getElementById('notificationTotalBadge');
-
-        const totalUnread = (ordersData.count || 0) + (reviewsData.count || 0);
-
-        if (ordersData.count > 0) {
-          orderBadge.style.display = 'flex';
-          orderBadge.textContent = ordersData.count;
-        } else {
-          orderBadge.style.display = 'none';
-        }
-
-        if (reviewsData.count > 0) {
-          reviewBadge.style.display = 'flex';
-          reviewBadge.textContent = reviewsData.count;
-        } else {
-          reviewBadge.style.display = 'none';
-        }
-
-        if (totalUnread > 0) {
-          totalBadge.style.display = 'flex';
-          totalBadge.textContent = totalUnread;
-        } else {
-          totalBadge.style.display = 'none';
-        }
-
-        if (dropdown.classList.contains('show')) {
-          loadNotifications();
-        }
-      } catch (error) {
-        console.error('Error checking notifications:', error);
-      }
-    }
-
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-      const errorDiv = document.getElementById('loginError');
-      const submitBtn = document.getElementById('loginBtn');
-
-      try {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>লগইন হচ্ছে...';
-
-        const res = await fetch(`${API_BASE}/admin/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
-          token = data.token;
-          localStorage.setItem('token', token);
-          localStorage.setItem('adminUsername', username);
-          document.getElementById('loginPage').style.display = 'none';
-          document.getElementById('adminPanel').style.display = 'block';
-          document.getElementById('adminNameDisplay').textContent = username;
-          document.getElementById('adminUsernameDisplay').textContent = username;
-          document.getElementById('sidebarAdminName').textContent = username;
-          loadDashboard();
-          loadUnreadCounts();
-          startNotificationChecker();
-          showPopup('লগইন সফল হয়েছে', 'success');
-        } else {
-          errorDiv.textContent = data.error || 'লগইন ব্যর্থ হয়েছে';
-          errorDiv.classList.remove('hidden');
-          showPopup(data.error || 'লগইন ব্যর্থ হয়েছে', 'error');
-        }
-      } catch (error) {
-        errorDiv.textContent = 'সার্ভারে সংযোগ করা যায়নি';
-        errorDiv.classList.remove('hidden');
-        showPopup('সার্ভারে সংযোগ করা যায়নি', 'error');
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<span class="inline-flex items-center">লগইন করুন <i class="fas fa-arrow-right ml-2"></i></span>';
-      }
-    });
-
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      localStorage.removeItem('token');
-      localStorage.removeItem('adminUsername');
-      token = null;
-      document.getElementById('adminPanel').style.display = 'none';
-      document.getElementById('loginPage').style.display = 'flex';
-      if (notificationInterval) clearInterval(notificationInterval);
-      showPopup('লগআউট করা হয়েছে', 'info');
-    });
-
-    document.getElementById('menuToggle').addEventListener('click', () => {
-      document.getElementById('sidebar').classList.add('open');
-      document.getElementById('sidebarOverlay').classList.remove('hidden');
-    });
-
-    window.closeSidebar = () => {
-      document.getElementById('sidebar').classList.remove('open');
-      document.getElementById('sidebarOverlay').classList.add('hidden');
+    const titles = {
+      success: 'সফল হয়েছে',
+      error: 'ব্যর্থ হয়েছে',
+      info: 'তথ্য',
+      warning: 'সতর্কতা'
     };
-
-    document.querySelectorAll('.menu-item').forEach(item => {
-      if (item.id !== 'logoutBtn') {
-        item.addEventListener('click', async () => {
-          document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
-          item.classList.add('active');
-          
-          const page = item.dataset.page;
-          currentPage = page;
-          document.getElementById('pageTitle').textContent = {
-            dashboard: 'ড্যাশবোর্ড',
-            categories: 'ক্যাটাগরি',
-            products: 'প্রোডাক্ট',
-            orders: 'অর্ডার',
-            reviews: 'রিভিউ',
-            sliders: 'স্লাইডার',
-            settings: 'সেটিংস',
-            'change-password': 'পাসওয়ার্ড পরিবর্তন'
-          }[page] || 'ড্যাশবোর্ড';
-
-          if (window.innerWidth <= 768) {
-            closeSidebar();
-          }
-
-          switch(page) {
-            case 'dashboard': loadDashboard(); break;
-            case 'categories': loadCategories(); break;
-            case 'products': loadProducts(); break;
-            case 'orders': loadOrders(); break;
-            case 'reviews': loadReviews(); break;
-            case 'sliders': loadSliders(); break;
-            case 'settings': loadSettings(); break;
-            case 'change-password': loadChangePassword(); break;
-          }
-        });
-      }
-    });
-
-    const bell = document.getElementById('notificationBell');
-    const dropdown = document.getElementById('notificationDropdown');
     
-    bell.addEventListener('click', (e) => {
-      e.stopPropagation();
-      dropdown.classList.toggle('show');
+    const popup = document.createElement('div');
+    popup.className = `popup-message ${type}`;
+    popup.id = `popup-${id}`;
+    popup.innerHTML = `
+      <div class="popup-icon ${type}">
+        <i class="fas ${type === 'success' ? 'fa-check' : type === 'error' ? 'fa-times' : type === 'warning' ? 'fa-exclamation' : 'fa-info'}"></i>
+      </div>
+      <div class="popup-content">
+        <div class="popup-title">${title || titles[type]}</div>
+        <div class="popup-text">${message}</div>
+      </div>
+    `;
+    
+    container.appendChild(popup);
+    
+    setTimeout(() => {
+      const popupElement = document.getElementById(`popup-${id}`);
+      if (popupElement) {
+        popupElement.style.animation = 'popup-slide 0.3s ease reverse';
+        setTimeout(() => {
+          popupElement.remove();
+        }, 300);
+      }
+    }, 3000);
+  }
+
+  function showLoading(message = 'অপেক্ষা করুন...') {
+    document.getElementById('loadingText').textContent = message;
+    document.getElementById('loadingOverlay').classList.add('active');
+  }
+
+  function hideLoading() {
+    document.getElementById('loadingOverlay').classList.remove('active');
+  }
+
+  if (token) {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    document.getElementById('adminNameDisplay').textContent = adminUsername || 'অ্যাডমিন';
+    document.getElementById('adminUsernameDisplay').textContent = adminUsername || 'অ্যাডমিন';
+    document.getElementById('sidebarAdminName').textContent = adminUsername || 'অ্যাডমিন';
+    loadDashboard();
+    loadUnreadCounts();
+    startNotificationChecker();
+  }
+
+  function startNotificationChecker() {
+    if (notificationInterval) clearInterval(notificationInterval);
+    checkNotifications();
+    notificationInterval = setInterval(checkNotifications, 5000);
+  }
+
+  async function checkNotifications() {
+    if (!token) return;
+    
+    try {
+      const [ordersRes, reviewsRes] = await Promise.allSettled([
+        fetchWithRetry(`${API_BASE}/admin/orders/unread-count`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetchWithRetry(`${API_BASE}/admin/reviews/unread-count`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ]);
+
+      let ordersData = { count: 0 };
+      let reviewsData = { count: 0 };
+
+      if (ordersRes.status === 'fulfilled' && ordersRes.value.ok) {
+        ordersData = await ordersRes.value.json();
+      }
+      if (reviewsRes.status === 'fulfilled' && reviewsRes.value.ok) {
+        reviewsData = await reviewsRes.value.json();
+      }
+
+      const orderBadge = document.getElementById('orderBadge');
+      const reviewBadge = document.getElementById('reviewBadge');
+      const totalBadge = document.getElementById('notificationTotalBadge');
+
+      const totalUnread = (ordersData.count || 0) + (reviewsData.count || 0);
+
+      if (ordersData.count > 0) {
+        orderBadge.style.display = 'flex';
+        orderBadge.textContent = ordersData.count;
+      } else {
+        orderBadge.style.display = 'none';
+      }
+
+      if (reviewsData.count > 0) {
+        reviewBadge.style.display = 'flex';
+        reviewBadge.textContent = reviewsData.count;
+      } else {
+        reviewBadge.style.display = 'none';
+      }
+
+      if (totalUnread > 0) {
+        totalBadge.style.display = 'flex';
+        totalBadge.textContent = totalUnread;
+      } else {
+        totalBadge.style.display = 'none';
+      }
+
+      const dropdown = document.getElementById('notificationDropdown');
       if (dropdown.classList.contains('show')) {
         loadNotifications();
       }
-    });
-    
-    document.addEventListener('click', (e) => {
-      if (!dropdown.contains(e.target) && !bell.contains(e.target)) {
-        dropdown.classList.remove('show');
+    } catch (error) {
+      console.error('Error checking notifications:', error);
+    }
+  }
+
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const errorDiv = document.getElementById('loginError');
+    const submitBtn = document.getElementById('loginBtn');
+
+    try {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>লগইন হচ্ছে...';
+
+      const res = await fetchWithRetry(`${API_BASE}/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      }, 2, 1000); // ২ বার রিট্রাই, ১ সেকেন্ড ব্যবধান
+
+      const data = await res.json();
+
+      if (res.ok) {
+        token = data.token;
+        localStorage.setItem('token', token);
+        localStorage.setItem('adminUsername', username);
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+        document.getElementById('adminNameDisplay').textContent = username;
+        document.getElementById('adminUsernameDisplay').textContent = username;
+        document.getElementById('sidebarAdminName').textContent = username;
+        loadDashboard();
+        loadUnreadCounts();
+        startNotificationChecker();
+        showPopup('লগইন সফল হয়েছে', 'success');
+      } else {
+        errorDiv.textContent = data.error || 'লগইন ব্যর্থ হয়েছে';
+        errorDiv.classList.remove('hidden');
+        showPopup(data.error || 'লগইন ব্যর্থ হয়েছে', 'error');
       }
-    });
+    } catch (error) {
+      errorDiv.textContent = 'সার্ভারে সংযোগ করা যায়নি';
+      errorDiv.classList.remove('hidden');
+      showPopup('সার্ভারে সংযোগ করা যায়নি', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<span class="inline-flex items-center">লগইন করুন <i class="fas fa-arrow-right ml-2"></i></span>';
+    }
+  });
 
-    async function loadNotifications() {
-      const listDiv = document.getElementById('notificationList');
-      listDiv.innerHTML = '<div class="p-4 text-center"><div class="loading-spinner mx-auto"></div></div>';
-      
-      try {
-        const [ordersRes, reviewsRes] = await Promise.all([
-          fetch(`${API_BASE}/admin/orders?limit=10&isRead=false`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }),
-          fetch(`${API_BASE}/admin/reviews?status=pending&limit=5`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          })
-        ]);
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('adminUsername');
+    token = null;
+    document.getElementById('adminPanel').style.display = 'none';
+    document.getElementById('loginPage').style.display = 'flex';
+    if (notificationInterval) clearInterval(notificationInterval);
+    showPopup('লগআউট করা হয়েছে', 'info');
+  });
 
-        const ordersData = await ordersRes.json();
-        const reviewsData = await reviewsRes.json();
+  // Sidebar menu toggle
+  document.getElementById('menuToggle').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('sidebarOverlay').classList.remove('hidden');
+  });
 
-        allOrders = ordersData.orders || [];
-        allReviews = reviewsData.reviews || [];
+  window.closeSidebar = () => {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.add('hidden');
+  };
 
-        const notifications = [];
+  // Menu item clicks
+  document.querySelectorAll('.menu-item').forEach(item => {
+    if (item.id !== 'logoutBtn') {
+      item.addEventListener('click', async () => {
+        document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        
+        const page = item.dataset.page;
+        currentPage = page;
+        document.getElementById('pageTitle').textContent = {
+          dashboard: 'ড্যাশবোর্ড',
+          categories: 'ক্যাটাগরি',
+          products: 'প্রোডাক্ট',
+          orders: 'অর্ডার',
+          reviews: 'রিভিউ',
+          sliders: 'স্লাইডার',
+          settings: 'সেটিংস',
+          'change-password': 'পাসওয়ার্ড পরিবর্তন'
+        }[page] || 'ড্যাশবোর্ড';
 
-        if (allOrders.length > 0) {
-          allOrders.forEach(order => {
-            notifications.push({
-              type: 'order',
-              id: order._id,
-              title: `নতুন অর্ডার #${order.orderId}`,
-              description: `${order.customerName || 'N/A'} - ৳${order.total || 0}`,
-              time: order.createdAt,
-              orderId: order._id,
-              read: false,
-              onClick: () => {
-                showOrderDetails(order);
-                markOrderAsRead(order._id);
-                dropdown.classList.remove('show');
-                setTimeout(() => {
-                  document.querySelector('[data-page="orders"]').click();
-                }, 300);
-              }
-            });
-          });
+        if (window.innerWidth <= 768) {
+          closeSidebar();
         }
 
-        if (allReviews.length > 0) {
-          allReviews.forEach(review => {
-            notifications.push({
-              type: 'review',
-              id: review._id,
-              title: `নতুন রিভিউ (${review.rating || 0}★)`,
-              description: `${review.name || 'N/A'} - ${review.address || 'N/A'}`,
-              time: review.createdAt,
-              read: false,
-              onClick: () => {
-                markReviewAsRead(review._id);
-                dropdown.classList.remove('show');
-                setTimeout(() => {
-                  document.querySelector('[data-page="reviews"]').click();
-                }, 300);
-              }
-            });
-          });
+        switch(page) {
+          case 'dashboard': loadDashboard(); break;
+          case 'categories': loadCategories(); break;
+          case 'products': loadProducts(); break;
+          case 'orders': loadOrders(); break;
+          case 'reviews': loadReviews(); break;
+          case 'sliders': loadSliders(); break;
+          case 'settings': loadSettings(); break;
+          case 'change-password': loadChangePassword(); break;
         }
+      });
+    }
+  });
 
-        notifications.sort((a,b) => new Date(b.time) - new Date(a.time));
+  // Notification dropdown
+  const bell = document.getElementById('notificationBell');
+  const dropdown = document.getElementById('notificationDropdown');
+  
+  bell.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdown.classList.toggle('show');
+    if (dropdown.classList.contains('show')) {
+      loadNotifications();
+    }
+  });
+  
+  document.addEventListener('click', (e) => {
+    if (!dropdown.contains(e.target) && !bell.contains(e.target)) {
+      dropdown.classList.remove('show');
+    }
+  });
 
-        if (notifications.length === 0) {
-          listDiv.innerHTML = '<div class="p-4 text-center text-gray-500">কোন নতুন নোটিফিকেশন নেই</div>';
-          return;
-        }
+  async function loadNotifications() {
+    const listDiv = document.getElementById('notificationList');
+    listDiv.innerHTML = '<div class="p-4 text-center"><div class="loading-spinner mx-auto"></div></div>';
+    
+    try {
+      const [ordersRes, reviewsRes] = await Promise.allSettled([
+        fetchWithRetry(`${API_BASE}/admin/orders?limit=10&isRead=false`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetchWithRetry(`${API_BASE}/admin/reviews?status=pending&limit=5`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ]);
 
-        listDiv.innerHTML = notifications.map(n => `
-          <div class="notification-item unread" onclick="(${n.onClick})()">
-            <div class="flex justify-between items-start">
-              <div class="flex-1">
-                <div class="flex items-center gap-2">
-                  <span class="font-medium">${n.title}</span>
-                  <span class="notification-type">${n.type === 'order' ? 'অর্ডার' : 'রিভিউ'}</span>
-                </div>
-                <p class="text-sm text-gray-600 mt-1">${n.description}</p>
-                <p class="notification-time mt-1">${new Date(n.time).toLocaleString('bn-BD')}</p>
+      let ordersData = { orders: [] };
+      let reviewsData = { reviews: [] };
+
+      if (ordersRes.status === 'fulfilled' && ordersRes.value.ok) {
+        ordersData = await ordersRes.value.json();
+      }
+      if (reviewsRes.status === 'fulfilled' && reviewsRes.value.ok) {
+        reviewsData = await reviewsRes.value.json();
+      }
+
+      allOrders = ordersData.orders || [];
+      allReviews = reviewsData.reviews || [];
+
+      const notifications = [];
+
+      allOrders.forEach(order => {
+        notifications.push({
+          type: 'order',
+          id: order._id,
+          title: `নতুন অর্ডার #${order.orderId}`,
+          description: `${order.customerName || 'N/A'} - ৳${order.total || 0}`,
+          time: order.createdAt,
+          orderId: order._id,
+          read: false,
+          onClick: () => {
+            showOrderDetails(order);
+            markOrderAsRead(order._id);
+            dropdown.classList.remove('show');
+            setTimeout(() => {
+              document.querySelector('[data-page="orders"]').click();
+            }, 300);
+          }
+        });
+      });
+
+      allReviews.forEach(review => {
+        notifications.push({
+          type: 'review',
+          id: review._id,
+          title: `নতুন রিভিউ (${review.rating || 0}★)`,
+          description: `${review.name || 'N/A'} - ${review.address || 'N/A'}`,
+          time: review.createdAt,
+          read: false,
+          onClick: () => {
+            markReviewAsRead(review._id);
+            dropdown.classList.remove('show');
+            setTimeout(() => {
+              document.querySelector('[data-page="reviews"]').click();
+            }, 300);
+          }
+        });
+      });
+
+      notifications.sort((a,b) => new Date(b.time) - new Date(a.time));
+
+      if (notifications.length === 0) {
+        listDiv.innerHTML = '<div class="p-4 text-center text-gray-500">কোন নতুন নোটিফিকেশন নেই</div>';
+        return;
+      }
+
+      listDiv.innerHTML = notifications.map(n => `
+        <div class="notification-item unread" onclick="(${n.onClick})()">
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <span class="font-medium">${n.title}</span>
+                <span class="notification-type">${n.type === 'order' ? 'অর্ডার' : 'রিভিউ'}</span>
               </div>
+              <p class="text-sm text-gray-600 mt-1">${n.description}</p>
+              <p class="notification-time mt-1">${new Date(n.time).toLocaleString('bn-BD')}</p>
             </div>
           </div>
-        `).join('');
-
-      } catch (error) {
-        console.error('Error loading notifications:', error);
-        listDiv.innerHTML = '<div class="p-4 text-center text-red-500">নোটিফিকেশন লোড করতে ব্যর্থ</div>';
-      }
-    }
-
-    window.viewAllNotifications = () => {
-      dropdown.classList.remove('show');
-      document.querySelector('[data-page="orders"]').click();
-    };
-
-    async function markOrderAsRead(orderId) {
-      try {
-        await fetch(`${API_BASE}/admin/orders/${orderId}/read`, {
-          method: 'PUT',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        loadUnreadCounts();
-      } catch (error) {
-        console.error('Error marking order as read:', error);
-      }
-    }
-
-    async function markReviewAsRead(reviewId) {
-      try {
-        await fetch(`${API_BASE}/admin/reviews/${reviewId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ isRead: true })
-        });
-        loadUnreadCounts();
-      } catch (error) {
-        console.error('Error marking review as read:', error);
-      }
-    }
-
-    document.getElementById('markAllRead').addEventListener('click', () => {
-      dropdown.classList.remove('show');
-    });
-
-    window.openImageModal = () => {
-      document.getElementById('imageModal').classList.add('active');
-    };
-
-    window.closeImageModal = () => {
-      document.getElementById('imageModal').classList.remove('active');
-      document.getElementById('fileInput').value = '';
-      document.getElementById('previewContainer').innerHTML = '';
-      document.getElementById('uploadStatus').innerHTML = '';
-    };
-
-    window.openGalleryModal = (images, callback) => {
-      const gallery = document.getElementById('galleryContainer');
-      gallery.innerHTML = images.map((img, index) => `
-        <div class="gallery-item ${index === 0 ? 'selected' : ''}" onclick="selectGalleryImage('${img}', ${index})">
-          <img src="${img}" class="w-full h-24 object-cover">
         </div>
       `).join('');
-      
-      window.galleryCallback = callback;
-      document.getElementById('galleryModal').classList.add('active');
-    };
 
-    window.selectGalleryImage = (image, index) => {
-      document.querySelectorAll('.gallery-item').forEach(item => {
-        item.classList.remove('selected');
-      });
-      event.currentTarget.classList.add('selected');
-      
-      if (window.galleryCallback) {
-        window.galleryCallback(image);
-      }
-    };
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+      listDiv.innerHTML = '<div class="p-4 text-center text-red-500">নোটিফিকেশন লোড করতে ব্যর্থ</div>';
+    }
+  }
 
-    window.closeGalleryModal = () => {
-      document.getElementById('galleryModal').classList.remove('active');
-      window.galleryCallback = null;
-    };
+  window.viewAllNotifications = () => {
+    dropdown.classList.remove('show');
+    document.querySelector('[data-page="orders"]').click();
+  };
 
-    window.openOrderModal = () => {
-      document.getElementById('orderModal').classList.add('active');
-    };
+  async function markOrderAsRead(orderId) {
+    try {
+      await fetchWithRetry(`${API_BASE}/admin/orders/${orderId}/read`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+      }, 2);
+      loadUnreadCounts();
+    } catch (error) {
+      console.error('Error marking order as read:', error);
+    }
+  }
 
-    window.closeOrderModal = () => {
-      document.getElementById('orderModal').classList.remove('active');
-    };
+  async function markReviewAsRead(reviewId) {
+    try {
+      await fetchWithRetry(`${API_BASE}/admin/reviews/${reviewId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ isRead: true })
+      }, 2);
+      loadUnreadCounts();
+    } catch (error) {
+      console.error('Error marking review as read:', error);
+    }
+  }
 
-    window.openConfirmModal = (title, message, callback) => {
-      document.getElementById('confirmTitle').textContent = title;
-      document.getElementById('confirmMessage').textContent = message;
-      confirmCallback = callback;
-      document.getElementById('confirmModal').classList.add('active');
-    };
+  document.getElementById('markAllRead').addEventListener('click', () => {
+    dropdown.classList.remove('show');
+  });
 
-    window.closeConfirmModal = () => {
-      document.getElementById('confirmModal').classList.remove('active');
-      confirmCallback = null;
-    };
+  // Modal functions
+  window.openImageModal = () => {
+    document.getElementById('imageModal').classList.add('active');
+  };
 
-    document.getElementById('confirmAction').addEventListener('click', () => {
-      if (confirmCallback) {
-        confirmCallback();
-      }
-      closeConfirmModal();
+  window.closeImageModal = () => {
+    document.getElementById('imageModal').classList.remove('active');
+    document.getElementById('fileInput').value = '';
+    document.getElementById('previewContainer').innerHTML = '';
+    document.getElementById('uploadStatus').innerHTML = '';
+  };
+
+  window.openGalleryModal = (images, callback) => {
+    const gallery = document.getElementById('galleryContainer');
+    gallery.innerHTML = images.map((img, index) => `
+      <div class="gallery-item ${index === 0 ? 'selected' : ''}" onclick="selectGalleryImage('${img}', ${index})">
+        <img src="${img}" class="w-full h-24 object-cover">
+      </div>
+    `).join('');
+    
+    window.galleryCallback = callback;
+    document.getElementById('galleryModal').classList.add('active');
+  };
+
+  window.selectGalleryImage = (image, index) => {
+    document.querySelectorAll('.gallery-item').forEach(item => {
+      item.classList.remove('selected');
     });
+    event.currentTarget.classList.add('selected');
+    
+    if (window.galleryCallback) {
+      window.galleryCallback(image);
+    }
+  };
 
-    window.closeModal = () => {
-      document.getElementById('modal').classList.remove('active');
-    };
+  window.closeGalleryModal = () => {
+    document.getElementById('galleryModal').classList.remove('active');
+    window.galleryCallback = null;
+  };
 
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
+  window.openOrderModal = () => {
+    document.getElementById('orderModal').classList.add('active');
+  };
 
-    dropZone.addEventListener('click', () => {
-      fileInput.click();
-    });
+  window.closeOrderModal = () => {
+    document.getElementById('orderModal').classList.remove('active');
+  };
 
-    dropZone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropZone.classList.add('dragover');
-    });
+  window.openConfirmModal = (title, message, callback) => {
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMessage').textContent = message;
+    confirmCallback = callback;
+    document.getElementById('confirmModal').classList.add('active');
+  };
 
-    dropZone.addEventListener('dragleave', (e) => {
-      e.preventDefault();
-      dropZone.classList.remove('dragover');
-    });
+  window.closeConfirmModal = () => {
+    document.getElementById('confirmModal').classList.remove('active');
+    confirmCallback = null;
+  };
 
-    dropZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropZone.classList.remove('dragover');
-      handleFiles(e.dataTransfer.files);
-    });
+  document.getElementById('confirmAction').addEventListener('click', () => {
+    if (confirmCallback) {
+      confirmCallback();
+    }
+    closeConfirmModal();
+  });
 
-    fileInput.addEventListener('change', (e) => {
-      handleFiles(e.target.files);
-    });
+  window.closeModal = () => {
+    document.getElementById('modal').classList.remove('active');
+  };
 
-    function handleFiles(files) {
-      const preview = document.getElementById('previewContainer');
-      preview.innerHTML = '';
-      document.getElementById('uploadStatus').innerHTML = `${files.length} টি ছবি নির্বাচিত`;
-      
-      for (let file of files) {
-        if (file.type.startsWith('image/')) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            preview.innerHTML += `
-              <div class="relative group">
-                <img src="${e.target.result}" class="image-preview w-full h-24 object-cover rounded-lg border-2 border-[#1877F2]">
-              </div>
-            `;
-          };
-          reader.readAsDataURL(file);
-        }
+  // Image upload handling
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+
+  dropZone.addEventListener('click', () => {
+    fileInput.click();
+  });
+
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+  });
+
+  dropZone.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+  });
+
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    handleFiles(e.dataTransfer.files);
+  });
+
+  fileInput.addEventListener('change', (e) => {
+    handleFiles(e.target.files);
+  });
+
+  function handleFiles(files) {
+    const preview = document.getElementById('previewContainer');
+    preview.innerHTML = '';
+    document.getElementById('uploadStatus').innerHTML = `${files.length} টি ছবি নির্বাচিত`;
+    
+    for (let file of files) {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          preview.innerHTML += `
+            <div class="relative group">
+              <img src="${e.target.result}" class="image-preview w-full h-24 object-cover rounded-lg border-2 border-[#1877F2]">
+            </div>
+          `;
+        };
+        reader.readAsDataURL(file);
       }
     }
+  }
 
-    window.uploadImages = async function() {
-      const files = fileInput.files;
-      if (files.length === 0) {
-        showPopup('কমপক্ষে একটি ছবি নির্বাচন করুন', 'error');
-        return;
-      }
+  window.uploadImages = async function() {
+    const files = fileInput.files;
+    if (files.length === 0) {
+      showPopup('কমপক্ষে একটি ছবি নির্বাচন করুন', 'error');
+      return;
+    }
 
-      const uploadBtn = document.getElementById('uploadBtn');
-      const originalText = uploadBtn.innerHTML;
+    const uploadBtn = document.getElementById('uploadBtn');
+    const originalText = uploadBtn.innerHTML;
+    
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>আপলোড হচ্ছে...';
+    document.getElementById('uploadStatus').innerHTML = 'ছবি আপলোড হচ্ছে...';
+
+    const formData = new FormData();
+    for (let file of files) {
+      formData.append('images', file);
+    }
+
+    try {
+      const res = await fetchWithRetry(`${API_BASE}/admin/products/temp-upload`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      }, 2);
+
+      const data = await res.json();
       
-      uploadBtn.disabled = true;
-      uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>আপলোড হচ্ছে...';
-      document.getElementById('uploadStatus').innerHTML = 'ছবি আপলোড হচ্ছে...';
-
-      const formData = new FormData();
-      for (let file of files) {
-        formData.append('images', file);
+      if (res.ok) {
+        productImages = [...productImages, ...data.urls];
+        updateImagePreview();
+        closeImageModal();
+        showPopup(`${data.urls.length} টি ছবি আপলোড সফল হয়েছে`, 'success');
+      } else {
+        showPopup(data.error || 'ছবি আপলোড ব্যর্থ হয়েছে', 'error');
       }
-
-      try {
-        const res = await fetch(`${API_BASE}/admin/products/temp-upload`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` },
-          body: formData
-        });
-
-        const data = await res.json();
-        
-        if (res.ok) {
-          productImages = [...productImages, ...data.urls];
-          updateImagePreview();
-          closeImageModal();
-          showPopup(`${data.urls.length} টি ছবি আপলোড সফল হয়েছে`, 'success');
-        } else {
-          showPopup(data.error || 'ছবি আপলোড ব্যর্থ হয়েছে', 'error');
-        }
-      } catch (error) {
-        console.error('Upload error:', error);
-        showPopup('ছবি আপলোড করতে সমস্যা হয়েছে', 'error');
-      } finally {
-        uploadBtn.disabled = false;
-        uploadBtn.innerHTML = originalText;
-      }
-    };
-
-    function updateImagePreview() {
-      const container = document.getElementById('imagePreviewContainer');
-      if (container) {
-        container.innerHTML = productImages.map((img, index) => `
-          <div class="relative group">
-            <img src="${img}" class="image-preview w-24 h-24 object-cover rounded-lg border-2 border-[#1877F2]" onclick="openGalleryModal(productImages, (image) => console.log('Selected:', image))">
-            <button type="button" onclick="removeImage('${img}')" class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full hover:bg-red-600">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-        `).join('');
-      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      showPopup('ছবি আপলোড করতে সমস্যা হয়েছে', 'error');
+    } finally {
+      uploadBtn.disabled = false;
+      uploadBtn.innerHTML = originalText;
     }
+  };
 
-    window.removeImage = function(imageUrl) {
-      productImages = productImages.filter(img => img !== imageUrl);
-      updateImagePreview();
-    };
-
-    async function loadDashboard() {
-      const content = document.getElementById('pageContent');
-
-      try {
-        const [statsRes, chartRes, productsRes] = await Promise.all([
-          fetch(`${API_BASE}/admin/dashboard`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }),
-          fetch(`${API_BASE}/admin/chart-data`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }),
-          fetch(`${API_BASE}/admin/products`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          })
-        ]);
-
-        if (!statsRes.ok || !chartRes.ok || !productsRes.ok) {
-          throw new Error('Failed to load dashboard data');
-        }
-
-        const data = await statsRes.json();
-        const chartData = await chartRes.json();
-        const products = await productsRes.json();
-
-        document.getElementById('productCount').textContent = data.stats.totalProducts || 0;
-        
-        const topProducts = [...products]
-          .sort((a, b) => (b.sold || 0) - (a.sold || 0))
-          .slice(0, 5);
-
-        const categoryMap = {};
-        products.forEach(p => {
-          categoryMap[p.category] = (categoryMap[p.category] || 0) + 1;
-        });
-        const categoryLabels = Object.keys(categoryMap);
-        const categoryData = Object.values(categoryMap);
-
-        content.innerHTML = `
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-icon"><i class="fas fa-truck"></i></div>
-              <div class="stat-content">
-                <div class="stat-label">মোট অর্ডার</div>
-                <div class="stat-value">${data.stats.totalOrders || 0}</div>
-              </div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon"><i class="fas fa-clock"></i></div>
-              <div class="stat-content">
-                <div class="stat-label">পেন্ডিং অর্ডার</div>
-                <div class="stat-value">${data.stats.pendingOrders || 0}</div>
-              </div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon"><i class="fas fa-shirt"></i></div>
-              <div class="stat-content">
-                <div class="stat-label">মোট প্রোডাক্ট</div>
-                <div class="stat-value">${data.stats.totalProducts || 0}</div>
-              </div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon"><i class="fas fa-star"></i></div>
-              <div class="stat-content">
-                <div class="stat-label">মোট রিভিউ</div>
-                <div class="stat-value">${data.stats.totalReviews || 0}</div>
-              </div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
-              <div class="stat-content">
-                <div class="stat-label">পেন্ডিং রিভিউ</div>
-                <div class="stat-value">${data.stats.pendingReviews || 0}</div>
-              </div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon"><i class="fas fa-bangladeshi-taka-sign"></i></div>
-              <div class="stat-content">
-                <div class="stat-label">মোট আয়</div>
-                <div class="stat-value">৳${(data.stats.revenue || 0).toLocaleString()}</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="chart-grid">
-            <div class="chart-card">
-              <h3 class="chart-title">অর্ডার স্ট্যাটাস</h3>
-              <div class="chart-container">
-                <canvas id="ordersStatusChart"></canvas>
-              </div>
-            </div>
-            <div class="chart-card">
-              <h3 class="chart-title">ক্যাটাগরি অনুযায়ী পণ্য</h3>
-              <div class="chart-container">
-                <canvas id="categoryChart"></canvas>
-              </div>
-            </div>
-          </div>
-
-          <div class="section-card">
-            <h3 class="text-xl font-bold mb-4">সর্বাধিক বিক্রিত পণ্য</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              ${topProducts.map(product => `
-                <div class="bg-gray-50 p-4 rounded-[20px_4px_20px_4px] flex items-center gap-4">
-                  <img src="${product.img || product.images?.[0] || ''}" class="w-16 h-16 object-cover rounded-[12px_2px_12px_2px]" onerror="this.src='https://via.placeholder.com/64'">
-                  <div class="flex-1">
-                    <h4 class="font-medium">${product.name || ''}</h4>
-                    <p class="text-sm text-gray-600">বিক্রি: ${product.sold || 0} টি</p>
-                    <p class="text-sm font-bold text-[#1877F2]">৳${product.price || 0}</p>
-                  </div>
-                </div>
-              `).join('')}
-              ${topProducts.length === 0 ? '<p class="text-center py-4 text-gray-500">কোন পণ্য নেই</p>' : ''}
-            </div>
-          </div>
-
-          <div class="section-card">
-            <h3 class="text-xl font-bold mb-4">সাম্প্রতিক অর্ডার</h3>
-            <div class="data-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>অর্ডার ID</th>
-                    <th>গ্রাহক</th>
-                    <th>ফোন</th>
-                    <th>মোট</th>
-                    <th>স্ট্যাটাস</th>
-                    <th>তারিখ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${(data.recentOrders || []).map(order => `
-                    <tr onclick="showOrderDetails('${order._id}')">
-                      <td>${order.orderId || 'N/A'}</td>
-                      <td>${order.customerName || 'N/A'}</td>
-                      <td>${order.phone || 'N/A'}</td>
-                      <td>৳${order.total || 0}</td>
-                      <td><span class="status-badge status-${order.status || 'pending'}">${order.status === 'pending' ? 'অপেক্ষমাণ' : order.status || 'pending'}</span></td>
-                      <td>${order.createdAt ? new Date(order.createdAt).toLocaleDateString('bn-BD') : 'N/A'}</td>
-                    </tr>
-                  `).join('')}
-                  ${(!data.recentOrders || data.recentOrders.length === 0) ? '<tr><td colspan="6" class="text-center py-4">কোন অর্ডার নেই</td></tr>' : ''}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        `;
-
-        if (chartInstance1) chartInstance1.destroy();
-        if (chartInstance2) chartInstance2.destroy();
-
-        const ctx1 = document.getElementById('ordersStatusChart')?.getContext('2d');
-        if (ctx1) {
-          chartInstance1 = new Chart(ctx1, {
-            type: 'doughnut',
-            data: {
-              labels: ['পেন্ডিং', 'নিশ্চিত', 'প্রক্রিয়াধীন', 'পাঠানো', 'ডেলিভারি', 'বাতিল'],
-              datasets: [{
-                data: [
-                  data.stats.pendingOrders || 0,
-                  data.stats.confirmedOrders || 0,
-                  data.stats.processingOrders || 0,
-                  data.stats.shippedOrders || 0,
-                  data.stats.deliveredOrders || 0,
-                  data.stats.cancelledOrders || 0
-                ],
-                backgroundColor: ['#fef3c7', '#dbeafe', '#e0e7ff', '#cffafe', '#d1fae5', '#fee2e2'],
-                borderColor: ['#92400e', '#1e40af', '#3730a3', '#0e7490', '#065f46', '#991b1b'],
-                borderWidth: 1
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: { position: 'bottom' }
-              }
-            }
-          });
-        }
-
-        const ctx2 = document.getElementById('categoryChart')?.getContext('2d');
-        if (ctx2) {
-          chartInstance2 = new Chart(ctx2, {
-            type: 'bar',
-            data: {
-              labels: categoryLabels,
-              datasets: [{
-                label: 'পণ্যের সংখ্যা',
-                data: categoryData,
-                backgroundColor: '#1877F2',
-                borderRadius: 8
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: { display: false }
-              }
-            }
-          });
-        }
-
-      } catch (error) {
-        console.error('Dashboard error:', error);
-        content.innerHTML = '<p class="text-red-500 text-center py-8">ডেটা লোড করতে ব্যর্থ হয়েছে</p>';
-      }
+  function updateImagePreview() {
+    const container = document.getElementById('imagePreviewContainer');
+    if (container) {
+      container.innerHTML = productImages.map((img, index) => `
+        <div class="relative group">
+          <img src="${img}" class="image-preview w-24 h-24 object-cover rounded-lg border-2 border-[#1877F2]" onclick="openGalleryModal(productImages, (image) => console.log('Selected:', image))">
+          <button type="button" onclick="removeImage('${img}')" class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full hover:bg-red-600">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      `).join('');
     }
+  }
 
-    async function loadCategories() {
-      const content = document.getElementById('pageContent');
+  window.removeImage = function(imageUrl) {
+    productImages = productImages.filter(img => img !== imageUrl);
+    updateImagePreview();
+  };
 
-      try {
-        const res = await fetch(`${API_BASE}/admin/categories`, {
+  // ---------- loadDashboard ----------
+  async function loadDashboard() {
+    const content = document.getElementById('pageContent');
+    showLoading('ড্যাশবোর্ড লোড হচ্ছে...');
+
+    try {
+      const [statsRes, chartRes, productsRes] = await Promise.allSettled([
+        fetchWithRetry(`${API_BASE}/admin/dashboard`, {
           headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (!res.ok) throw new Error('Failed to load categories');
-
-        const categories = await res.json();
-
-        document.getElementById('categoryCount').textContent = categories.length;
-
-        content.innerHTML = `
-          <div class="section-card">
-            <div class="section-header">
-              <h3 class="text-xl font-bold">ক্যাটাগরি পরিচালনা</h3>
-              <button class="btn-primary" onclick="showCategoryForm()">
-                <i class="fas fa-plus mr-2"></i>নতুন ক্যাটাগরি
-              </button>
-            </div>
-            <div class="data-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>নাম</th>
-                    <th>বাংলা নাম</th>
-                    <th>অর্ডার</th>
-                    <th>স্ট্যাটাস</th>
-                    <th>অ্যাকশন</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${categories.map(cat => `
-                    <tr>
-                      <td>${cat.name || ''}</td>
-                      <td>${cat.banglaName || ''}</td>
-                      <td>${cat.order || 0}</td>
-                      <td><span class="status-badge ${cat.active ? 'status-delivered' : 'status-cancelled'}">${cat.active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</span></td>
-                      <td>
-                        <button onclick='showCategoryForm(${JSON.stringify(cat).replace(/'/g, "\\'")})' class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-edit"></i></button>
-                        <button onclick="confirmDeleteCategory('${cat._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
-                      </td>
-                    </tr>
-                  `).join('')}
-                  ${categories.length === 0 ? '<tr><td colspan="5" class="text-center py-4">কোন ক্যাটাগরি নেই</td></tr>' : ''}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        `;
-      } catch (error) {
-        console.error('Categories error:', error);
-        content.innerHTML = '<p class="text-red-500 text-center py-8">ক্যাটাগরি লোড করতে ব্যর্থ হয়েছে</p>';
-      }
-    }
-
-    window.showCategoryForm = (category = null) => {
-      const modal = document.getElementById('modal');
-      const modalContent = document.getElementById('modalContent');
-      
-      modalContent.innerHTML = `
-        <h3 class="text-2xl font-bold mb-6">${category ? 'ক্যাটাগরি সম্পাদনা' : 'নতুন ক্যাটাগরি'}</h3>
-        <form id="categoryForm" onsubmit="saveCategory(event, '${category?._id || ''}')">
-          <div class="form-group">
-            <label class="form-label">নাম (ইংরেজি)</label>
-            <input type="text" class="form-input" name="name" value="${category?.name || ''}" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">বাংলা নাম</label>
-            <input type="text" class="form-input" name="banglaName" value="${category?.banglaName || ''}" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">বিবরণ</label>
-            <textarea class="form-textarea" name="description">${category?.description || ''}</textarea>
-          </div>
-          <div class="form-group">
-            <label class="form-label">অর্ডার</label>
-            <input type="number" class="form-input" name="order" value="${category?.order || '1'}" required>
-          </div>
-          <div class="form-group">
-            <label class="flex items-center gap-2">
-              <input type="checkbox" name="active" ${category?.active ? 'checked' : ''}>
-              <span>সক্রিয়</span>
-            </label>
-          </div>
-          <div class="flex justify-end gap-3 mt-6">
-            <button type="button" class="btn-secondary px-6 py-2" onclick="closeModal()">বাতিল</button>
-            <button type="submit" class="btn-primary px-6 py-2">সংরক্ষণ</button>
-          </div>
-        </form>
-      `;
-
-      modal.classList.add('active');
-    };
-
-    window.saveCategory = async (e, id) => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const submitBtn = e.target.querySelector('button[type="submit"]');
-      
-      const data = {
-        name: formData.get('name'),
-        banglaName: formData.get('banglaName'),
-        description: formData.get('description'),
-        order: parseInt(formData.get('order')) || 1,
-        active: formData.get('active') === 'on'
-      };
-
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = 'সংরক্ষণ হচ্ছে...';
-
-      try {
-        const url = id ? `${API_BASE}/admin/categories/${id}` : `${API_BASE}/admin/categories`;
-        const method = id ? 'PUT' : 'POST';
-
-        const res = await fetch(url, {
-          method,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(data)
-        });
-
-        if (res.ok) {
-          showPopup(id ? 'ক্যাটাগরি আপডেট হয়েছে' : 'ক্যাটাগরি তৈরি হয়েছে', 'success');
-          closeModal();
-          loadCategories();
-        } else {
-          const error = await res.json();
-          showPopup(error.error || 'ব্যর্থ হয়েছে', 'error');
-        }
-      } catch (error) {
-        console.error('Save category error:', error);
-        showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = 'সংরক্ষণ';
-      }
-    };
-
-    window.confirmDeleteCategory = (id) => {
-      openConfirmModal(
-        'ক্যাটাগরি মুছবেন?',
-        'এই ক্যাটাগরিটি মুছে ফেলা হবে!',
-        () => deleteCategory(id)
-      );
-    };
-
-    window.deleteCategory = async (id) => {
-      try {
-        const res = await fetch(`${API_BASE}/admin/categories/${id}`, {
-          method: 'DELETE',
+        }),
+        fetchWithRetry(`${API_BASE}/admin/chart-data`, {
           headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (res.ok) {
-          showPopup('ক্যাটাগরি মুছে ফেলা হয়েছে', 'success');
-          loadCategories();
-        } else {
-          const error = await res.json();
-          showPopup(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
-        }
-      } catch (error) {
-        console.error('Delete category error:', error);
-        showPopup('মুছতে সমস্যা হয়েছে', 'error');
-      }
-    };
-
-    async function loadProducts() {
-      const content = document.getElementById('pageContent');
-
-      try {
-        const res = await fetch(`${API_BASE}/admin/products`, {
+        }),
+        fetchWithRetry(`${API_BASE}/admin/products`, {
           headers: { 'Authorization': `Bearer ${token}` }
-        });
+        })
+      ]);
 
-        if (!res.ok) throw new Error('Failed to load products');
+      let statsData = { stats: {}, recentOrders: [] };
+      let chartData = { labels: [], data: [] };
+      let products = [];
 
-        const products = await res.json();
+      if (statsRes.status === 'fulfilled' && statsRes.value.ok) {
+        statsData = await statsRes.value.json();
+      } else {
+        showPopup('স্ট্যাটাস লোড করতে সমস্যা হয়েছে', 'warning');
+      }
 
+      if (chartRes.status === 'fulfilled' && chartRes.value.ok) {
+        chartData = await chartRes.value.json();
+      } else {
+        showPopup('চার্ট ডেটা লোড করতে সমস্যা হয়েছে', 'warning');
+      }
+
+      if (productsRes.status === 'fulfilled' && productsRes.value.ok) {
+        products = await productsRes.value.json();
         document.getElementById('productCount').textContent = products.length;
-
-        content.innerHTML = `
-          <div class="section-card">
-            <div class="section-header">
-              <h3 class="text-xl font-bold">প্রোডাক্ট পরিচালনা</h3>
-              <button class="btn-primary" onclick="showProductForm()">
-                <i class="fas fa-plus mr-2"></i>নতুন প্রোডাক্ট
-              </button>
-            </div>
-            <div class="data-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>ছবি</th>
-                    <th>নাম</th>
-                    <th>ক্যাটাগরি</th>
-                    <th>মূল্য</th>
-                    <th>স্টক</th>
-                    <th>বিক্রি</th>
-                    <th>অ্যাকশন</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${products.map(product => `
-                    <tr>
-                      <td><img src="${product.img || product.images?.[0] || ''}" class="image-preview w-12 h-12" onerror="this.src='https://via.placeholder.com/50'"></td>
-                      <td>${product.name || ''}</td>
-                      <td>${product.category || ''}</td>
-                      <td>৳${product.price || 0}</td>
-                      <td>${product.stock || 0}</td>
-                      <td>${product.sold || 0}</td>
-                      <td>
-                        <button onclick='showProductForm(${JSON.stringify(product).replace(/'/g, "\\'")})' class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-edit"></i></button>
-                        <button onclick="confirmDeleteProduct('${product._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
-                      </td>
-                    </tr>
-                  `).join('')}
-                  ${products.length === 0 ? '<tr><td colspan="7" class="text-center py-4">কোন প্রোডাক্ট নেই</td></tr>' : ''}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        `;
-      } catch (error) {
-        console.error('Products error:', error);
-        content.innerHTML = '<p class="text-red-500 text-center py-8">প্রোডাক্ট লোড করতে ব্যর্থ হয়েছে</p>';
-      }
-    }
-
-    window.showProductForm = async (product = null) => {
-      currentProductId = product?._id || null;
-      productImages = product?.images || (product?.img ? [product.img] : []);
-
-      const modal = document.getElementById('modal');
-      const modalContent = document.getElementById('modalContent');
-
-      let categories = [];
-      try {
-        const res = await fetch(`${API_BASE}/categories`);
-        categories = await res.json();
-      } catch (error) {
-        console.error('Failed to load categories:', error);
+      } else {
+        showPopup('প্রোডাক্ট লোড করতে সমস্যা হয়েছে', 'warning');
       }
 
-      modalContent.innerHTML = `
-        <h3 class="text-2xl font-bold mb-6">${product ? 'প্রোডাক্ট সম্পাদনা' : 'নতুন প্রোডাক্ট'}</h3>
-        <form id="productForm" onsubmit="saveProduct(event, '${product?._id || ''}')">
-          <div class="form-group">
-            <label class="form-label">প্রোডাক্ট নাম</label>
-            <input type="text" class="form-input" name="name" value="${product?.name || ''}" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">বিবরণ</label>
-            <input type="text" class="form-input" name="desc" value="${product?.desc || ''}" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">ক্যাটাগরি</label>
-            <select class="form-select" name="category" required>
-              <option value="">ক্যাটাগরি নির্বাচন করুন</option>
-              ${categories.map(cat => `<option value="${cat.name}" ${product?.category === cat.name ? 'selected' : ''}>${cat.banglaName || cat.name}</option>`).join('')}
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">মূল মূল্য</label>
-            <input type="number" class="form-input" name="original" value="${product?.original || ''}" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">বিক্রয় মূল্য</label>
-            <input type="number" class="form-input" name="price" value="${product?.price || ''}" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">স্টক</label>
-            <input type="number" class="form-input" name="stock" value="${product?.stock || '10'}" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">বিক্রি হয়েছে</label>
-            <input type="number" class="form-input" name="sold" value="${product?.sold || '0'}" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">ছবি (সর্বোচ্চ ১০টি)</label>
-            <button type="button" onclick="openImageModal()" class="bg-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300 mb-2">
-              <i class="fas fa-upload mr-2"></i>ছবি আপলোড
-            </button>
-            <div id="imagePreviewContainer" class="flex flex-wrap gap-3 mt-2">
-              ${productImages.map(img => `
-                <div class="relative group">
-                  <img src="${img}" class="image-preview w-24 h-24" onerror="this.src='https://via.placeholder.com/100'">
-                  <button type="button" onclick="removeImage('${img}')" class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full hover:bg-red-600">×</button>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="flex items-center gap-2">
-              <input type="checkbox" name="featured" ${product?.featured ? 'checked' : ''}>
-              <span>ফিচার্ড</span>
-            </label>
-          </div>
-          <div class="flex justify-end gap-3 mt-6">
-            <button type="button" class="btn-secondary px-6 py-2" onclick="closeModal()">বাতিল</button>
-            <button type="submit" class="btn-primary px-6 py-2">সংরক্ষণ</button>
-          </div>
-        </form>
+      // Render dashboard
+      renderDashboard(statsData, chartData, products);
+
+    } catch (error) {
+      console.error('Dashboard critical error:', error);
+      content.innerHTML = `
+        <div class="text-center py-8">
+          <p class="text-red-500 mb-4">ডেটা লোড করতে ব্যর্থ হয়েছে</p>
+          <button onclick="loadDashboard()" class="btn-primary px-6 py-2">
+            <i class="fas fa-sync-alt mr-2"></i>আবার চেষ্টা করুন
+          </button>
+        </div>
       `;
+    } finally {
+      hideLoading();
+    }
+  }
 
-      modal.classList.add('active');
-    };
+  function renderDashboard(data, chartData, products) {
+    const content = document.getElementById('pageContent');
+    const stats = data.stats || {};
+    const recentOrders = data.recentOrders || [];
 
-    window.saveProduct = async (e, id) => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const submitBtn = e.target.querySelector('button[type="submit"]');
-      
-      if (productImages.length === 0) {
-        showPopup('কমপক্ষে একটি ছবি আপলোড করুন', 'error');
-        return;
-      }
+    const topProducts = [...products]
+      .sort((a, b) => (b.sold || 0) - (a.sold || 0))
+      .slice(0, 5);
 
-      const data = {
-        name: formData.get('name'),
-        desc: formData.get('desc'),
-        category: formData.get('category'),
-        original: parseInt(formData.get('original')) || 0,
-        price: parseInt(formData.get('price')) || 0,
-        stock: parseInt(formData.get('stock')) || 10,
-        sold: parseInt(formData.get('sold')) || 0,
-        featured: formData.get('featured') === 'on',
-        images: productImages
-      };
+    const categoryMap = {};
+    products.forEach(p => {
+      categoryMap[p.category] = (categoryMap[p.category] || 0) + 1;
+    });
+    const categoryLabels = Object.keys(categoryMap);
+    const categoryData = Object.values(categoryMap);
 
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = 'সংরক্ষণ হচ্ছে...';
+    content.innerHTML = `
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fas fa-truck"></i></div>
+          <div class="stat-content">
+            <div class="stat-label">মোট অর্ডার</div>
+            <div class="stat-value">${stats.totalOrders || 0}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fas fa-clock"></i></div>
+          <div class="stat-content">
+            <div class="stat-label">পেন্ডিং অর্ডার</div>
+            <div class="stat-value">${stats.pendingOrders || 0}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fas fa-shirt"></i></div>
+          <div class="stat-content">
+            <div class="stat-label">মোট প্রোডাক্ট</div>
+            <div class="stat-value">${stats.totalProducts || 0}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fas fa-star"></i></div>
+          <div class="stat-content">
+            <div class="stat-label">মোট রিভিউ</div>
+            <div class="stat-value">${stats.totalReviews || 0}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
+          <div class="stat-content">
+            <div class="stat-label">পেন্ডিং রিভিউ</div>
+            <div class="stat-value">${stats.pendingReviews || 0}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fas fa-bangladeshi-taka-sign"></i></div>
+          <div class="stat-content">
+            <div class="stat-label">মোট আয়</div>
+            <div class="stat-value">৳${(stats.revenue || 0).toLocaleString()}</div>
+          </div>
+        </div>
+      </div>
 
-      try {
-        const url = id ? `${API_BASE}/admin/products/${id}` : `${API_BASE}/admin/products`;
-        const method = id ? 'PUT' : 'POST';
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3 class="chart-title">অর্ডার স্ট্যাটাস</h3>
+          <div class="chart-container">
+            <canvas id="ordersStatusChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">ক্যাটাগরি অনুযায়ী পণ্য</h3>
+          <div class="chart-container">
+            <canvas id="categoryChart"></canvas>
+          </div>
+        </div>
+      </div>
 
-        const formDataToSend = new FormData();
-        formDataToSend.append('data', JSON.stringify(data));
-        
-        for (let i = 0; i < productImages.length; i++) {
-          if (productImages[i].startsWith('blob:')) {
-            const response = await fetch(productImages[i]);
-            const blob = await response.blob();
-            formDataToSend.append('images', blob, `image-${i}.jpg`);
-          }
-        }
-
-        const res = await fetch(url, {
-          method,
-          headers: { 'Authorization': `Bearer ${token}` },
-          body: formDataToSend
-        });
-
-        if (res.ok) {
-          showPopup(id ? 'প্রোডাক্ট আপডেট হয়েছে' : 'প্রোডাক্ট তৈরি হয়েছে', 'success');
-          closeModal();
-          loadProducts();
-        } else {
-          const error = await res.json();
-          showPopup(error.error || 'ব্যর্থ হয়েছে', 'error');
-        }
-      } catch (error) {
-        console.error('Save product error:', error);
-        showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = 'সংরক্ষণ';
-      }
-    };
-
-    window.confirmDeleteProduct = (id) => {
-      openConfirmModal(
-        'প্রোডাক্ট মুছবেন?',
-        'এই প্রোডাক্টটি মুছে ফেলা হবে!',
-        () => deleteProduct(id)
-      );
-    };
-
-    window.deleteProduct = async (id) => {
-      try {
-        const res = await fetch(`${API_BASE}/admin/products/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (res.ok) {
-          showPopup('প্রোডাক্ট মুছে ফেলা হয়েছে', 'success');
-          loadProducts();
-        } else {
-          const error = await res.json();
-          showPopup(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
-        }
-      } catch (error) {
-        console.error('Delete product error:', error);
-        showPopup('মুছতে সমস্যা হয়েছে', 'error');
-      }
-    };
-
-    async function loadOrders() {
-      const content = document.getElementById('pageContent');
-
-      try {
-        const res = await fetch(`${API_BASE}/admin/orders`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (!res.ok) throw new Error('Failed to load orders');
-
-        const data = await res.json();
-        allOrders = data.orders || [];
-
-        content.innerHTML = `
-          <div class="section-card">
-            <div class="section-header">
-              <h3 class="text-xl font-bold">অর্ডার পরিচালনা</h3>
-              <div class="flex gap-2">
-                <select id="orderStatusFilter" class="form-select w-auto" onchange="filterOrders(this.value)">
-                  <option value="all">সব অর্ডার</option>
-                  <option value="pending">অপেক্ষমাণ</option>
-                  <option value="confirmed">নিশ্চিত</option>
-                  <option value="processing">প্রক্রিয়াধীন</option>
-                  <option value="shipped">পাঠানো হয়েছে</option>
-                  <option value="delivered">ডেলিভারি হয়েছে</option>
-                  <option value="cancelled">বাতিল</option>
-                </select>
+      <div class="section-card">
+        <h3 class="text-xl font-bold mb-4">সর্বাধিক বিক্রিত পণ্য</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          ${topProducts.map(product => `
+            <div class="bg-gray-50 p-4 rounded-[20px_4px_20px_4px] flex items-center gap-4">
+              <img src="${product.img || product.images?.[0] || ''}" class="w-16 h-16 object-cover rounded-[12px_2px_12px_2px]" onerror="this.src='https://via.placeholder.com/64'">
+              <div class="flex-1">
+                <h4 class="font-medium">${product.name || ''}</h4>
+                <p class="text-sm text-gray-600">বিক্রি: ${product.sold || 0} টি</p>
+                <p class="text-sm font-bold text-[#1877F2]">৳${product.price || 0}</p>
               </div>
             </div>
-            <div class="data-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>অর্ডার ID</th>
-                    <th>গ্রাহক</th>
-                    <th>ফোন</th>
-                    <th>জেলা</th>
-                    <th>আইটেম</th>
-                    <th>মোট</th>
-                    <th>স্ট্যাটাস</th>
-                    <th>তারিখ</th>
-                    <th>অ্যাকশন</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${allOrders.map(order => `
-                    <tr>
-                      <td>${order.orderId || 'N/A'}</td>
-                      <td>${order.customerName || 'N/A'}</td>
-                      <td>${order.phone || 'N/A'}</td>
-                      <td>${order.district === 'dhaka' ? 'ঢাকা' : 'ঢাকার বাইরে'}</td>
-                      <td>${order.items?.length || 0}</td>
-                      <td>৳${order.total || 0}</td>
-                      <td><span class="status-badge status-${order.status || 'pending'}">${order.status === 'pending' ? 'অপেক্ষমাণ' : order.status || 'pending'}</span></td>
-                      <td>${order.createdAt ? new Date(order.createdAt).toLocaleDateString('bn-BD') : 'N/A'}</td>
-                      <td>
-                        <button onclick='showOrderDetails(${JSON.stringify(order).replace(/'/g, "\\'")})' class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-eye"></i></button>
-                        <button onclick="confirmDeleteOrder('${order._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
-                      </td>
-                    </tr>
-                  `).join('')}
-                  ${allOrders.length === 0 ? '<tr><td colspan="9" class="text-center py-4">কোন অর্ডার নেই</td></tr>' : ''}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        `;
-      } catch (error) {
-        console.error('Orders error:', error);
-        content.innerHTML = '<p class="text-red-500 text-center py-8">অর্ডার লোড করতে ব্যর্থ হয়েছে</p>';
-      }
+          `).join('')}
+          ${topProducts.length === 0 ? '<p class="text-center py-4 text-gray-500">কোন পণ্য নেই</p>' : ''}
+        </div>
+      </div>
+
+      <div class="section-card">
+        <h3 class="text-xl font-bold mb-4">সাম্প্রতিক অর্ডার</h3>
+        <div class="data-table">
+          <table>
+            <thead>
+              <tr>
+                <th>অর্ডার ID</th>
+                <th>গ্রাহক</th>
+                <th>ফোন</th>
+                <th>মোট</th>
+                <th>স্ট্যাটাস</th>
+                <th>তারিখ</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${recentOrders.map(order => `
+                <tr onclick="showOrderDetails('${order._id}')">
+                  <td>${order.orderId || 'N/A'}</td>
+                  <td>${order.customerName || 'N/A'}</td>
+                  <td>${order.phone || 'N/A'}</td>
+                  <td>৳${order.total || 0}</td>
+                  <td><span class="status-badge status-${order.status || 'pending'}">${order.status === 'pending' ? 'অপেক্ষমাণ' : order.status || 'pending'}</span></td>
+                  <td>${order.createdAt ? new Date(order.createdAt).toLocaleDateString('bn-BD') : 'N/A'}</td>
+                </tr>
+              `).join('')}
+              ${recentOrders.length === 0 ? '<tr><td colspan="6" class="text-center py-4">কোন অর্ডার নেই</td></tr>' : ''}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    // Charts
+    if (chartInstance1) chartInstance1.destroy();
+    if (chartInstance2) chartInstance2.destroy();
+
+    const ctx1 = document.getElementById('ordersStatusChart')?.getContext('2d');
+    if (ctx1) {
+      chartInstance1 = new Chart(ctx1, {
+        type: 'doughnut',
+        data: {
+          labels: ['পেন্ডিং', 'নিশ্চিত', 'প্রক্রিয়াধীন', 'পাঠানো', 'ডেলিভারি', 'বাতিল'],
+          datasets: [{
+            data: [
+              stats.pendingOrders || 0,
+              stats.confirmedOrders || 0,
+              stats.processingOrders || 0,
+              stats.shippedOrders || 0,
+              stats.deliveredOrders || 0,
+              stats.cancelledOrders || 0
+            ],
+            backgroundColor: ['#fef3c7', '#dbeafe', '#e0e7ff', '#cffafe', '#d1fae5', '#fee2e2'],
+            borderColor: ['#92400e', '#1e40af', '#3730a3', '#0e7490', '#065f46', '#991b1b'],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
     }
 
-    window.filterOrders = async (status) => {
-      try {
-        const res = await fetch(`${API_BASE}/admin/orders${status !== 'all' ? `?status=${status}` : ''}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (!res.ok) throw new Error('Failed to filter orders');
-
-        const data = await res.json();
-        allOrders = data.orders || [];
-
-        const tbody = document.querySelector('tbody');
-        if (tbody) {
-          tbody.innerHTML = allOrders.map(order => `
-            <tr>
-              <td>${order.orderId || 'N/A'}</td>
-              <td>${order.customerName || 'N/A'}</td>
-              <td>${order.phone || 'N/A'}</td>
-              <td>${order.district === 'dhaka' ? 'ঢাকা' : 'ঢাকার বাইরে'}</td>
-              <td>${order.items?.length || 0}</td>
-              <td>৳${order.total || 0}</td>
-              <td><span class="status-badge status-${order.status || 'pending'}">${order.status === 'pending' ? 'অপেক্ষমাণ' : order.status || 'pending'}</span></td>
-              <td>${order.createdAt ? new Date(order.createdAt).toLocaleDateString('bn-BD') : 'N/A'}</td>
-              <td>
-                <button onclick='showOrderDetails(${JSON.stringify(order).replace(/'/g, "\\'")})' class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-eye"></i></button>
-                <button onclick="confirmDeleteOrder('${order._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
-              </td>
-            </tr>
-          `).join('');
-          
-          if (allOrders.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4">কোন অর্ডার নেই</td></tr>';
+    const ctx2 = document.getElementById('categoryChart')?.getContext('2d');
+    if (ctx2) {
+      chartInstance2 = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: categoryLabels,
+          datasets: [{
+            label: 'পণ্যের সংখ্যা',
+            data: categoryData,
+            backgroundColor: '#1877F2',
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
           }
         }
-      } catch (error) {
-        console.error('Filter orders error:', error);
-        showPopup('অর্ডার ফিল্টার করতে ব্যর্থ', 'error');
-      }
-    };
+      });
+    }
+  }
 
-    window.showOrderDetails = (order) => {
-      const modalContent = document.getElementById('orderDetails');
-      if (!modalContent) return;
+  // ---------- loadCategories ----------
+  async function loadCategories() {
+    const content = document.getElementById('pageContent');
+    showLoading('ক্যাটাগরি লোড হচ্ছে...');
 
-      modalContent.innerHTML = `
-        <div class="space-y-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-gray-50 p-4 rounded-lg">
-              <h4 class="font-bold mb-2">গ্রাহকের তথ্য</h4>
-              <p><span class="text-gray-600">নাম:</span> ${order.customerName || 'N/A'}</p>
-              <p><span class="text-gray-600">ফোন:</span> ${order.phone || 'N/A'}</p>
-              <p><span class="text-gray-600">ঠিকানা:</span> ${order.address || 'N/A'}</p>
-            </div>
-            
-            <div class="bg-gray-50 p-4 rounded-lg">
-              <h4 class="font-bold mb-2">অর্ডারের তথ্য</h4>
-              <p><span class="text-gray-600">অর্ডার ID:</span> ${order.orderId || 'N/A'}</p>
-              <p><span class="text-gray-600">তারিখ:</span> ${order.createdAt ? new Date(order.createdAt).toLocaleString('bn-BD') : 'N/A'}</p>
-              <p><span class="text-gray-600">স্ট্যাটাস:</span> <span class="status-badge status-${order.status || 'pending'}">${order.status === 'pending' ? 'অপেক্ষমাণ' : order.status || 'pending'}</span></p>
-            </div>
-          </div>
+    try {
+      const res = await fetchWithRetry(`${API_BASE}/admin/categories`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const categories = await res.json();
 
-          <div class="bg-gray-50 p-4 rounded-lg">
-            <h4 class="font-bold mb-2">পণ্যের তালিকা</h4>
-            <div class="space-y-2">
-              ${(order.items || []).map(item => `
-                <div class="flex justify-between items-center border-b pb-2">
-                  <div>
-                    <p class="font-medium">${item.name || 'N/A'}</p>
-                    <p class="text-sm text-gray-600">৳${item.price || 0} × ${item.quantity || 0}</p>
-                  </div>
-                  <p class="font-bold">৳${(item.price || 0) * (item.quantity || 0)}</p>
-                </div>
-              `).join('')}
-              ${(!order.items || order.items.length === 0) ? '<p class="text-gray-500 text-center">কোন পণ্য নেই</p>' : ''}
-            </div>
-            
-            <div class="mt-4 pt-2 border-t">
-              <div class="flex justify-between">
-                <span>সাবটোটাল:</span>
-                <span class="font-bold">৳${order.subtotal || 0}</span>
-              </div>
-              <div class="flex justify-between">
-                <span>ডেলিভারি চার্জ:</span>
-                <span class="font-bold">৳${order.deliveryCharge || 0}</span>
-              </div>
-              <div class="flex justify-between text-lg">
-                <span>মোট:</span>
-                <span class="font-bold text-[#1877F2]">৳${order.total || 0}</span>
-              </div>
-            </div>
-          </div>
+      document.getElementById('categoryCount').textContent = categories.length;
 
-          <div class="flex justify-end gap-3">
-            <select id="orderStatusUpdate" class="form-select w-auto">
-              <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>অপেক্ষমাণ</option>
-              <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>নিশ্চিত</option>
-              <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>প্রক্রিয়াধীন</option>
-              <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>পাঠানো হয়েছে</option>
-              <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>ডেলিভারি হয়েছে</option>
-              <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>বাতিল</option>
-            </select>
-            <button onclick="updateOrderStatus('${order._id}')" class="btn-primary px-4 py-2">
-              আপডেট করুন
+      content.innerHTML = `
+        <div class="section-card">
+          <div class="section-header">
+            <h3 class="text-xl font-bold">ক্যাটাগরি পরিচালনা</h3>
+            <button class="btn-primary" onclick="showCategoryForm()">
+              <i class="fas fa-plus mr-2"></i>নতুন ক্যাটাগরি
             </button>
+          </div>
+          <div class="data-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>নাম</th>
+                  <th>বাংলা নাম</th>
+                  <th>অর্ডার</th>
+                  <th>স্ট্যাটাস</th>
+                  <th>অ্যাকশন</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${categories.map(cat => `
+                  <tr>
+                    <td>${cat.name || ''}</td>
+                    <td>${cat.banglaName || ''}</td>
+                    <td>${cat.order || 0}</td>
+                    <td><span class="status-badge ${cat.active ? 'status-delivered' : 'status-cancelled'}">${cat.active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</span></td>
+                    <td>
+                      <button onclick='showCategoryForm(${JSON.stringify(cat).replace(/'/g, "\\'")})' class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-edit"></i></button>
+                      <button onclick="confirmDeleteCategory('${cat._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
+                    </td>
+                  </tr>
+                `).join('')}
+                ${categories.length === 0 ? '<tr><td colspan="5" class="text-center py-4">কোন ক্যাটাগরি নেই</td></tr>' : ''}
+              </tbody>
+            </table>
           </div>
         </div>
       `;
-
-      markOrderAsRead(order._id);
-      openOrderModal();
-    };
-
-    window.updateOrderStatus = async (orderId) => {
-      const status = document.getElementById('orderStatusUpdate')?.value;
-      if (!status) return;
-
-      try {
-        const res = await fetch(`${API_BASE}/admin/orders/${orderId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ status })
-        });
-
-        if (res.ok) {
-          showPopup('অর্ডার স্ট্যাটাস আপডেট হয়েছে', 'success');
-          closeOrderModal();
-          loadOrders();
-          loadUnreadCounts();
-        } else {
-          const error = await res.json();
-          showPopup(error.error || 'আপডেট ব্যর্থ', 'error');
-        }
-      } catch (error) {
-        console.error('Update order error:', error);
-        showPopup('আপডেট ব্যর্থ', 'error');
-      }
-    };
-
-    window.confirmDeleteOrder = (id) => {
-      openConfirmModal(
-        'অর্ডার মুছবেন?',
-        'এই অর্ডারটি মুছে ফেলা হবে!',
-        () => deleteOrder(id)
-      );
-    };
-
-    window.deleteOrder = async (id) => {
-      try {
-        const res = await fetch(`${API_BASE}/admin/orders/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (res.ok) {
-          showPopup('অর্ডার মুছে ফেলা হয়েছে', 'success');
-          loadOrders();
-          loadUnreadCounts();
-        } else {
-          const error = await res.json();
-          showPopup(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
-        }
-      } catch (error) {
-        console.error('Delete order error:', error);
-        showPopup('মুছতে সমস্যা হয়েছে', 'error');
-      }
-    };
-
-    async function loadReviews() {
-      const content = document.getElementById('pageContent');
-
-      try {
-        const res = await fetch(`${API_BASE}/admin/reviews`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (!res.ok) throw new Error('Failed to load reviews');
-
-        const data = await res.json();
-        allReviews = data.reviews || [];
-
-        content.innerHTML = `
-          <div class="section-card">
-            <div class="section-header">
-              <h3 class="text-xl font-bold">রিভিউ পরিচালনা</h3>
-              <div class="flex gap-2">
-                <select id="reviewStatusFilter" class="form-select w-auto" onchange="filterReviews(this.value)">
-                  <option value="all">সকল</option>
-                  <option value="pending">পেন্ডিং</option>
-                  <option value="approved">অনুমোদিত</option>
-                  <option value="rejected">বাতিল</option>
-                </select>
-              </div>
-            </div>
-            <div class="data-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>নাম</th>
-                    <th>জেলা</th>
-                    <th>রিভিউ</th>
-                    <th>রেটিং</th>
-                    <th>স্ট্যাটাস</th>
-                    <th>তারিখ</th>
-                    <th>অ্যাকশন</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${allReviews.map(review => `
-                    <tr>
-                      <td>${review.name || ''}</td>
-                      <td>${review.address || ''}</td>
-                      <td>${(review.text || '').substring(0, 30)}${review.text?.length > 30 ? '...' : ''}</td>
-                      <td>${'★'.repeat(review.rating || 0)}${'☆'.repeat(5 - (review.rating || 0))}</td>
-                      <td><span class="status-badge status-${review.status || 'pending'}">${review.status === 'pending' ? 'অপেক্ষমাণ' : review.status === 'approved' ? 'অনুমোদিত' : 'বাতিল'}</span></td>
-                      <td>${review.createdAt ? new Date(review.createdAt).toLocaleDateString('bn-BD') : 'N/A'}</td>
-                      <td>
-                        <button onclick="updateReviewStatus('${review._id}', 'approved')" class="btn-success text-sm px-3 py-1 mr-2"><i class="fas fa-check"></i></button>
-                        <button onclick="updateReviewStatus('${review._id}', 'rejected')" class="btn-danger text-sm px-3 py-1 mr-2"><i class="fas fa-times"></i></button>
-                        <button onclick="confirmDeleteReview('${review._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
-                      </td>
-                    </tr>
-                  `).join('')}
-                  ${allReviews.length === 0 ? '<tr><td colspan="7" class="text-center py-4">কোন রিভিউ নেই</td></tr>' : ''}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        `;
-      } catch (error) {
-        console.error('Reviews error:', error);
-        content.innerHTML = '<p class="text-red-500 text-center py-8">রিভিউ লোড করতে ব্যর্থ হয়েছে</p>';
-      }
-    }
-
-    window.filterReviews = async (status) => {
-      try {
-        const res = await fetch(`${API_BASE}/admin/reviews${status !== 'all' ? `?status=${status}` : ''}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (!res.ok) throw new Error('Failed to filter reviews');
-
-        const data = await res.json();
-        allReviews = data.reviews || [];
-
-        const tbody = document.querySelector('tbody');
-        if (tbody) {
-          tbody.innerHTML = allReviews.map(review => `
-            <tr>
-              <td>${review.name || ''}</td>
-              <td>${review.address || ''}</td>
-              <td>${(review.text || '').substring(0, 30)}${review.text?.length > 30 ? '...' : ''}</td>
-              <td>${'★'.repeat(review.rating || 0)}${'☆'.repeat(5 - (review.rating || 0))}</td>
-              <td><span class="status-badge status-${review.status || 'pending'}">${review.status === 'pending' ? 'অপেক্ষমাণ' : review.status === 'approved' ? 'অনুমোদিত' : 'বাতিল'}</span></td>
-              <td>${review.createdAt ? new Date(review.createdAt).toLocaleDateString('bn-BD') : 'N/A'}</td>
-              <td>
-                <button onclick="updateReviewStatus('${review._id}', 'approved')" class="btn-success text-sm px-3 py-1 mr-2"><i class="fas fa-check"></i></button>
-                <button onclick="updateReviewStatus('${review._id}', 'rejected')" class="btn-danger text-sm px-3 py-1 mr-2"><i class="fas fa-times"></i></button>
-                <button onclick="confirmDeleteReview('${review._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
-              </td>
-            </tr>
-          `).join('');
-          
-          if (allReviews.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">কোন রিভিউ নেই</td></tr>';
-          }
-        }
-      } catch (error) {
-        console.error('Filter reviews error:', error);
-        showPopup('রিভিউ ফিল্টার করতে ব্যর্থ', 'error');
-      }
-    };
-
-    window.updateReviewStatus = async (id, status) => {
-      try {
-        const res = await fetch(`${API_BASE}/admin/reviews/${id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ status, isRead: true })
-        });
-
-        if (res.ok) {
-          showPopup(`রিভিউ ${status === 'approved' ? 'অনুমোদিত' : 'বাতিল'} হয়েছে`, 'success');
-          loadReviews();
-          loadUnreadCounts();
-        } else {
-          const error = await res.json();
-          showPopup(error.error || 'আপডেট ব্যর্থ', 'error');
-        }
-      } catch (error) {
-        console.error('Update review error:', error);
-        showPopup('আপডেট ব্যর্থ', 'error');
-      }
-    };
-
-    window.confirmDeleteReview = (id) => {
-      openConfirmModal(
-        'রিভিউ মুছবেন?',
-        'এই রিভিউটি মুছে ফেলা হবে!',
-        () => deleteReview(id)
-      );
-    };
-
-    window.deleteReview = async (id) => {
-      try {
-        const res = await fetch(`${API_BASE}/admin/reviews/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (res.ok) {
-          showPopup('রিভিউ মুছে ফেলা হয়েছে', 'success');
-          loadReviews();
-          loadUnreadCounts();
-        } else {
-          const error = await res.json();
-          showPopup(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
-        }
-      } catch (error) {
-        console.error('Delete review error:', error);
-        showPopup('মুছতে সমস্যা হয়েছে', 'error');
-      }
-    };
-
-    async function loadSliders() {
-      const content = document.getElementById('pageContent');
-
-      try {
-        const res = await fetch(`${API_BASE}/admin/sliders`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (!res.ok) throw new Error('Failed to load sliders');
-
-        const sliders = await res.json();
-
-        content.innerHTML = `
-          <div class="section-card">
-            <div class="section-header">
-              <h3 class="text-xl font-bold">স্লাইডার পরিচালনা</h3>
-              <button class="btn-primary" onclick="showSliderForm()">
-                <i class="fas fa-plus mr-2"></i>নতুন স্লাইডার
-              </button>
-            </div>
-            <div class="data-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>ছবি</th>
-                    <th>শিরোনাম</th>
-                    <th>ব্যাজ</th>
-                    <th>অর্ডার</th>
-                    <th>স্ট্যাটাস</th>
-                    <th>অ্যাকশন</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${sliders.map(slider => `
-                    <tr>
-                      <td><img src="${slider.imageUrl || ''}" class="image-preview w-12 h-12" onerror="this.src='https://via.placeholder.com/50'"></td>
-                      <td>${slider.title || ''}</td>
-                      <td><span style="background:${slider.badgeColor || '#1877F2'}" class="px-2 py-1 text-white rounded-full text-xs">${slider.badge || ''}</span></td>
-                      <td>${slider.order || 0}</td>
-                      <td><span class="status-badge ${slider.active ? 'status-delivered' : 'status-cancelled'}">${slider.active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</span></td>
-                      <td>
-                        <button onclick='showSliderForm(${JSON.stringify(slider).replace(/'/g, "\\'")})' class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-edit"></i></button>
-                        <button onclick="confirmDeleteSlider('${slider._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
-                      </td>
-                    </tr>
-                  `).join('')}
-                  ${sliders.length === 0 ? '<tr><td colspan="6" class="text-center py-4">কোন স্লাইডার নেই</td></tr>' : ''}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        `;
-      } catch (error) {
-        console.error('Sliders error:', error);
-        content.innerHTML = '<p class="text-red-500 text-center py-8">স্লাইডার লোড করতে ব্যর্থ হয়েছে</p>';
-      }
-    }
-
-    window.showSliderForm = (slider = null) => {
-      currentSlideId = slider?._id || null;
-      slideImage = slider?.imageUrl || '';
-
-      const modal = document.getElementById('modal');
-      const modalContent = document.getElementById('modalContent');
-
-      modalContent.innerHTML = `
-        <h3 class="text-2xl font-bold mb-6">${slider ? 'স্লাইডার সম্পাদনা' : 'নতুন স্লাইডার'}</h3>
-        <form id="sliderForm" onsubmit="saveSlider(event, '${slider?._id || ''}')">
-          <div class="form-group">
-            <label class="form-label">শিরোনাম</label>
-            <input type="text" class="form-input" name="title" value="${slider?.title || ''}" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">সাবটাইটেল</label>
-            <input type="text" class="form-input" name="subtitle" value="${slider?.subtitle || ''}" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">ব্যাজ</label>
-            <input type="text" class="form-input" name="badge" value="${slider?.badge || ''}" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">ব্যাজ রঙ</label>
-            <input type="color" class="form-input" name="badgeColor" value="${slider?.badgeColor || '#1877F2'}" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">বাটন টেক্সট</label>
-            <input type="text" class="form-input" name="buttonText" value="${slider?.buttonText || 'এখনই কিনুন'}" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">প্রোডাক্ট আইডি</label>
-            <input type="number" class="form-input" name="productId" value="${slider?.productId || ''}" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">অর্ডার</label>
-            <input type="number" class="form-input" name="order" value="${slider?.order || '1'}" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">ছবি</label>
-            ${slideImage ? `<img src="${slideImage}" class="image-preview mb-2" onerror="this.style.display='none'">` : ''}
-            <input type="file" class="form-input" name="image" accept="image/*" ${slider ? '' : 'required'}>
-          </div>
-          <div class="form-group">
-            <label class="flex items-center gap-2">
-              <input type="checkbox" name="active" ${slider?.active ? 'checked' : ''}>
-              <span>সক্রিয়</span>
-            </label>
-          </div>
-          <div class="flex justify-end gap-3 mt-6">
-            <button type="button" class="btn-secondary px-6 py-2" onclick="closeModal()">বাতিল</button>
-            <button type="submit" class="btn-primary px-6 py-2">সংরক্ষণ</button>
-          </div>
-        </form>
+    } catch (error) {
+      content.innerHTML = `
+        <div class="text-center py-8">
+          <p class="text-red-500 mb-4">ক্যাটাগরি লোড করতে ব্যর্থ হয়েছে</p>
+          <button onclick="loadCategories()" class="btn-primary px-6 py-2">
+            <i class="fas fa-sync-alt mr-2"></i>আবার চেষ্টা করুন
+          </button>
+        </div>
       `;
+    } finally {
+      hideLoading();
+    }
+  }
 
-      modal.classList.add('active');
+  window.showCategoryForm = (category = null) => {
+    const modal = document.getElementById('modal');
+    const modalContent = document.getElementById('modalContent');
+    
+    modalContent.innerHTML = `
+      <h3 class="text-2xl font-bold mb-6">${category ? 'ক্যাটাগরি সম্পাদনা' : 'নতুন ক্যাটাগরি'}</h3>
+      <form id="categoryForm" onsubmit="saveCategory(event, '${category?._id || ''}')">
+        <div class="form-group">
+          <label class="form-label">নাম (ইংরেজি)</label>
+          <input type="text" class="form-input" name="name" value="${category?.name || ''}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">বাংলা নাম</label>
+          <input type="text" class="form-input" name="banglaName" value="${category?.banglaName || ''}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">বিবরণ</label>
+          <textarea class="form-textarea" name="description">${category?.description || ''}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">অর্ডার</label>
+          <input type="number" class="form-input" name="order" value="${category?.order || '1'}" required>
+        </div>
+        <div class="form-group">
+          <label class="flex items-center gap-2">
+            <input type="checkbox" name="active" ${category?.active ? 'checked' : ''}>
+            <span>সক্রিয়</span>
+          </label>
+        </div>
+        <div class="flex justify-end gap-3 mt-6">
+          <button type="button" class="btn-secondary px-6 py-2" onclick="closeModal()">বাতিল</button>
+          <button type="submit" class="btn-primary px-6 py-2">সংরক্ষণ</button>
+        </div>
+      </form>
+    `;
+    modal.classList.add('active');
+  };
+
+  window.saveCategory = async (e, id) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    
+    const data = {
+      name: formData.get('name'),
+      banglaName: formData.get('banglaName'),
+      description: formData.get('description'),
+      order: parseInt(formData.get('order')) || 1,
+      active: formData.get('active') === 'on'
     };
 
-    window.saveSlider = async (e, id) => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const submitBtn = e.target.querySelector('button[type="submit"]');
-      
-      const data = {
-        title: formData.get('title'),
-        subtitle: formData.get('subtitle'),
-        badge: formData.get('badge'),
-        badgeColor: formData.get('badgeColor'),
-        buttonText: formData.get('buttonText'),
-        productId: parseInt(formData.get('productId')) || 0,
-        order: parseInt(formData.get('order')) || 1,
-        active: formData.get('active') === 'on'
-      };
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'সংরক্ষণ হচ্ছে...';
+
+    try {
+      const url = id ? `${API_BASE}/admin/categories/${id}` : `${API_BASE}/admin/categories`;
+      const method = id ? 'PUT' : 'POST';
+
+      const res = await fetchWithRetry(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+      }, 2);
+
+      if (res.ok) {
+        showPopup(id ? 'ক্যাটাগরি আপডেট হয়েছে' : 'ক্যাটাগরি তৈরি হয়েছে', 'success');
+        closeModal();
+        loadCategories();
+      } else {
+        const error = await res.json();
+        showPopup(error.error || 'ব্যর্থ হয়েছে', 'error');
+      }
+    } catch (error) {
+      console.error('Save category error:', error);
+      showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'সংরক্ষণ';
+    }
+  };
+
+  window.confirmDeleteCategory = (id) => {
+    openConfirmModal(
+      'ক্যাটাগরি মুছবেন?',
+      'এই ক্যাটাগরিটি মুছে ফেলা হবে!',
+      () => deleteCategory(id)
+    );
+  };
+
+  window.deleteCategory = async (id) => {
+    try {
+      const res = await fetchWithRetry(`${API_BASE}/admin/categories/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      }, 2);
+
+      if (res.ok) {
+        showPopup('ক্যাটাগরি মুছে ফেলা হয়েছে', 'success');
+        loadCategories();
+      } else {
+        const error = await res.json();
+        showPopup(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
+      }
+    } catch (error) {
+      console.error('Delete category error:', error);
+      showPopup('মুছতে সমস্যা হয়েছে', 'error');
+    }
+  };
+
+  // ---------- loadProducts ----------
+  async function loadProducts() {
+    const content = document.getElementById('pageContent');
+    showLoading('প্রোডাক্ট লোড হচ্ছে...');
+
+    try {
+      const res = await fetchWithRetry(`${API_BASE}/admin/products`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const products = await res.json();
+
+      document.getElementById('productCount').textContent = products.length;
+
+      content.innerHTML = `
+        <div class="section-card">
+          <div class="section-header">
+            <h3 class="text-xl font-bold">প্রোডাক্ট পরিচালনা</h3>
+            <button class="btn-primary" onclick="showProductForm()">
+              <i class="fas fa-plus mr-2"></i>নতুন প্রোডাক্ট
+            </button>
+          </div>
+          <div class="data-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>ছবি</th>
+                  <th>নাম</th>
+                  <th>ক্যাটাগরি</th>
+                  <th>মূল্য</th>
+                  <th>স্টক</th>
+                  <th>বিক্রি</th>
+                  <th>অ্যাকশন</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${products.map(product => `
+                  <tr>
+                    <td><img src="${product.img || product.images?.[0] || ''}" class="image-preview w-12 h-12" onerror="this.src='https://via.placeholder.com/50'"></td>
+                    <td>${product.name || ''}</td>
+                    <td>${product.category || ''}</td>
+                    <td>৳${product.price || 0}</td>
+                    <td>${product.stock || 0}</td>
+                    <td>${product.sold || 0}</td>
+                    <td>
+                      <button onclick='showProductForm(${JSON.stringify(product).replace(/'/g, "\\'")})' class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-edit"></i></button>
+                      <button onclick="confirmDeleteProduct('${product._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
+                    </td>
+                  </tr>
+                `).join('')}
+                ${products.length === 0 ? '<tr><td colspan="7" class="text-center py-4">কোন প্রোডাক্ট নেই</td></tr>' : ''}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    } catch (error) {
+      content.innerHTML = `
+        <div class="text-center py-8">
+          <p class="text-red-500 mb-4">প্রোডাক্ট লোড করতে ব্যর্থ হয়েছে</p>
+          <button onclick="loadProducts()" class="btn-primary px-6 py-2">
+            <i class="fas fa-sync-alt mr-2"></i>আবার চেষ্টা করুন
+          </button>
+        </div>
+      `;
+    } finally {
+      hideLoading();
+    }
+  }
+
+  window.showProductForm = async (product = null) => {
+    currentProductId = product?._id || null;
+    productImages = product?.images || (product?.img ? [product.img] : []);
+
+    const modal = document.getElementById('modal');
+    const modalContent = document.getElementById('modalContent');
+
+    let categories = [];
+    try {
+      const res = await fetchWithRetry(`${API_BASE}/categories`, {}, 2);
+      categories = await res.json();
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+    }
+
+    modalContent.innerHTML = `
+      <h3 class="text-2xl font-bold mb-6">${product ? 'প্রোডাক্ট সম্পাদনা' : 'নতুন প্রোডাক্ট'}</h3>
+      <form id="productForm" onsubmit="saveProduct(event, '${product?._id || ''}')">
+        <div class="form-group">
+          <label class="form-label">প্রোডাক্ট নাম</label>
+          <input type="text" class="form-input" name="name" value="${product?.name || ''}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">বিবরণ</label>
+          <input type="text" class="form-input" name="desc" value="${product?.desc || ''}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ক্যাটাগরি</label>
+          <select class="form-select" name="category" required>
+            <option value="">ক্যাটাগরি নির্বাচন করুন</option>
+            ${categories.map(cat => `<option value="${cat.name}" ${product?.category === cat.name ? 'selected' : ''}>${cat.banglaName || cat.name}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">মূল মূল্য</label>
+          <input type="number" class="form-input" name="original" value="${product?.original || ''}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">বিক্রয় মূল্য</label>
+          <input type="number" class="form-input" name="price" value="${product?.price || ''}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">স্টক</label>
+          <input type="number" class="form-input" name="stock" value="${product?.stock || '10'}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">বিক্রি হয়েছে</label>
+          <input type="number" class="form-input" name="sold" value="${product?.sold || '0'}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ছবি (সর্বোচ্চ ১০টি)</label>
+          <button type="button" onclick="openImageModal()" class="bg-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300 mb-2">
+            <i class="fas fa-upload mr-2"></i>ছবি আপলোড
+          </button>
+          <div id="imagePreviewContainer" class="flex flex-wrap gap-3 mt-2">
+            ${productImages.map(img => `
+              <div class="relative group">
+                <img src="${img}" class="image-preview w-24 h-24" onerror="this.src='https://via.placeholder.com/100'">
+                <button type="button" onclick="removeImage('${img}')" class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full hover:bg-red-600">×</button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="flex items-center gap-2">
+            <input type="checkbox" name="featured" ${product?.featured ? 'checked' : ''}>
+            <span>ফিচার্ড</span>
+          </label>
+        </div>
+        <div class="flex justify-end gap-3 mt-6">
+          <button type="button" class="btn-secondary px-6 py-2" onclick="closeModal()">বাতিল</button>
+          <button type="submit" class="btn-primary px-6 py-2">সংরক্ষণ</button>
+        </div>
+      </form>
+    `;
+    modal.classList.add('active');
+  };
+
+  window.saveProduct = async (e, id) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    
+    if (productImages.length === 0) {
+      showPopup('কমপক্ষে একটি ছবি আপলোড করুন', 'error');
+      return;
+    }
+
+    const data = {
+      name: formData.get('name'),
+      desc: formData.get('desc'),
+      category: formData.get('category'),
+      original: parseInt(formData.get('original')) || 0,
+      price: parseInt(formData.get('price')) || 0,
+      stock: parseInt(formData.get('stock')) || 10,
+      sold: parseInt(formData.get('sold')) || 0,
+      featured: formData.get('featured') === 'on',
+      images: productImages
+    };
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'সংরক্ষণ হচ্ছে...';
+
+    try {
+      const url = id ? `${API_BASE}/admin/products/${id}` : `${API_BASE}/admin/products`;
+      const method = id ? 'PUT' : 'POST';
 
       const formDataToSend = new FormData();
       formDataToSend.append('data', JSON.stringify(data));
-      if (formData.get('image').size > 0) {
-        formDataToSend.append('image', formData.get('image'));
-      }
-
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = 'সংরক্ষণ হচ্ছে...';
-
-      try {
-        const url = id ? `${API_BASE}/admin/sliders/${id}` : `${API_BASE}/admin/sliders`;
-        const method = id ? 'PUT' : 'POST';
-
-        const res = await fetch(url, {
-          method,
-          headers: { 'Authorization': `Bearer ${token}` },
-          body: formDataToSend
-        });
-
-        if (res.ok) {
-          showPopup(id ? 'স্লাইডার আপডেট হয়েছে' : 'স্লাইডার তৈরি হয়েছে', 'success');
-          closeModal();
-          loadSliders();
-        } else {
-          const error = await res.json();
-          showPopup(error.error || 'ব্যর্থ হয়েছে', 'error');
+      
+      for (let i = 0; i < productImages.length; i++) {
+        if (productImages[i].startsWith('blob:')) {
+          const response = await fetch(productImages[i]);
+          const blob = await response.blob();
+          formDataToSend.append('images', blob, `image-${i}.jpg`);
         }
-      } catch (error) {
-        console.error('Save slider error:', error);
-        showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = 'সংরক্ষণ';
       }
-    };
 
-    window.confirmDeleteSlider = (id) => {
-      openConfirmModal(
-        'স্লাইডার মুছবেন?',
-        'এই স্লাইডারটি মুছে ফেলা হবে!',
-        () => deleteSlider(id)
-      );
-    };
+      const res = await fetchWithRetry(url, {
+        method,
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formDataToSend
+      }, 2);
 
-    window.deleteSlider = async (id) => {
-      try {
-        const res = await fetch(`${API_BASE}/admin/sliders/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (res.ok) {
-          showPopup('স্লাইডার মুছে ফেলা হয়েছে', 'success');
-          loadSliders();
-        } else {
-          const error = await res.json();
-          showPopup(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
-        }
-      } catch (error) {
-        console.error('Delete slider error:', error);
-        showPopup('মুছতে সমস্যা হয়েছে', 'error');
+      if (res.ok) {
+        showPopup(id ? 'প্রোডাক্ট আপডেট হয়েছে' : 'প্রোডাক্ট তৈরি হয়েছে', 'success');
+        closeModal();
+        loadProducts();
+      } else {
+        const error = await res.json();
+        showPopup(error.error || 'ব্যর্থ হয়েছে', 'error');
       }
-    };
+    } catch (error) {
+      console.error('Save product error:', error);
+      showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'সংরক্ষণ';
+    }
+  };
 
-    async function loadSettings() {
-      const content = document.getElementById('pageContent');
+  window.confirmDeleteProduct = (id) => {
+    openConfirmModal(
+      'প্রোডাক্ট মুছবেন?',
+      'এই প্রোডাক্টটি মুছে ফেলা হবে!',
+      () => deleteProduct(id)
+    );
+  };
 
-      try {
-        const res = await fetch(`${API_BASE}/admin/settings`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+  window.deleteProduct = async (id) => {
+    try {
+      const res = await fetchWithRetry(`${API_BASE}/admin/products/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      }, 2);
 
-        if (!res.ok) throw new Error('Failed to load settings');
+      if (res.ok) {
+        showPopup('প্রোডাক্ট মুছে ফেলা হয়েছে', 'success');
+        loadProducts();
+      } else {
+        const error = await res.json();
+        showPopup(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
+      }
+    } catch (error) {
+      console.error('Delete product error:', error);
+      showPopup('মুছতে সমস্যা হয়েছে', 'error');
+    }
+  };
 
-        const settings = await res.json();
+  // ---------- loadOrders ----------
+  async function loadOrders() {
+    const content = document.getElementById('pageContent');
+    showLoading('অর্ডার লোড হচ্ছে...');
 
-        content.innerHTML = `
-          <div class="section-card">
-            <div class="section-header">
-              <h3 class="text-xl font-bold">সাইট সেটিংস</h3>
+    try {
+      const res = await fetchWithRetry(`${API_BASE}/admin/orders`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      allOrders = data.orders || [];
+
+      content.innerHTML = `
+        <div class="section-card">
+          <div class="section-header">
+            <h3 class="text-xl font-bold">অর্ডার পরিচালনা</h3>
+            <div class="flex gap-2">
+              <select id="orderStatusFilter" class="form-select w-auto" onchange="filterOrders(this.value)">
+                <option value="all">সব অর্ডার</option>
+                <option value="pending">অপেক্ষমাণ</option>
+                <option value="confirmed">নিশ্চিত</option>
+                <option value="processing">প্রক্রিয়াধীন</option>
+                <option value="shipped">পাঠানো হয়েছে</option>
+                <option value="delivered">ডেলিভারি হয়েছে</option>
+                <option value="cancelled">বাতিল</option>
+              </select>
             </div>
-            <form id="settingsForm" onsubmit="saveSettings(event)">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="form-group">
-                  <label class="form-label">সাইট নাম</label>
-                  <input type="text" class="form-input" name="siteName" value="${settings.siteName || 'AMAYRA'}" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">সাইট টাইটেল</label>
-                  <input type="text" class="form-input" name="siteTitle" value="${settings.siteTitle || 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন'}" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">সাইট সাবটাইটেল</label>
-                  <input type="text" class="form-input" name="siteSubtitle" value="${settings.siteSubtitle || 'PREMIUM SHIRT COLLECTION'}" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">ফোন নম্বর</label>
-                  <input type="text" class="form-input" name="phoneNumber" value="${settings.phoneNumber || '01712345678'}" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">হোয়াটসঅ্যাপ নম্বর</label>
-                  <input type="text" class="form-input" name="whatsappNumber" value="${settings.whatsappNumber || '8801712345678'}" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">ইমেইল</label>
-                  <input type="email" class="form-input" name="email" value="${settings.email || 'info@amayra.com'}" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">ফেসবুক পেজ</label>
-                  <input type="text" class="form-input" name="facebook" value="${settings.facebook || '@amayra.shirt'}" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">ইনস্টাগ্রাম</label>
-                  <input type="text" class="form-input" name="instagram" value="${settings.instagram || '@amayra'}" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">ঠিকানা</label>
-                  <input type="text" class="form-input" name="address" value="${settings.address || 'Dhaka, Bangladesh'}" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">ঢাকার ভেতরে ডেলিভারি চার্জ</label>
-                  <input type="number" class="form-input" name="deliveryChargeDhaka" value="${settings.deliveryChargeDhaka || 60}" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">ঢাকার বাইরে ডেলিভারি চার্জ</label>
-                  <input type="number" class="form-input" name="deliveryChargeOutside" value="${settings.deliveryChargeOutside || 120}" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">ফ্রি ডেলিভারির জন্য ন্যূনতম অর্ডার</label>
-                  <input type="number" class="form-input" name="freeDeliveryThreshold" value="${settings.freeDeliveryThreshold || 2000}" required>
-                </div>
-                <div class="form-group md:col-span-2">
-                  <label class="form-label">ফুটার টেক্সট</label>
-                  <input type="text" class="form-input" name="footerText" value="${settings.footerText || 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন · ২০২৫'}" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">কারেন্সি</label>
-                  <input type="text" class="form-input" name="currency" value="${settings.currency || '৳'}" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">থিম কালার</label>
-                  <input type="color" class="form-input" name="themeColor" value="${settings.themeColor || '#1877F2'}" required>
-                </div>
-              </div>
-              
-              <div class="flex justify-end mt-6">
-                <button type="submit" class="btn-primary px-8 py-3">সেটিংস সংরক্ষণ</button>
-              </div>
-            </form>
           </div>
-        `;
-      } catch (error) {
-        console.error('Settings error:', error);
-        content.innerHTML = '<p class="text-red-500 text-center py-8">সেটিংস লোড করতে ব্যর্থ হয়েছে</p>';
+          <div class="data-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>অর্ডার ID</th>
+                  <th>গ্রাহক</th>
+                  <th>ফোন</th>
+                  <th>জেলা</th>
+                  <th>আইটেম</th>
+                  <th>মোট</th>
+                  <th>স্ট্যাটাস</th>
+                  <th>তারিখ</th>
+                  <th>অ্যাকশন</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${allOrders.map(order => `
+                  <tr>
+                    <td>${order.orderId || 'N/A'}</td>
+                    <td>${order.customerName || 'N/A'}</td>
+                    <td>${order.phone || 'N/A'}</td>
+                    <td>${order.district === 'dhaka' ? 'ঢাকা' : 'ঢাকার বাইরে'}</td>
+                    <td>${order.items?.length || 0}</td>
+                    <td>৳${order.total || 0}</td>
+                    <td><span class="status-badge status-${order.status || 'pending'}">${order.status === 'pending' ? 'অপেক্ষমাণ' : order.status || 'pending'}</span></td>
+                    <td>${order.createdAt ? new Date(order.createdAt).toLocaleDateString('bn-BD') : 'N/A'}</td>
+                    <td>
+                      <button onclick='showOrderDetails(${JSON.stringify(order).replace(/'/g, "\\'")})' class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-eye"></i></button>
+                      <button onclick="confirmDeleteOrder('${order._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
+                    </td>
+                  </tr>
+                `).join('')}
+                ${allOrders.length === 0 ? '<tr><td colspan="9" class="text-center py-4">কোন অর্ডার নেই</td></tr>' : ''}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    } catch (error) {
+      content.innerHTML = `
+        <div class="text-center py-8">
+          <p class="text-red-500 mb-4">অর্ডার লোড করতে ব্যর্থ হয়েছে</p>
+          <button onclick="loadOrders()" class="btn-primary px-6 py-2">
+            <i class="fas fa-sync-alt mr-2"></i>আবার চেষ্টা করুন
+          </button>
+        </div>
+      `;
+    } finally {
+      hideLoading();
+    }
+  }
+
+  window.filterOrders = async (status) => {
+    try {
+      const res = await fetchWithRetry(`${API_BASE}/admin/orders${status !== 'all' ? `?status=${status}` : ''}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      allOrders = data.orders || [];
+
+      const tbody = document.querySelector('tbody');
+      if (tbody) {
+        tbody.innerHTML = allOrders.map(order => `
+          <tr>
+            <td>${order.orderId || 'N/A'}</td>
+            <td>${order.customerName || 'N/A'}</td>
+            <td>${order.phone || 'N/A'}</td>
+            <td>${order.district === 'dhaka' ? 'ঢাকা' : 'ঢাকার বাইরে'}</td>
+            <td>${order.items?.length || 0}</td>
+            <td>৳${order.total || 0}</td>
+            <td><span class="status-badge status-${order.status || 'pending'}">${order.status === 'pending' ? 'অপেক্ষমাণ' : order.status || 'pending'}</span></td>
+            <td>${order.createdAt ? new Date(order.createdAt).toLocaleDateString('bn-BD') : 'N/A'}</td>
+            <td>
+              <button onclick='showOrderDetails(${JSON.stringify(order).replace(/'/g, "\\'")})' class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-eye"></i></button>
+              <button onclick="confirmDeleteOrder('${order._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
+            </td>
+          </tr>
+        `).join('');
+        
+        if (allOrders.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4">কোন অর্ডার নেই</td></tr>';
+        }
       }
+    } catch (error) {
+      console.error('Filter orders error:', error);
+      showPopup('অর্ডার ফিল্টার করতে ব্যর্থ', 'error');
+    }
+  };
+
+  window.showOrderDetails = (order) => {
+    if (typeof order === 'string') {
+      // order is an ID, fetch details
+      fetchOrderDetails(order);
+      return;
+    }
+    displayOrderDetails(order);
+  };
+
+  async function fetchOrderDetails(orderId) {
+    try {
+      const res = await fetchWithRetry(`${API_BASE}/admin/orders/${orderId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const order = await res.json();
+      displayOrderDetails(order);
+      markOrderAsRead(orderId);
+    } catch (error) {
+      console.error('Error loading order details:', error);
+      showPopup('অর্ডার ডিটেইলস লোড করতে ব্যর্থ', 'error');
+    }
+  }
+
+  function displayOrderDetails(order) {
+    const modalContent = document.getElementById('orderDetails');
+    modalContent.innerHTML = `
+      <div class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <h4 class="font-bold mb-2">গ্রাহকের তথ্য</h4>
+            <p><span class="text-gray-600">নাম:</span> ${order.customerName || 'N/A'}</p>
+            <p><span class="text-gray-600">ফোন:</span> ${order.phone || 'N/A'}</p>
+            <p><span class="text-gray-600">ঠিকানা:</span> ${order.address || 'N/A'}</p>
+          </div>
+          
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <h4 class="font-bold mb-2">অর্ডারের তথ্য</h4>
+            <p><span class="text-gray-600">অর্ডার ID:</span> ${order.orderId || 'N/A'}</p>
+            <p><span class="text-gray-600">তারিখ:</span> ${order.createdAt ? new Date(order.createdAt).toLocaleString('bn-BD') : 'N/A'}</p>
+            <p><span class="text-gray-600">স্ট্যাটাস:</span> <span class="status-badge status-${order.status || 'pending'}">${order.status === 'pending' ? 'অপেক্ষমাণ' : order.status || 'pending'}</span></p>
+          </div>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h4 class="font-bold mb-2">পণ্যের তালিকা</h4>
+          <div class="space-y-2">
+            ${(order.items || []).map(item => `
+              <div class="flex justify-between items-center border-b pb-2">
+                <div>
+                  <p class="font-medium">${item.name || 'N/A'}</p>
+                  <p class="text-sm text-gray-600">৳${item.price || 0} × ${item.quantity || 0}</p>
+                </div>
+                <p class="font-bold">৳${(item.price || 0) * (item.quantity || 0)}</p>
+              </div>
+            `).join('')}
+            ${(!order.items || order.items.length === 0) ? '<p class="text-gray-500 text-center">কোন পণ্য নেই</p>' : ''}
+          </div>
+          
+          <div class="mt-4 pt-2 border-t">
+            <div class="flex justify-between">
+              <span>সাবটোটাল:</span>
+              <span class="font-bold">৳${order.subtotal || 0}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>ডেলিভারি চার্জ:</span>
+              <span class="font-bold">৳${order.deliveryCharge || 0}</span>
+            </div>
+            <div class="flex justify-between text-lg">
+              <span>মোট:</span>
+              <span class="font-bold text-[#1877F2]">৳${order.total || 0}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3">
+          <select id="orderStatusUpdate" class="form-select w-auto">
+            <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>অপেক্ষমাণ</option>
+            <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>নিশ্চিত</option>
+            <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>প্রক্রিয়াধীন</option>
+            <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>পাঠানো হয়েছে</option>
+            <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>ডেলিভারি হয়েছে</option>
+            <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>বাতিল</option>
+          </select>
+          <button onclick="updateOrderStatus('${order._id}')" class="btn-primary px-4 py-2">
+            আপডেট করুন
+          </button>
+        </div>
+      </div>
+    `;
+
+    openOrderModal();
+  }
+
+  window.updateOrderStatus = async (orderId) => {
+    const status = document.getElementById('orderStatusUpdate')?.value;
+    if (!status) return;
+
+    try {
+      const res = await fetchWithRetry(`${API_BASE}/admin/orders/${orderId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status })
+      }, 2);
+
+      if (res.ok) {
+        showPopup('অর্ডার স্ট্যাটাস আপডেট হয়েছে', 'success');
+        closeOrderModal();
+        loadOrders();
+        loadUnreadCounts();
+      } else {
+        const error = await res.json();
+        showPopup(error.error || 'আপডেট ব্যর্থ', 'error');
+      }
+    } catch (error) {
+      console.error('Update order error:', error);
+      showPopup('আপডেট ব্যর্থ', 'error');
+    }
+  };
+
+  window.confirmDeleteOrder = (id) => {
+    openConfirmModal(
+      'অর্ডার মুছবেন?',
+      'এই অর্ডারটি মুছে ফেলা হবে!',
+      () => deleteOrder(id)
+    );
+  };
+
+  window.deleteOrder = async (id) => {
+    try {
+      const res = await fetchWithRetry(`${API_BASE}/admin/orders/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      }, 2);
+
+      if (res.ok) {
+        showPopup('অর্ডার মুছে ফেলা হয়েছে', 'success');
+        loadOrders();
+        loadUnreadCounts();
+      } else {
+        const error = await res.json();
+        showPopup(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
+      }
+    } catch (error) {
+      console.error('Delete order error:', error);
+      showPopup('মুছতে সমস্যা হয়েছে', 'error');
+    }
+  };
+
+  // ---------- loadReviews ----------
+  async function loadReviews() {
+    const content = document.getElementById('pageContent');
+    showLoading('রিভিউ লোড হচ্ছে...');
+
+    try {
+      const res = await fetchWithRetry(`${API_BASE}/admin/reviews`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      allReviews = data.reviews || [];
+
+      content.innerHTML = `
+        <div class="section-card">
+          <div class="section-header">
+            <h3 class="text-xl font-bold">রিভিউ পরিচালনা</h3>
+            <div class="flex gap-2">
+              <select id="reviewStatusFilter" class="form-select w-auto" onchange="filterReviews(this.value)">
+                <option value="all">সকল</option>
+                <option value="pending">পেন্ডিং</option>
+                <option value="approved">অনুমোদিত</option>
+                <option value="rejected">বাতিল</option>
+              </select>
+            </div>
+          </div>
+          <div class="data-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>নাম</th>
+                  <th>জেলা</th>
+                  <th>রিভিউ</th>
+                  <th>রেটিং</th>
+                  <th>স্ট্যাটাস</th>
+                  <th>তারিখ</th>
+                  <th>অ্যাকশন</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${allReviews.map(review => `
+                  <tr>
+                    <td>${review.name || ''}</td>
+                    <td>${review.address || ''}</td>
+                    <td>${(review.text || '').substring(0, 30)}${review.text?.length > 30 ? '...' : ''}</td>
+                    <td>${'★'.repeat(review.rating || 0)}${'☆'.repeat(5 - (review.rating || 0))}</td>
+                    <td><span class="status-badge status-${review.status || 'pending'}">${review.status === 'pending' ? 'অপেক্ষমাণ' : review.status === 'approved' ? 'অনুমোদিত' : 'বাতিল'}</span></td>
+                    <td>${review.createdAt ? new Date(review.createdAt).toLocaleDateString('bn-BD') : 'N/A'}</td>
+                    <td>
+                      <button onclick="updateReviewStatus('${review._id}', 'approved')" class="btn-success text-sm px-3 py-1 mr-2"><i class="fas fa-check"></i></button>
+                      <button onclick="updateReviewStatus('${review._id}', 'rejected')" class="btn-danger text-sm px-3 py-1 mr-2"><i class="fas fa-times"></i></button>
+                      <button onclick="confirmDeleteReview('${review._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
+                    </td>
+                  </tr>
+                `).join('')}
+                ${allReviews.length === 0 ? '<tr><td colspan="7" class="text-center py-4">কোন রিভিউ নেই</td></tr>' : ''}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    } catch (error) {
+      content.innerHTML = `
+        <div class="text-center py-8">
+          <p class="text-red-500 mb-4">রিভিউ লোড করতে ব্যর্থ হয়েছে</p>
+          <button onclick="loadReviews()" class="btn-primary px-6 py-2">
+            <i class="fas fa-sync-alt mr-2"></i>আবার চেষ্টা করুন
+          </button>
+        </div>
+      `;
+    } finally {
+      hideLoading();
+    }
+  }
+
+  window.filterReviews = async (status) => {
+    try {
+      const res = await fetchWithRetry(`${API_BASE}/admin/reviews${status !== 'all' ? `?status=${status}` : ''}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      allReviews = data.reviews || [];
+
+      const tbody = document.querySelector('tbody');
+      if (tbody) {
+        tbody.innerHTML = allReviews.map(review => `
+          <tr>
+            <td>${review.name || ''}</td>
+            <td>${review.address || ''}</td>
+            <td>${(review.text || '').substring(0, 30)}${review.text?.length > 30 ? '...' : ''}</td>
+            <td>${'★'.repeat(review.rating || 0)}${'☆'.repeat(5 - (review.rating || 0))}</td>
+            <td><span class="status-badge status-${review.status || 'pending'}">${review.status === 'pending' ? 'অপেক্ষমাণ' : review.status === 'approved' ? 'অনুমোদিত' : 'বাতিল'}</span></td>
+            <td>${review.createdAt ? new Date(review.createdAt).toLocaleDateString('bn-BD') : 'N/A'}</td>
+            <td>
+              <button onclick="updateReviewStatus('${review._id}', 'approved')" class="btn-success text-sm px-3 py-1 mr-2"><i class="fas fa-check"></i></button>
+              <button onclick="updateReviewStatus('${review._id}', 'rejected')" class="btn-danger text-sm px-3 py-1 mr-2"><i class="fas fa-times"></i></button>
+              <button onclick="confirmDeleteReview('${review._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
+            </td>
+          </tr>
+        `).join('');
+        
+        if (allReviews.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">কোন রিভিউ নেই</td></tr>';
+        }
+      }
+    } catch (error) {
+      console.error('Filter reviews error:', error);
+      showPopup('রিভিউ ফিল্টার করতে ব্যর্থ', 'error');
+    }
+  };
+
+  window.updateReviewStatus = async (id, status) => {
+    try {
+      const res = await fetchWithRetry(`${API_BASE}/admin/reviews/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status, isRead: true })
+      }, 2);
+
+      if (res.ok) {
+        showPopup(`রিভিউ ${status === 'approved' ? 'অনুমোদিত' : 'বাতিল'} হয়েছে`, 'success');
+        loadReviews();
+        loadUnreadCounts();
+      } else {
+        const error = await res.json();
+        showPopup(error.error || 'আপডেট ব্যর্থ', 'error');
+      }
+    } catch (error) {
+      console.error('Update review error:', error);
+      showPopup('আপডেট ব্যর্থ', 'error');
+    }
+  };
+
+  window.confirmDeleteReview = (id) => {
+    openConfirmModal(
+      'রিভিউ মুছবেন?',
+      'এই রিভিউটি মুছে ফেলা হবে!',
+      () => deleteReview(id)
+    );
+  };
+
+  window.deleteReview = async (id) => {
+    try {
+      const res = await fetchWithRetry(`${API_BASE}/admin/reviews/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      }, 2);
+
+      if (res.ok) {
+        showPopup('রিভিউ মুছে ফেলা হয়েছে', 'success');
+        loadReviews();
+        loadUnreadCounts();
+      } else {
+        const error = await res.json();
+        showPopup(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
+      }
+    } catch (error) {
+      console.error('Delete review error:', error);
+      showPopup('মুছতে সমস্যা হয়েছে', 'error');
+    }
+  };
+
+  // ---------- loadSliders ----------
+  async function loadSliders() {
+    const content = document.getElementById('pageContent');
+    showLoading('স্লাইডার লোড হচ্ছে...');
+
+    try {
+      const res = await fetchWithRetry(`${API_BASE}/admin/sliders`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const sliders = await res.json();
+
+      content.innerHTML = `
+        <div class="section-card">
+          <div class="section-header">
+            <h3 class="text-xl font-bold">স্লাইডার পরিচালনা</h3>
+            <button class="btn-primary" onclick="showSliderForm()">
+              <i class="fas fa-plus mr-2"></i>নতুন স্লাইডার
+            </button>
+          </div>
+          <div class="data-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>ছবি</th>
+                  <th>শিরোনাম</th>
+                  <th>ব্যাজ</th>
+                  <th>অর্ডার</th>
+                  <th>স্ট্যাটাস</th>
+                  <th>অ্যাকশন</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${sliders.map(slider => `
+                  <tr>
+                    <td><img src="${slider.imageUrl || ''}" class="image-preview w-12 h-12" onerror="this.src='https://via.placeholder.com/50'"></td>
+                    <td>${slider.title || ''}</td>
+                    <td><span style="background:${slider.badgeColor || '#1877F2'}" class="px-2 py-1 text-white rounded-full text-xs">${slider.badge || ''}</span></td>
+                    <td>${slider.order || 0}</td>
+                    <td><span class="status-badge ${slider.active ? 'status-delivered' : 'status-cancelled'}">${slider.active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</span></td>
+                    <td>
+                      <button onclick='showSliderForm(${JSON.stringify(slider).replace(/'/g, "\\'")})' class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-edit"></i></button>
+                      <button onclick="confirmDeleteSlider('${slider._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
+                    </td>
+                  </tr>
+                `).join('')}
+                ${sliders.length === 0 ? '<tr><td colspan="6" class="text-center py-4">কোন স্লাইডার নেই</td></tr>' : ''}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    } catch (error) {
+      content.innerHTML = `
+        <div class="text-center py-8">
+          <p class="text-red-500 mb-4">স্লাইডার লোড করতে ব্যর্থ হয়েছে</p>
+          <button onclick="loadSliders()" class="btn-primary px-6 py-2">
+            <i class="fas fa-sync-alt mr-2"></i>আবার চেষ্টা করুন
+          </button>
+        </div>
+      `;
+    } finally {
+      hideLoading();
+    }
+  }
+
+  window.showSliderForm = (slider = null) => {
+    currentSlideId = slider?._id || null;
+    slideImage = slider?.imageUrl || '';
+
+    const modal = document.getElementById('modal');
+    const modalContent = document.getElementById('modalContent');
+
+    modalContent.innerHTML = `
+      <h3 class="text-2xl font-bold mb-6">${slider ? 'স্লাইডার সম্পাদনা' : 'নতুন স্লাইডার'}</h3>
+      <form id="sliderForm" onsubmit="saveSlider(event, '${slider?._id || ''}')">
+        <div class="form-group">
+          <label class="form-label">শিরোনাম</label>
+          <input type="text" class="form-input" name="title" value="${slider?.title || ''}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">সাবটাইটেল</label>
+          <input type="text" class="form-input" name="subtitle" value="${slider?.subtitle || ''}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ব্যাজ</label>
+          <input type="text" class="form-input" name="badge" value="${slider?.badge || ''}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ব্যাজ রঙ</label>
+          <input type="color" class="form-input" name="badgeColor" value="${slider?.badgeColor || '#1877F2'}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">বাটন টেক্সট</label>
+          <input type="text" class="form-input" name="buttonText" value="${slider?.buttonText || 'এখনই কিনুন'}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">প্রোডাক্ট আইডি</label>
+          <input type="number" class="form-input" name="productId" value="${slider?.productId || ''}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">অর্ডার</label>
+          <input type="number" class="form-input" name="order" value="${slider?.order || '1'}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ছবি</label>
+          ${slideImage ? `<img src="${slideImage}" class="image-preview mb-2" onerror="this.style.display='none'">` : ''}
+          <input type="file" class="form-input" name="image" accept="image/*" ${slider ? '' : 'required'}>
+        </div>
+        <div class="form-group">
+          <label class="flex items-center gap-2">
+            <input type="checkbox" name="active" ${slider?.active ? 'checked' : ''}>
+            <span>সক্রিয়</span>
+          </label>
+        </div>
+        <div class="flex justify-end gap-3 mt-6">
+          <button type="button" class="btn-secondary px-6 py-2" onclick="closeModal()">বাতিল</button>
+          <button type="submit" class="btn-primary px-6 py-2">সংরক্ষণ</button>
+        </div>
+      </form>
+    `;
+    modal.classList.add('active');
+  };
+
+  window.saveSlider = async (e, id) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    
+    const data = {
+      title: formData.get('title'),
+      subtitle: formData.get('subtitle'),
+      badge: formData.get('badge'),
+      badgeColor: formData.get('badgeColor'),
+      buttonText: formData.get('buttonText'),
+      productId: parseInt(formData.get('productId')) || 0,
+      order: parseInt(formData.get('order')) || 1,
+      active: formData.get('active') === 'on'
+    };
+
+    const formDataToSend = new FormData();
+    formDataToSend.append('data', JSON.stringify(data));
+    if (formData.get('image').size > 0) {
+      formDataToSend.append('image', formData.get('image'));
     }
 
-    window.saveSettings = async (e) => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const submitBtn = e.target.querySelector('button[type="submit"]');
-      
-      const data = Object.fromEntries(formData.entries());
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'সংরক্ষণ হচ্ছে...';
 
-      data.deliveryChargeDhaka = parseInt(data.deliveryChargeDhaka) || 60;
-      data.deliveryChargeOutside = parseInt(data.deliveryChargeOutside) || 120;
-      data.freeDeliveryThreshold = parseInt(data.freeDeliveryThreshold) || 2000;
+    try {
+      const url = id ? `${API_BASE}/admin/sliders/${id}` : `${API_BASE}/admin/sliders`;
+      const method = id ? 'PUT' : 'POST';
 
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = 'সংরক্ষণ হচ্ছে...';
+      const res = await fetchWithRetry(url, {
+        method,
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formDataToSend
+      }, 2);
 
-      try {
-        const res = await fetch(`${API_BASE}/admin/settings`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(data)
-        });
-
-        if (res.ok) {
-          showPopup('সেটিংস সংরক্ষিত হয়েছে', 'success');
-        } else {
-          const error = await res.json();
-          showPopup(error.error || 'ব্যর্থ হয়েছে', 'error');
-        }
-      } catch (error) {
-        console.error('Save settings error:', error);
-        showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = 'সেটিংস সংরক্ষণ';
+      if (res.ok) {
+        showPopup(id ? 'স্লাইডার আপডেট হয়েছে' : 'স্লাইডার তৈরি হয়েছে', 'success');
+        closeModal();
+        loadSliders();
+      } else {
+        const error = await res.json();
+        showPopup(error.error || 'ব্যর্থ হয়েছে', 'error');
       }
-    };
+    } catch (error) {
+      console.error('Save slider error:', error);
+      showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'সংরক্ষণ';
+    }
+  };
 
-    function loadChangePassword() {
-      const content = document.getElementById('pageContent');
-      
+  window.confirmDeleteSlider = (id) => {
+    openConfirmModal(
+      'স্লাইডার মুছবেন?',
+      'এই স্লাইডারটি মুছে ফেলা হবে!',
+      () => deleteSlider(id)
+    );
+  };
+
+  window.deleteSlider = async (id) => {
+    try {
+      const res = await fetchWithRetry(`${API_BASE}/admin/sliders/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      }, 2);
+
+      if (res.ok) {
+        showPopup('স্লাইডার মুছে ফেলা হয়েছে', 'success');
+        loadSliders();
+      } else {
+        const error = await res.json();
+        showPopup(error.error || 'মুছতে সমস্যা হয়েছে', 'error');
+      }
+    } catch (error) {
+      console.error('Delete slider error:', error);
+      showPopup('মুছতে সমস্যা হয়েছে', 'error');
+    }
+  };
+
+  // ---------- loadSettings ----------
+  async function loadSettings() {
+    const content = document.getElementById('pageContent');
+    showLoading('সেটিংস লোড হচ্ছে...');
+
+    try {
+      const res = await fetchWithRetry(`${API_BASE}/admin/settings`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const settings = await res.json();
+
       content.innerHTML = `
-        <div class="section-card max-w-lg mx-auto">
-          <h3 class="text-xl font-bold mb-6">পাসওয়ার্ড পরিবর্তন</h3>
-          <form id="changePasswordForm" onsubmit="changePassword(event)">
-            <div class="form-group">
-              <label class="form-label">বর্তমান পাসওয়ার্ড</label>
-              <input type="password" class="form-input" name="currentPassword" required>
+        <div class="section-card">
+          <div class="section-header">
+            <h3 class="text-xl font-bold">সাইট সেটিংস</h3>
+          </div>
+          <form id="settingsForm" onsubmit="saveSettings(event)">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="form-group">
+                <label class="form-label">সাইট নাম</label>
+                <input type="text" class="form-input" name="siteName" value="${settings.siteName || 'AMAYRA'}" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">সাইট টাইটেল</label>
+                <input type="text" class="form-input" name="siteTitle" value="${settings.siteTitle || 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন'}" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">সাইট সাবটাইটেল</label>
+                <input type="text" class="form-input" name="siteSubtitle" value="${settings.siteSubtitle || 'PREMIUM SHIRT COLLECTION'}" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">ফোন নম্বর</label>
+                <input type="text" class="form-input" name="phoneNumber" value="${settings.phoneNumber || '01712345678'}" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">হোয়াটসঅ্যাপ নম্বর</label>
+                <input type="text" class="form-input" name="whatsappNumber" value="${settings.whatsappNumber || '8801712345678'}" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">ইমেইল</label>
+                <input type="email" class="form-input" name="email" value="${settings.email || 'info@amayra.com'}" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">ফেসবুক পেজ</label>
+                <input type="text" class="form-input" name="facebook" value="${settings.facebook || '@amayra.shirt'}" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">ইনস্টাগ্রাম</label>
+                <input type="text" class="form-input" name="instagram" value="${settings.instagram || '@amayra'}" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">ঠিকানা</label>
+                <input type="text" class="form-input" name="address" value="${settings.address || 'Dhaka, Bangladesh'}" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">ঢাকার ভেতরে ডেলিভারি চার্জ</label>
+                <input type="number" class="form-input" name="deliveryChargeDhaka" value="${settings.deliveryChargeDhaka || 60}" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">ঢাকার বাইরে ডেলিভারি চার্জ</label>
+                <input type="number" class="form-input" name="deliveryChargeOutside" value="${settings.deliveryChargeOutside || 120}" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">ফ্রি ডেলিভারির জন্য ন্যূনতম অর্ডার</label>
+                <input type="number" class="form-input" name="freeDeliveryThreshold" value="${settings.freeDeliveryThreshold || 2000}" required>
+              </div>
+              <div class="form-group md:col-span-2">
+                <label class="form-label">ফুটার টেক্সট</label>
+                <input type="text" class="form-input" name="footerText" value="${settings.footerText || 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন · ২০২৫'}" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">কারেন্সি</label>
+                <input type="text" class="form-input" name="currency" value="${settings.currency || '৳'}" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">থিম কালার</label>
+                <input type="color" class="form-input" name="themeColor" value="${settings.themeColor || '#1877F2'}" required>
+              </div>
             </div>
-            <div class="form-group">
-              <label class="form-label">নতুন পাসওয়ার্ড</label>
-              <input type="password" class="form-input" name="newPassword" required>
+            
+            <div class="flex justify-end mt-6">
+              <button type="submit" class="btn-primary px-8 py-3">সেটিংস সংরক্ষণ</button>
             </div>
-            <div class="form-group">
-              <label class="form-label">নতুন পাসওয়ার্ড (আবার)</label>
-              <input type="password" class="form-input" name="confirmPassword" required>
-            </div>
-            <button type="submit" class="btn-primary w-full py-3">পাসওয়ার্ড পরিবর্তন করুন</button>
           </form>
         </div>
       `;
-    }
-
-    window.changePassword = async (e) => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const submitBtn = e.target.querySelector('button[type="submit"]');
-      
-      const currentPassword = formData.get('currentPassword');
-      const newPassword = formData.get('newPassword');
-      const confirmPassword = formData.get('confirmPassword');
-
-      if (newPassword !== confirmPassword) {
-        showPopup('নতুন পাসওয়ার্ড মেলেনি', 'error');
-        return;
-      }
-
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = 'পরিবর্তন হচ্ছে...';
-
-      try {
-        const res = await fetch(`${API_BASE}/admin/change-password`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ currentPassword, newPassword })
-        });
-
-        if (res.ok) {
-          showPopup('পাসওয়ার্ড পরিবর্তন হয়েছে', 'success');
-          e.target.reset();
-        } else {
-          const data = await res.json();
-          showPopup(data.error || 'ব্যর্থ হয়েছে', 'error');
-        }
-      } catch (error) {
-        console.error('Change password error:', error);
-        showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = 'পাসওয়ার্ড পরিবর্তন করুন';
-      }
-    };
-
-    async function loadUnreadCounts() {
-      try {
-        const [ordersRes, reviewsRes] = await Promise.all([
-          fetch(`${API_BASE}/admin/orders/unread-count`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }),
-          fetch(`${API_BASE}/admin/reviews/unread-count`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          })
-        ]);
-
-        const ordersData = await ordersRes.json();
-        const reviewsData = await reviewsRes.json();
-
-        const orderBadge = document.getElementById('orderBadge');
-        const reviewBadge = document.getElementById('reviewBadge');
-        const totalBadge = document.getElementById('notificationTotalBadge');
-
-        const totalUnread = (ordersData.count || 0) + (reviewsData.count || 0);
-
-        orderBadge.style.display = ordersData.count > 0 ? 'flex' : 'none';
-        orderBadge.textContent = ordersData.count || 0;
-        
-        reviewBadge.style.display = reviewsData.count > 0 ? 'flex' : 'none';
-        reviewBadge.textContent = reviewsData.count || 0;
-        
-        totalBadge.style.display = totalUnread > 0 ? 'flex' : 'none';
-        totalBadge.textContent = totalUnread;
-      } catch (error) {
-        console.error('Error loading unread counts:', error);
-      }
-    }
-
-    window.showOrderDetails = async (orderId) => {
-      if (typeof orderId === 'string') {
-        try {
-          const res = await fetch(`${API_BASE}/admin/orders/${orderId}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          const order = await res.json();
-          showOrderDetailsModal(order);
-          markOrderAsRead(orderId);
-        } catch (error) {
-          console.error('Error loading order details:', error);
-          showPopup('অর্ডার ডিটেইলস লোড করতে ব্যর্থ', 'error');
-        }
-      } else {
-        showOrderDetailsModal(orderId);
-        markOrderAsRead(orderId._id);
-      }
-    };
-
-    function showOrderDetailsModal(order) {
-      const modalContent = document.getElementById('orderDetails');
-      if (!modalContent) return;
-
-      modalContent.innerHTML = `
-        <div class="space-y-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-gray-50 p-4 rounded-lg">
-              <h4 class="font-bold mb-2">গ্রাহকের তথ্য</h4>
-              <p><span class="text-gray-600">নাম:</span> ${order.customerName || 'N/A'}</p>
-              <p><span class="text-gray-600">ফোন:</span> ${order.phone || 'N/A'}</p>
-              <p><span class="text-gray-600">ঠিকানা:</span> ${order.address || 'N/A'}</p>
-            </div>
-            
-            <div class="bg-gray-50 p-4 rounded-lg">
-              <h4 class="font-bold mb-2">অর্ডারের তথ্য</h4>
-              <p><span class="text-gray-600">অর্ডার ID:</span> ${order.orderId || 'N/A'}</p>
-              <p><span class="text-gray-600">তারিখ:</span> ${order.createdAt ? new Date(order.createdAt).toLocaleString('bn-BD') : 'N/A'}</p>
-              <p><span class="text-gray-600">স্ট্যাটাস:</span> <span class="status-badge status-${order.status || 'pending'}">${order.status === 'pending' ? 'অপেক্ষমাণ' : order.status || 'pending'}</span></p>
-            </div>
-          </div>
-
-          <div class="bg-gray-50 p-4 rounded-lg">
-            <h4 class="font-bold mb-2">পণ্যের তালিকা</h4>
-            <div class="space-y-2">
-              ${(order.items || []).map(item => `
-                <div class="flex justify-between items-center border-b pb-2">
-                  <div>
-                    <p class="font-medium">${item.name || 'N/A'}</p>
-                    <p class="text-sm text-gray-600">৳${item.price || 0} × ${item.quantity || 0}</p>
-                  </div>
-                  <p class="font-bold">৳${(item.price || 0) * (item.quantity || 0)}</p>
-                </div>
-              `).join('')}
-              ${(!order.items || order.items.length === 0) ? '<p class="text-gray-500 text-center">কোন পণ্য নেই</p>' : ''}
-            </div>
-            
-            <div class="mt-4 pt-2 border-t">
-              <div class="flex justify-between">
-                <span>সাবটোটাল:</span>
-                <span class="font-bold">৳${order.subtotal || 0}</span>
-              </div>
-              <div class="flex justify-between">
-                <span>ডেলিভারি চার্জ:</span>
-                <span class="font-bold">৳${order.deliveryCharge || 0}</span>
-              </div>
-              <div class="flex justify-between text-lg">
-                <span>মোট:</span>
-                <span class="font-bold text-[#1877F2]">৳${order.total || 0}</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex justify-end gap-3">
-            <select id="orderStatusUpdate" class="form-select w-auto">
-              <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>অপেক্ষমাণ</option>
-              <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>নিশ্চিত</option>
-              <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>প্রক্রিয়াধীন</option>
-              <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>পাঠানো হয়েছে</option>
-              <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>ডেলিভারি হয়েছে</option>
-              <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>বাতিল</option>
-            </select>
-            <button onclick="updateOrderStatus('${order._id}')" class="btn-primary px-4 py-2">
-              আপডেট করুন
-            </button>
-          </div>
+    } catch (error) {
+      content.innerHTML = `
+        <div class="text-center py-8">
+          <p class="text-red-500 mb-4">সেটিংস লোড করতে ব্যর্থ হয়েছে</p>
+          <button onclick="loadSettings()" class="btn-primary px-6 py-2">
+            <i class="fas fa-sync-alt mr-2"></i>আবার চেষ্টা করুন
+          </button>
         </div>
       `;
-
-      openOrderModal();
+    } finally {
+      hideLoading();
     }
-  </script>
+  }
+
+  window.saveSettings = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    
+    const data = Object.fromEntries(formData.entries());
+
+    data.deliveryChargeDhaka = parseInt(data.deliveryChargeDhaka) || 60;
+    data.deliveryChargeOutside = parseInt(data.deliveryChargeOutside) || 120;
+    data.freeDeliveryThreshold = parseInt(data.freeDeliveryThreshold) || 2000;
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'সংরক্ষণ হচ্ছে...';
+
+    try {
+      const res = await fetchWithRetry(`${API_BASE}/admin/settings`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+      }, 2);
+
+      if (res.ok) {
+        showPopup('সেটিংস সংরক্ষিত হয়েছে', 'success');
+      } else {
+        const error = await res.json();
+        showPopup(error.error || 'ব্যর্থ হয়েছে', 'error');
+      }
+    } catch (error) {
+      console.error('Save settings error:', error);
+      showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'সেটিংস সংরক্ষণ';
+    }
+  };
+
+  function loadChangePassword() {
+    const content = document.getElementById('pageContent');
+    
+    content.innerHTML = `
+      <div class="section-card max-w-lg mx-auto">
+        <h3 class="text-xl font-bold mb-6">পাসওয়ার্ড পরিবর্তন</h3>
+        <form id="changePasswordForm" onsubmit="changePassword(event)">
+          <div class="form-group">
+            <label class="form-label">বর্তমান পাসওয়ার্ড</label>
+            <input type="password" class="form-input" name="currentPassword" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">নতুন পাসওয়ার্ড</label>
+            <input type="password" class="form-input" name="newPassword" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">নতুন পাসওয়ার্ড (আবার)</label>
+            <input type="password" class="form-input" name="confirmPassword" required>
+          </div>
+          <button type="submit" class="btn-primary w-full py-3">পাসওয়ার্ড পরিবর্তন করুন</button>
+        </form>
+      </div>
+    `;
+  }
+
+  window.changePassword = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    
+    const currentPassword = formData.get('currentPassword');
+    const newPassword = formData.get('newPassword');
+    const confirmPassword = formData.get('confirmPassword');
+
+    if (newPassword !== confirmPassword) {
+      showPopup('নতুন পাসওয়ার্ড মেলেনি', 'error');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'পরিবর্তন হচ্ছে...';
+
+    try {
+      const res = await fetchWithRetry(`${API_BASE}/admin/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ currentPassword, newPassword })
+      }, 2);
+
+      if (res.ok) {
+        showPopup('পাসওয়ার্ড পরিবর্তন হয়েছে', 'success');
+        e.target.reset();
+      } else {
+        const data = await res.json();
+        showPopup(data.error || 'ব্যর্থ হয়েছে', 'error');
+      }
+    } catch (error) {
+      console.error('Change password error:', error);
+      showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'পাসওয়ার্ড পরিবর্তন করুন';
+    }
+  };
+
+  async function loadUnreadCounts() {
+    try {
+      const [ordersRes, reviewsRes] = await Promise.allSettled([
+        fetchWithRetry(`${API_BASE}/admin/orders/unread-count`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetchWithRetry(`${API_BASE}/admin/reviews/unread-count`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ]);
+
+      let ordersData = { count: 0 };
+      let reviewsData = { count: 0 };
+
+      if (ordersRes.status === 'fulfilled' && ordersRes.value.ok) {
+        ordersData = await ordersRes.value.json();
+      }
+      if (reviewsRes.status === 'fulfilled' && reviewsRes.value.ok) {
+        reviewsData = await reviewsRes.value.json();
+      }
+
+      const orderBadge = document.getElementById('orderBadge');
+      const reviewBadge = document.getElementById('reviewBadge');
+      const totalBadge = document.getElementById('notificationTotalBadge');
+
+      const totalUnread = (ordersData.count || 0) + (reviewsData.count || 0);
+
+      orderBadge.style.display = ordersData.count > 0 ? 'flex' : 'none';
+      orderBadge.textContent = ordersData.count || 0;
+      
+      reviewBadge.style.display = reviewsData.count > 0 ? 'flex' : 'none';
+      reviewBadge.textContent = reviewsData.count || 0;
+      
+      totalBadge.style.display = totalUnread > 0 ? 'flex' : 'none';
+      totalBadge.textContent = totalUnread;
+    } catch (error) {
+      console.error('Error loading unread counts:', error);
+    }
+  }
+</script>
 </body>
 </html>

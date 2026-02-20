@@ -13,10 +13,10 @@ require('dotenv').config();
 
 const app = express();
 
+// ---------- Self‑ping (Render free tier prevention) ----------
 if (process.env.RENDER) {
-  const PING_INTERVAL = 5 * 60 * 1000;
-  const port = process.env.PORT || 5000;
-  const pingUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${port}`;
+  const PING_INTERVAL = 5 * 60 * 1000; // 5 মিনিট
+  const pingUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${process.env.PORT || 5000}`;
 
   setInterval(async () => {
     try {
@@ -34,6 +34,7 @@ if (process.env.RENDER) {
   console.log('🔄 Self‑ping system activated (interval: 5 minutes)');
 }
 
+// Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({ 
     status: 'ok', 
@@ -42,16 +43,19 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-const allowedOrigins = [
-  process.env.CLIENT_URL_1,
-  process.env.CLIENT_URL_2,
-  process.env.FRONTEND_URL,
-  process.env.ADMIN_URL,
-  'http://localhost:3000',
-  'http://localhost:5000',
-  'http://localhost:5173',
-  'http://127.0.0.1:5500'
-].filter(Boolean);
+// ---------- CORS configuration (flexible) ----------
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+  : [
+      process.env.CLIENT_URL_1,
+      process.env.CLIENT_URL_2,
+      process.env.FRONTEND_URL,
+      process.env.ADMIN_URL,
+      'http://localhost:3000',
+      'http://localhost:5000',
+      'http://localhost:5173',
+      'http://127.0.0.1:5500'
+    ].filter(Boolean);
 
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
@@ -59,7 +63,16 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+      callback(null, true);
+    } else {
+      console.log('🚫 Blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -69,13 +82,17 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+// ---------- Rate limiting (increased limit) ----------
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 200,
-  message: 'Too many requests from this IP'
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 500, // increased from 200 to 500
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 app.use('/api/', limiter);
 
+// ---------- Cloudinary ----------
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -96,17 +113,33 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 }
 });
 
-mongoose.connect(process.env.MONGODB_URI, {
-  serverSelectionTimeoutMS: 5000,
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => {
-  console.log('✅ MongoDB Connected');
-}).catch(err => {
-  console.error('❌ MongoDB Connection Error:', err);
-  process.exit(1);
+// ---------- MongoDB connection with improved stability ----------
+const connectWithRetry = () => {
+  mongoose.connect(process.env.MONGODB_URI, {
+    serverSelectionTimeoutMS: 15000, // increased from 5000 to 15000
+    socketTimeoutMS: 45000,
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  }).then(() => {
+    console.log('✅ MongoDB Connected');
+  }).catch(err => {
+    console.error('❌ MongoDB Connection Error:', err);
+    console.log('🔄 Retrying connection in 5 seconds...');
+    setTimeout(connectWithRetry, 5000);
+  });
+};
+
+connectWithRetry();
+
+mongoose.connection.on('disconnected', () => {
+  console.log('⚠️ MongoDB disconnected. Attempting to reconnect...');
 });
 
+mongoose.connection.on('reconnected', () => {
+  console.log('✅ MongoDB reconnected');
+});
+
+// ---------- Schemas ----------
 const AdminSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
@@ -231,6 +264,7 @@ const Order = mongoose.model('Order', OrderSchema);
 const Review = mongoose.model('Review', ReviewSchema);
 const Settings = mongoose.model('Settings', SettingsSchema);
 
+// ---------- Middleware ----------
 const validate = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -253,6 +287,7 @@ const auth = async (req, res, next) => {
   }
 };
 
+// ---------- Database initialization ----------
 async function initializeDatabase() {
   try {
     const adminExists = await Admin.findOne({ username: process.env.ADMIN_USERNAME });
@@ -322,6 +357,7 @@ async function initializeDatabase() {
   }
 }
 
+// ---------- Routes ----------
 app.post('/api/admin/login', [
   body('username').notEmpty(),
   body('password').notEmpty()
@@ -389,6 +425,7 @@ app.post('/api/admin/change-password', auth, async (req, res) => {
   }
 });
 
+// Public routes
 app.get('/api/categories', async (req, res) => {
   try {
     const categories = await Category.find({ active: true }).sort('order');
@@ -398,6 +435,135 @@ app.get('/api/categories', async (req, res) => {
   }
 });
 
+app.get('/api/sliders', async (req, res) => {
+  try {
+    const sliders = await Slider.find({ active: true }).sort('order');
+    res.json(sliders);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/products', async (req, res) => {
+  try {
+    const { category, search, featured } = req.query;
+    let filter = {};
+    
+    if (category && category !== 'all') filter.category = category;
+    if (featured === 'true') filter.featured = true;
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { desc: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const products = await Product.find(filter).sort('id');
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/products/:id', async (req, res) => {
+  try {
+    const product = await Product.findOne({ id: parseInt(req.params.id) });
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+    
+    product.views += 1;
+    await product.save();
+    
+    res.json(product);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/orders', [
+  body('customerName').notEmpty(),
+  body('phone').matches(/^01[3-9]\d{8}$/),
+  body('address').notEmpty(),
+  body('items').isArray().notEmpty()
+], validate, async (req, res) => {
+  try {
+    const { customerName, phone, district, address, items, subtotal, deliveryCharge, total, notes } = req.body;
+    
+    const orderId = 'ORD' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 5).toUpperCase();
+    
+    const order = new Order({ 
+      orderId, 
+      customerName, 
+      phone, 
+      district, 
+      address, 
+      items, 
+      subtotal, 
+      deliveryCharge, 
+      total, 
+      notes 
+    });
+    
+    await order.save();
+
+    for (const item of items) {
+      await Product.findOneAndUpdate(
+        { id: item.id }, 
+        { $inc: { sold: item.quantity, stock: -item.quantity } }
+      );
+    }
+
+    res.status(201).json({ orderId, message: 'Order placed successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/reviews', async (req, res) => {
+  try {
+    const { featured } = req.query;
+    let filter = { status: 'approved' };
+    if (featured === 'true') filter.isFeatured = true;
+    
+    const reviews = await Review.find(filter)
+      .sort('-createdAt')
+      .limit(20);
+    res.json(reviews);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/reviews', [
+  body('name').notEmpty(),
+  body('address').notEmpty(),
+  body('text').notEmpty(),
+  body('rating').isInt({ min: 1, max: 5 })
+], validate, async (req, res) => {
+  try {
+    const { name, address, text, rating } = req.body;
+    const review = new Review({ name, address, text, rating });
+    await review.save();
+    res.status(201).json({ message: 'Review submitted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/settings', async (req, res) => {
+  try {
+    let settings = await Settings.findOne();
+    if (!settings) {
+      settings = await Settings.create({});
+    }
+    res.json(settings);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin routes (protected)
 app.get('/api/admin/categories', auth, async (req, res) => {
   try {
     const categories = await Category.find().sort('order');
@@ -460,15 +626,6 @@ app.delete('/api/admin/categories/:id', auth, async (req, res) => {
     
     await Category.findByIdAndDelete(req.params.id);
     res.json({ message: 'Category deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/api/sliders', async (req, res) => {
-  try {
-    const sliders = await Slider.find({ active: true }).sort('order');
-    res.json(sliders);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -547,43 +704,6 @@ app.delete('/api/admin/sliders/:id', auth, async (req, res) => {
     }
     await Slider.findByIdAndDelete(req.params.id);
     res.json({ message: 'Slider deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/api/products', async (req, res) => {
-  try {
-    const { category, search, featured } = req.query;
-    let filter = {};
-    
-    if (category && category !== 'all') filter.category = category;
-    if (featured === 'true') filter.featured = true;
-    if (search) {
-      filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { desc: { $regex: search, $options: 'i' } }
-      ];
-    }
-
-    const products = await Product.find(filter).sort('id');
-    res.json(products);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/api/products/:id', async (req, res) => {
-  try {
-    const product = await Product.findOne({ id: parseInt(req.params.id) });
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-    
-    product.views += 1;
-    await product.save();
-    
-    res.json(product);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -715,49 +835,6 @@ app.delete('/api/admin/products/:id', auth, async (req, res) => {
   }
 });
 
-function generateOrderId() {
-  return 'ORD' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 5).toUpperCase();
-}
-
-app.post('/api/orders', [
-  body('customerName').notEmpty(),
-  body('phone').matches(/^01[3-9]\d{8}$/),
-  body('address').notEmpty(),
-  body('items').isArray().notEmpty()
-], validate, async (req, res) => {
-  try {
-    const { customerName, phone, district, address, items, subtotal, deliveryCharge, total, notes } = req.body;
-    
-    const orderId = generateOrderId();
-    
-    const order = new Order({ 
-      orderId, 
-      customerName, 
-      phone, 
-      district, 
-      address, 
-      items, 
-      subtotal, 
-      deliveryCharge, 
-      total, 
-      notes 
-    });
-    
-    await order.save();
-
-    for (const item of items) {
-      await Product.findOneAndUpdate(
-        { id: item.id }, 
-        { $inc: { sold: item.quantity, stock: -item.quantity } }
-      );
-    }
-
-    res.status(201).json({ orderId, message: 'Order placed successfully' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
 app.get('/api/admin/orders', auth, async (req, res) => {
   try {
     const { status, page = 1, limit = 20, search, isRead } = req.query;
@@ -846,37 +923,6 @@ app.delete('/api/admin/orders/:id', auth, async (req, res) => {
   }
 });
 
-app.get('/api/reviews', async (req, res) => {
-  try {
-    const { featured } = req.query;
-    let filter = { status: 'approved' };
-    if (featured === 'true') filter.isFeatured = true;
-    
-    const reviews = await Review.find(filter)
-      .sort('-createdAt')
-      .limit(20);
-    res.json(reviews);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/reviews', [
-  body('name').notEmpty(),
-  body('address').notEmpty(),
-  body('text').notEmpty(),
-  body('rating').isInt({ min: 1, max: 5 })
-], validate, async (req, res) => {
-  try {
-    const { name, address, text, rating } = req.body;
-    const review = new Review({ name, address, text, rating });
-    await review.save();
-    res.status(201).json({ message: 'Review submitted successfully' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
 app.get('/api/admin/reviews', auth, async (req, res) => {
   try {
     const { status, page = 1, limit = 20 } = req.query;
@@ -942,18 +988,6 @@ app.delete('/api/admin/reviews/:id', auth, async (req, res) => {
   try {
     await Review.findByIdAndDelete(req.params.id);
     res.json({ message: 'Review deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/api/settings', async (req, res) => {
-  try {
-    let settings = await Settings.findOne();
-    if (!settings) {
-      settings = await Settings.create({});
-    }
-    res.json(settings);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -1112,6 +1146,7 @@ app.get('/api/admin/notifications/unread', auth, async (req, res) => {
   }
 });
 
+// ---------- Start server ----------
 initializeDatabase().then(() => {
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {

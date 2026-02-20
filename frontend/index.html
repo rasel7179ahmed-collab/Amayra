@@ -1122,6 +1122,30 @@
   let fullscreenCurrentIndex = 0;
   let lastAddedItemId = null;
 
+  // ---------- Utility: fetch with retry ----------
+  async function fetchWithRetry(url, options = {}, retries = 3, delay = 1000) {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const res = await fetch(url, options);
+        if (!res.ok) {
+          if (res.status === 429 && i < retries - 1) {
+            const waitTime = delay * Math.pow(2, i);
+            console.log(`Rate limited. Retrying in ${waitTime}ms...`);
+            await new Promise(r => setTimeout(r, waitTime));
+            continue;
+          }
+          throw new Error(`HTTP error ${res.status}`);
+        }
+        return res;
+      } catch (err) {
+        if (i === retries - 1) throw err;
+        const waitTime = delay * Math.pow(2, i);
+        console.log(`Request failed (${err.message}). Retrying in ${waitTime}ms...`);
+        await new Promise(r => setTimeout(r, waitTime));
+      }
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', async function() {
     await loadSettings();
     await loadSliders();
@@ -1135,7 +1159,7 @@
 
   async function loadSettings() {
     try {
-      const res = await fetch(`${API_BASE}/settings`);
+      const res = await fetchWithRetry(`${API_BASE}/settings`);
       settings = await res.json();
       
       document.getElementById('headerBrandName').textContent = settings.siteName || 'AMAYRA';
@@ -1157,16 +1181,28 @@
       
     } catch (error) {
       console.error('Error loading settings:', error);
+      // ডিফল্ট সেটিংস
+      settings = {
+        siteName: 'AMAYRA',
+        phoneNumber: '01712345678',
+        whatsappNumber: '8801712345678',
+        deliveryChargeDhaka: 60,
+        deliveryChargeOutside: 120,
+        freeDeliveryThreshold: 2000,
+        footerText: 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন · ২০২৫',
+        facebook: '@amayra.shirt'
+      };
     }
   }
 
   async function loadSliders() {
     try {
-      const res = await fetch(`${API_BASE}/sliders`);
+      const res = await fetchWithRetry(`${API_BASE}/sliders`);
       sliders = await res.json();
       renderSliders();
     } catch (error) {
       console.error('Error loading sliders:', error);
+      renderSliders(); // ডিফল্ট স্লাইডার দেখাবে (renderSliders ফাংশনে ডিফল্ট দেওয়া আছে)
     }
   }
 
@@ -1174,7 +1210,7 @@
     const track = document.getElementById('sliderTrack');
     const dots = document.getElementById('sliderDots');
     
-    if (!sliders.length) {
+    if (!sliders || sliders.length === 0) {
       track.innerHTML = `
         <div class="w-full flex-shrink-0 slide-bg" style="background-image: url('https://images.unsplash.com/photo-1598033128083-2f68a5d9b1b1?w=1200&q=85');">
           <div class="w-full h-full p-8 md:p-12 bg-gradient-to-t from-[#0A192F]/80 via-transparent to-transparent text-white flex items-end">
@@ -1211,11 +1247,13 @@
 
   async function loadCategories() {
     try {
-      const res = await fetch(`${API_BASE}/categories`);
+      const res = await fetchWithRetry(`${API_BASE}/categories`);
       categories = await res.json();
       renderCategoryPills();
     } catch (error) {
       console.error('Error loading categories:', error);
+      categories = [];
+      renderCategoryPills();
     }
   }
 
@@ -1232,7 +1270,7 @@
 
   async function loadProducts() {
     try {
-      const res = await fetch(`${API_BASE}/products`);
+      const res = await fetchWithRetry(`${API_BASE}/products`);
       products = await res.json();
       
       products.forEach(product => {
@@ -1243,7 +1281,14 @@
       loadBestsellers();
     } catch (error) {
       console.error('Error loading products:', error);
-      document.getElementById('productGrid').innerHTML = '<div class="col-span-full text-center text-red-500">প্রোডাক্ট লোড করতে ব্যর্থ হয়েছে</div>';
+      document.getElementById('productGrid').innerHTML = `
+        <div class="col-span-full text-center py-10">
+          <p class="text-red-500 mb-4">প্রোডাক্ট লোড করতে ব্যর্থ হয়েছে</p>
+          <button onclick="loadProducts()" class="btn-primary px-6 py-2">
+            <i class="fas fa-sync-alt mr-2"></i>আবার চেষ্টা করুন
+          </button>
+        </div>
+      `;
     }
   }
 
@@ -1662,13 +1707,13 @@
     };
 
     try {
-      const res = await fetch(`${API_BASE}/orders`, {
+      const res = await fetchWithRetry(`${API_BASE}/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(orderData)
-      });
+      }, 2);
 
       if (res.ok) {
         const data = await res.json();
@@ -1692,7 +1737,7 @@
         updateCart();
         e.target.reset();
 
-        await loadProducts();
+        await loadProducts(); // stock আপডেট
       } else {
         throw new Error('Order failed');
       }
@@ -1708,12 +1753,19 @@
 
   async function loadReviews() {
     try {
-      const res = await fetch(`${API_BASE}/reviews`);
+      const res = await fetchWithRetry(`${API_BASE}/reviews`);
       const reviews = await res.json();
       displayReviews(reviews);
     } catch (error) {
       console.error('Error loading reviews:', error);
-      document.getElementById('reviewsList').innerHTML = '<p class="text-center text-red-500">রিভিউ লোড করতে ব্যর্থ হয়েছে</p>';
+      document.getElementById('reviewsList').innerHTML = `
+        <div class="text-center py-10">
+          <p class="text-red-500 mb-4">রিভিউ লোড করতে ব্যর্থ হয়েছে</p>
+          <button onclick="loadReviews()" class="btn-primary px-6 py-2">
+            <i class="fas fa-sync-alt mr-2"></i>আবার চেষ্টা করুন
+          </button>
+        </div>
+      `;
     }
   }
 
@@ -1788,13 +1840,13 @@
     }
 
     try {
-      const res = await fetch(`${API_BASE}/reviews`, {
+      const res = await fetchWithRetry(`${API_BASE}/reviews`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ name, address, text, rating })
-      });
+      }, 2);
 
       if (res.ok) {
         Swal.fire({
@@ -1810,6 +1862,7 @@
         e.target.reset();
         ratingInput.value = 0;
         starContainer.querySelectorAll('i').forEach(s => s.className = 'fa-regular fa-star');
+        await loadReviews(); // নতুন রিভিউ দেখান
       } else {
         throw new Error('Review submission failed');
       }
@@ -1881,7 +1934,7 @@
   }
 
   window.slideChange = (direction) => {
-    if (!sliders.length) return;
+    if (!sliders || !sliders.length) return;
     
     const track = document.getElementById('sliderTrack');
     const totalSlides = sliders.length;
@@ -1891,7 +1944,7 @@
   };
 
   window.jumpToSlide = (index) => {
-    if (!sliders.length) return;
+    if (!sliders || !sliders.length) return;
     
     currentSlide = index;
     document.getElementById('sliderTrack').style.transform = `translateX(-${index * 100}%)`;
