@@ -323,7 +323,6 @@
       color: #FF7A00;
     }
 
-    /* রিভিউ স্ক্রলবার - চিকন এবং বর্ডার রেডিয়েস ছাড়া */
     .reviews-scroll::-webkit-scrollbar {
       width: 3px;
       height: 3px;
@@ -343,13 +342,11 @@
       background: #1666d9;
     }
 
-    /* Firefox এর জন্য */
     .reviews-scroll {
       scrollbar-width: thin;
       scrollbar-color: #1877F2 #F0F2F5;
     }
 
-    /* অর্ডার সেকশন র‍্যাপার - উচ্চতা সমান করার জন্য */
     .order-section-wrapper {
       display: grid;
       grid-template-columns: 1fr;
@@ -364,7 +361,6 @@
       }
     }
 
-    /* অর্ডার ফর্ম কার্ড এবং বেস্টসেলার স্লাইডারের উচ্চতা সমান */
     #orderFormCard,
     .bestseller-slider {
       height: fit-content;
@@ -436,7 +432,6 @@
       -webkit-text-fill-color: transparent;
     }
 
-    /* বেস্টসেলার কন্টেইনার ফ্লেক্স গ্রো */
     #bestsellerContainer {
       flex: 1;
       display: flex;
@@ -540,7 +535,6 @@
       margin-bottom: 1rem;
     }
     
-    /* রিভিউ সেকশন */
     .bestseller-reviews {
       margin: 1rem 0;
       padding: 0.5rem 0;
@@ -960,6 +954,86 @@
       font-size: 0.8rem;
       font-weight: 600;
     }
+
+    /* হ্যামবার্গার মেনু স্টাইল - মোবাইলের জন্য */
+    .hamburger {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      padding: 6px 0;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+      z-index: 1000;
+      background: transparent;
+      border: none;
+    }
+    
+    .hamburger span {
+      display: block;
+      width: 100%;
+      height: 3px;
+      background: #1877F2;
+      border-radius: 3px;
+      transition: all 0.3s ease;
+    }
+    
+    .hamburger span:nth-child(2) {
+      width: 70%;
+    }
+    
+    .hamburger.open span:nth-child(1) {
+      transform: translateY(8px) rotate(45deg);
+      width: 100%;
+    }
+    
+    .hamburger.open span:nth-child(2) {
+      opacity: 0;
+      width: 100%;
+    }
+    
+    .hamburger.open span:nth-child(3) {
+      transform: translateY(-8px) rotate(-45deg);
+      width: 100%;
+    }
+
+    body.menu-open {
+      overflow: hidden;
+    }
+
+    .close-menu-btn {
+      background: none;
+      border: none;
+      font-size: 2rem;
+      cursor: pointer;
+      color: #1C1E21;
+      transition: 0.2s;
+    }
+    .close-menu-btn:hover {
+      color: #1877F2;
+      transform: rotate(90deg);
+    }
+
+    @media (max-width: 768px) {
+      .hamburger {
+        width: 28px;
+        height: 28px;
+        padding: 5px 0;
+      }
+      
+      .hamburger span {
+        height: 2.5px;
+      }
+      
+      .hamburger.open span:nth-child(1) {
+        transform: translateY(7px) rotate(45deg);
+      }
+      
+      .hamburger.open span:nth-child(3) {
+        transform: translateY(-7px) rotate(-45deg);
+      }
+    }
   </style>
 </head>
 <body class="text-[#1C1E21]">
@@ -967,7 +1041,7 @@
 <div class="dropdown-sidebar" id="dropdownSidebar">
   <div class="flex justify-between items-center mb-6">
     <a href="#home" class="brand-logo">
-      <img src="images/Amayra_Logo.png" alt="AMAYRA Logo">
+      <img src="images/Amayra.jpg" alt="AMAYRA Logo">
       <div class="brand-text">
         <div class="brand-elegant" id="sidebarBrandName">AMAYRA</div>
         <div class="brand-subtitle" id="sidebarBrandSubtitle">LUXURY CLOTHING BRAND</div>
@@ -1203,6 +1277,7 @@
     await loadCategories();
     await loadProducts();
     await loadReviews();
+    await loadBestsellers();
     
     setupEventListeners();
     startSlideShow();
@@ -1328,7 +1403,6 @@
       });
       
       renderProducts();
-      loadBestsellers();
     } catch (error) {
       console.error('Error loading products:', error);
       document.getElementById('productGrid').innerHTML = `
@@ -1459,9 +1533,27 @@
     }
   });
 
+  async function loadBestsellers() {
+    try {
+      const res = await fetchWithRetry(`${API_BASE}/products?sort=sold&limit=5`);
+      bestsellerProducts = await res.json();
+      
+      if (bestsellerProducts.length === 0) {
+        document.getElementById('bestsellerContainer').innerHTML = '<p class="text-center text-gray-500 py-4">কোন প্রোডাক্ট নেই</p>';
+        return;
+      }
+      
+      updateBestsellerDisplay();
+      startBestsellerSlide();
+      setTimeout(adjustHeights, 100);
+    } catch (error) {
+      console.error('Error loading bestsellers:', error);
+      document.getElementById('bestsellerContainer').innerHTML = '<p class="text-center text-red-500 py-4">বেস্টসেলার লোড করতে ব্যর্থ</p>';
+    }
+  }
+
   function getRandomReviewsForProduct(productId, count = 2) {
     if (!allReviews || allReviews.length === 0) {
-      // ডেমো রিভিউ যদি কোন রিভিউ না থাকে
       return [
         {
           name: 'রহিম মিয়া',
@@ -1478,30 +1570,13 @@
       ];
     }
     
-    // প্রোডাক্ট আইডি অনুযায়ী রিভিউ ফিল্টার বা র্যান্ডম
     const productReviews = allReviews.filter(r => r.productId === productId);
     if (productReviews.length >= count) {
       return productReviews.slice(0, count);
     } else {
-      // র্যান্ডম রিভিউ নিন
       const shuffled = [...allReviews].sort(() => 0.5 - Math.random());
       return shuffled.slice(0, count);
     }
-  }
-
-  function loadBestsellers() {
-    bestsellerProducts = [...products]
-      .sort((a, b) => (b.sold || 0) - (a.sold || 0))
-      .slice(0, 5);
-    
-    if (bestsellerProducts.length === 0) {
-      document.getElementById('bestsellerContainer').innerHTML = '<p class="text-center text-gray-500 py-4">কোন প্রোডাক্ট নেই</p>';
-      return;
-    }
-    
-    updateBestsellerDisplay();
-    startBestsellerSlide();
-    setTimeout(adjustHeights, 100);
   }
 
   function updateBestsellerDisplay() {
@@ -1513,7 +1588,6 @@
     const images = product.images && product.images.length ? product.images : [product.img];
     const discount = product.discountPercent || Math.round((1 - product.price / product.original) * 100);
     
-    // প্রোডাক্টের জন্য রিভিউ নিন
     const reviews = getRandomReviewsForProduct(product.id, 2);
     
     const container = document.getElementById('bestsellerContainer');
@@ -1683,8 +1757,51 @@
     }, 300);
   };
 
-  window.quickOrder = (productId) => {
-    addToCart(productId);
+  window.quickOrder = async (productId) => {
+    try {
+      const res = await fetchWithRetry(`${API_BASE}/products/${productId}`);
+      const product = await res.json();
+      
+      if (!product || product.stock <= 0) {
+        Swal.fire({
+          icon: 'error',
+          title: 'স্টক শেষ',
+          text: 'এই প্রোডাক্টটি বর্তমানে স্টকে নেই',
+          confirmButtonColor: '#1877F2'
+        });
+        return;
+      }
+
+      const productImage = product.images && product.images.length ? product.images[0] : product.img;
+      
+      cart = [{
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        quantity: 1,
+        stock: product.stock,
+        image: productImage
+      }];
+      
+      updateCart();
+      
+      document.getElementById('order').scrollIntoView({ behavior: 'smooth' });
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'প্রোডাক্ট যুক্ত হয়েছে',
+        text: 'অর্ডার ফর্ম পূরণ করুন',
+        confirmButtonColor: '#1877F2'
+      });
+      
+    } catch (error) {
+      console.error('Error quick order:', error);
+      Swal.fire({
+        icon: 'error',
+        text: 'প্রোডাক্ট লোড করতে ব্যর্থ',
+        confirmButtonColor: '#1877F2'
+      });
+    }
   };
 
   function updateCart() {
@@ -1984,7 +2101,7 @@
         ratingInput.value = 0;
         starContainer.querySelectorAll('i').forEach(s => s.className = 'fa-regular fa-star');
         await loadReviews();
-        updateBestsellerDisplay(); // বেস্টসেলার রিভিউ আপডেট
+        updateBestsellerDisplay();
       } else {
         throw new Error('Review submission failed');
       }
