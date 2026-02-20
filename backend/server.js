@@ -116,11 +116,9 @@ const upload = multer({
 // ---------- MongoDB connection with improved stability ----------
 const connectWithRetry = () => {
   mongoose.connect(process.env.MONGODB_URI, {
-    serverSelectionTimeoutMS: 15000, // increased from 5000 to 15000
-    socketTimeoutMS: 45000,
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  }).then(() => {
+  serverSelectionTimeoutMS: 15000,
+  socketTimeoutMS: 45000
+}).then(() => {
     console.log('✅ MongoDB Connected');
   }).catch(err => {
     console.error('❌ MongoDB Connection Error:', err);
