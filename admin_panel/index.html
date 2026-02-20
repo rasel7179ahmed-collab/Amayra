@@ -244,6 +244,9 @@
       align-items: center;
       justify-content: space-between;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 1rem;
+      z-index: 40;
     }
     
     .menu-toggle {
@@ -259,7 +262,102 @@
       }
     }
     
-    /* Notification Styles */
+    /* Stats Cards - নতুন ডিজাইন */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    @media (max-width: 1024px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    @media (max-width: 640px) {
+      .stats-grid {
+        grid-template-columns: repeat(1, 1fr);
+      }
+    }
+    
+    .stat-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 30px 8px 30px 8px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(24, 119, 242, 0.1);
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 25px -5px rgba(24, 119, 242, 0.2);
+    }
+    
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #1877F2, #FF7A00);
+      border-radius: 20px 4px 20px 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.5rem;
+    }
+    
+    .stat-content {
+      flex: 1;
+    }
+    
+    .stat-label {
+      color: #6b7280;
+      font-size: 0.9rem;
+      margin-bottom: 0.25rem;
+    }
+    
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    
+    /* Chart Cards */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    @media (max-width: 768px) {
+      .chart-grid {
+        grid-template-columns: repeat(1, 1fr);
+      }
+    }
+    
+    .chart-card {
+      background: white;
+      border-radius: 40px 12px 40px 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .chart-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: #1e293b;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 0.75rem;
+    }
+    
+    /* Notification Badge */
     .notification-badge {
       position: relative;
     }
@@ -315,42 +413,6 @@
     .notification-time {
       font-size: 0.7rem;
       color: #718096;
-    }
-    
-    /* Stats Cards */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
-    
-    .stat-card {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 30px 8px 30px 8px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-      background: linear-gradient(145deg, #ffffff, #f8fafc);
-      border: 1px solid rgba(24, 119, 242, 0.1);
-      transition: all 0.3s;
-    }
-    
-    .stat-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-    }
-    
-    .stat-icon {
-      width: 48px;
-      height: 48px;
-      background: linear-gradient(135deg, #1877F2, #FF7A00);
-      border-radius: 20px 4px 20px 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
     }
     
     /* Cards and Tables */
@@ -614,52 +676,6 @@
       100% { transform: rotate(360deg); }
     }
     
-    /* Toggle Switch */
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 60px;
-      height: 34px;
-    }
-    
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-    
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #ccc;
-      transition: .4s;
-      border-radius: 34px;
-    }
-    
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 26px;
-      width: 26px;
-      left: 4px;
-      bottom: 4px;
-      background-color: white;
-      transition: .4s;
-      border-radius: 50%;
-    }
-    
-    input:checked + .slider {
-      background-color: #1877F2;
-    }
-    
-    input:checked + .slider:before {
-      transform: translateX(26px);
-    }
-    
     /* Notification Container */
     .notification-container {
       position: fixed;
@@ -770,17 +786,6 @@
       padding: 0.75rem;
       border-radius: 20px 4px 20px 4px;
       margin-bottom: 0.5rem;
-    }
-    
-    /* Responsive */
-    @media (max-width: 768px) {
-      .notification-item-popup {
-        min-width: 250px;
-        padding: 12px 16px;
-      }
-      .gallery-grid {
-        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-      }
     }
     
     /* Chart Container */
@@ -961,6 +966,11 @@
     </div>
   </div>
 
+  <!-- Main Modal (for forms) -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal-content" id="modalContent"></div>
+  </div>
+
   <!-- Image Upload Modal -->
   <div class="modal-overlay" id="imageModal">
     <div class="modal-content w-full max-w-2xl p-6">
@@ -1044,6 +1054,36 @@
     </div>
   </div>
 
+  <!-- Logo Upload Modal -->
+  <div class="modal-overlay" id="logoModal">
+    <div class="modal-content w-full max-w-md p-6">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-2xl font-bold">লোগো আপলোড</h3>
+        <button onclick="closeLogoModal()" class="text-gray-500 hover:text-red-500 text-2xl">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="drop-zone" id="logoDropZone">
+        <i class="fas fa-cloud-upload-alt text-5xl text-[#1877F2] mb-4"></i>
+        <p class="text-lg font-medium text-gray-700">PNG লোগো নির্বাচন করুন</p>
+        <p class="text-sm text-gray-500 mt-2">শুধুমাত্র PNG ফাইল</p>
+        <input type="file" id="logoFileInput" accept="image/png" class="hidden">
+      </div>
+      
+      <div id="logoPreviewContainer" class="flex justify-center mt-6"></div>
+      
+      <div class="flex justify-end gap-3 mt-6">
+        <button onclick="closeLogoModal()" class="px-6 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">
+          বাতিল
+        </button>
+        <button onclick="uploadLogo()" id="uploadLogoBtn" class="px-6 py-2 bg-[#1877F2] text-white rounded-lg hover:bg-[#0a5bc4]">
+          <i class="fas fa-upload mr-2"></i>আপলোড
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Notification Container -->
   <div id="notificationContainer" class="notification-container"></div>
 
@@ -1060,7 +1100,9 @@
     let slideImage = '';
     let confirmCallback = null;
     let notificationInterval = null;
-    let chartInstance = null;
+    let chartInstance1 = null;
+    let chartInstance2 = null;
+    let chartInstance3 = null;
 
     // Check login status
     if (token) {
@@ -1324,8 +1366,8 @@
           });
         }
 
-        if (reviewsData) {
-          reviewsData.forEach(review => {
+        if (reviewsData.reviews) {
+          reviewsData.reviews.forEach(review => {
             notifications.push({
               type: 'review',
               id: review._id,
@@ -1333,7 +1375,8 @@
               description: `${review.name} - ${review.address}`,
               time: review.createdAt,
               onClick: () => {
-                loadPage('reviews');
+                currentPage = 'reviews';
+                loadReviews();
                 dropdown.classList.remove('show');
               }
             });
@@ -1386,6 +1429,16 @@
       document.getElementById('fileInput').value = '';
       document.getElementById('previewContainer').innerHTML = '';
       document.getElementById('uploadStatus').innerHTML = '';
+    };
+
+    window.openLogoModal = () => {
+      document.getElementById('logoModal').classList.add('active');
+    };
+
+    window.closeLogoModal = () => {
+      document.getElementById('logoModal').classList.remove('active');
+      document.getElementById('logoFileInput').value = '';
+      document.getElementById('logoPreviewContainer').innerHTML = '';
     };
 
     window.openGalleryModal = (images, callback) => {
@@ -1443,6 +1496,10 @@
       closeConfirmModal();
     });
 
+    window.closeModal = () => {
+      document.getElementById('modal').classList.remove('active');
+    };
+
     // ========== DROPZONE HANDLING ==========
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
@@ -1491,6 +1548,54 @@
       }
     }
 
+    // Logo DropZone
+    const logoDropZone = document.getElementById('logoDropZone');
+    const logoFileInput = document.getElementById('logoFileInput');
+
+    logoDropZone.addEventListener('click', () => {
+      logoFileInput.click();
+    });
+
+    logoDropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      logoDropZone.classList.add('dragover');
+    });
+
+    logoDropZone.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      logoDropZone.classList.remove('dragover');
+    });
+
+    logoDropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      logoDropZone.classList.remove('dragover');
+      handleLogoFile(e.dataTransfer.files);
+    });
+
+    logoFileInput.addEventListener('change', (e) => {
+      handleLogoFile(e.target.files);
+    });
+
+    function handleLogoFile(files) {
+      const preview = document.getElementById('logoPreviewContainer');
+      preview.innerHTML = '';
+      
+      if (files.length > 0) {
+        const file = files[0];
+        if (file.type === 'image/png') {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            preview.innerHTML = `
+              <img src="${e.target.result}" class="image-preview w-32 h-32 object-contain border-2 border-[#1877F2]">
+            `;
+          };
+          reader.readAsDataURL(file);
+        } else {
+          showNotification('শুধুমাত্র PNG ফাইল গ্রহণযোগ্য', 'error');
+        }
+      }
+    }
+
     window.uploadImages = async function() {
       const files = fileInput.files;
       if (files.length === 0) {
@@ -1535,6 +1640,52 @@
       }
     };
 
+    window.uploadLogo = async function() {
+      const files = logoFileInput.files;
+      if (files.length === 0) {
+        showNotification('লোগো নির্বাচন করুন', 'error');
+        return;
+      }
+
+      const file = files[0];
+      if (file.type !== 'image/png') {
+        showNotification('শুধুমাত্র PNG ফাইল গ্রহণযোগ্য', 'error');
+        return;
+      }
+
+      const uploadBtn = document.getElementById('uploadLogoBtn');
+      const originalText = uploadBtn.innerHTML;
+      
+      uploadBtn.disabled = true;
+      uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>আপলোড হচ্ছে...';
+
+      const formData = new FormData();
+      formData.append('logo', file);
+
+      try {
+        const res = await fetch(`${API_BASE}/admin/settings/logo`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        });
+
+        const data = await res.json();
+        
+        if (res.ok) {
+          closeLogoModal();
+          showNotification('লোগো আপলোড সফল হয়েছে', 'success');
+          loadSettings();
+        } else {
+          showNotification(data.error || 'লোগো আপলোড ব্যর্থ হয়েছে', 'error');
+        }
+      } catch (error) {
+        showNotification('লোগো আপলোড করতে সমস্যা হয়েছে', 'error');
+      } finally {
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = originalText;
+      }
+    };
+
     function updateImagePreview() {
       const container = document.getElementById('imagePreviewContainer');
       if (container) {
@@ -1560,70 +1711,124 @@
       content.innerHTML = '<div class="flex justify-center p-8"><div class="loading-spinner"></div></div>';
 
       try {
-        const [statsRes, chartRes] = await Promise.all([
+        const [statsRes, chartRes, productsRes] = await Promise.all([
           fetch(`${API_BASE}/admin/dashboard`, {
             headers: { 'Authorization': `Bearer ${token}` }
           }),
           fetch(`${API_BASE}/admin/chart-data`, {
             headers: { 'Authorization': `Bearer ${token}` }
+          }),
+          fetch(`${API_BASE}/admin/products`, {
+            headers: { 'Authorization': `Bearer ${token}` }
           })
         ]);
 
-        if (!statsRes.ok || !chartRes.ok) {
+        if (!statsRes.ok || !chartRes.ok || !productsRes.ok) {
           throw new Error('Failed to load dashboard data');
         }
 
         const data = await statsRes.json();
         const chartData = await chartRes.json();
+        const products = await productsRes.json();
 
         // Update sidebar counts
         document.getElementById('productCount').textContent = data.stats.totalProducts || 0;
-        document.getElementById('orderBadge').textContent = data.stats.pendingOrders || 0;
-        if (data.stats.pendingOrders > 0) {
-          document.getElementById('orderBadge').style.display = 'flex';
-        }
+        
+        // Calculate top selling products
+        const topProducts = [...products]
+          .sort((a, b) => (b.sold || 0) - (a.sold || 0))
+          .slice(0, 5);
+
+        // Calculate category distribution
+        const categoryMap = {};
+        products.forEach(p => {
+          categoryMap[p.category] = (categoryMap[p.category] || 0) + 1;
+        });
+        const categoryLabels = Object.keys(categoryMap);
+        const categoryData = Object.values(categoryMap);
 
         content.innerHTML = `
+          <!-- Stats Cards - নতুন ডিজাইন -->
           <div class="stats-grid">
             <div class="stat-card">
               <div class="stat-icon"><i class="fas fa-truck"></i></div>
-              <p class="text-gray-600 text-sm">মোট অর্ডার</p>
-              <h3 class="text-2xl font-bold">${data.stats.totalOrders || 0}</h3>
+              <div class="stat-content">
+                <div class="stat-label">মোট অর্ডার</div>
+                <div class="stat-value">${data.stats.totalOrders || 0}</div>
+              </div>
             </div>
             <div class="stat-card">
               <div class="stat-icon"><i class="fas fa-clock"></i></div>
-              <p class="text-gray-600 text-sm">পেন্ডিং অর্ডার</p>
-              <h3 class="text-2xl font-bold">${data.stats.pendingOrders || 0}</h3>
+              <div class="stat-content">
+                <div class="stat-label">পেন্ডিং অর্ডার</div>
+                <div class="stat-value">${data.stats.pendingOrders || 0}</div>
+              </div>
             </div>
             <div class="stat-card">
               <div class="stat-icon"><i class="fas fa-shirt"></i></div>
-              <p class="text-gray-600 text-sm">মোট প্রোডাক্ট</p>
-              <h3 class="text-2xl font-bold">${data.stats.totalProducts || 0}</h3>
+              <div class="stat-content">
+                <div class="stat-label">মোট প্রোডাক্ট</div>
+                <div class="stat-value">${data.stats.totalProducts || 0}</div>
+              </div>
             </div>
             <div class="stat-card">
               <div class="stat-icon"><i class="fas fa-star"></i></div>
-              <p class="text-gray-600 text-sm">মোট রিভিউ</p>
-              <h3 class="text-2xl font-bold">${data.stats.totalReviews || 0}</h3>
+              <div class="stat-content">
+                <div class="stat-label">মোট রিভিউ</div>
+                <div class="stat-value">${data.stats.totalReviews || 0}</div>
+              </div>
             </div>
             <div class="stat-card">
               <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
-              <p class="text-gray-600 text-sm">পেন্ডিং রিভিউ</p>
-              <h3 class="text-2xl font-bold">${data.stats.pendingReviews || 0}</h3>
+              <div class="stat-content">
+                <div class="stat-label">পেন্ডিং রিভিউ</div>
+                <div class="stat-value">${data.stats.pendingReviews || 0}</div>
+              </div>
             </div>
             <div class="stat-card">
               <div class="stat-icon"><i class="fas fa-bangladeshi-taka-sign"></i></div>
-              <p class="text-gray-600 text-sm">মোট আয়</p>
-              <h3 class="text-2xl font-bold">৳${(data.stats.revenue || 0).toLocaleString()}</h3>
+              <div class="stat-content">
+                <div class="stat-label">মোট আয়</div>
+                <div class="stat-value">৳${(data.stats.revenue || 0).toLocaleString()}</div>
+              </div>
             </div>
           </div>
 
+          <!-- চার্ট সেকশন -->
+          <div class="chart-grid">
+            <div class="chart-card">
+              <h3 class="chart-title">অর্ডার স্ট্যাটাস</h3>
+              <div class="chart-container">
+                <canvas id="ordersStatusChart"></canvas>
+              </div>
+            </div>
+            <div class="chart-card">
+              <h3 class="chart-title">ক্যাটাগরি অনুযায়ী পণ্য</h3>
+              <div class="chart-container">
+                <canvas id="categoryChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- সর্বাধিক বিক্রিত পণ্য -->
           <div class="section-card">
-            <h3 class="text-xl font-bold mb-4">গত ৭ দিনের অর্ডার</h3>
-            <div class="chart-container">
-              <canvas id="ordersChart"></canvas>
+            <h3 class="text-xl font-bold mb-4">সর্বাধিক বিক্রিত পণ্য</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              ${topProducts.map(product => `
+                <div class="bg-gray-50 p-4 rounded-[20px_4px_20px_4px] flex items-center gap-4">
+                  <img src="${product.img || product.images?.[0] || ''}" class="w-16 h-16 object-cover rounded-[12px_2px_12px_2px]" onerror="this.src='https://via.placeholder.com/64'">
+                  <div class="flex-1">
+                    <h4 class="font-medium">${product.name || ''}</h4>
+                    <p class="text-sm text-gray-600">বিক্রি: ${product.sold || 0} টি</p>
+                    <p class="text-sm font-bold text-[#1877F2]">৳${product.price || 0}</p>
+                  </div>
+                </div>
+              `).join('')}
+              ${topProducts.length === 0 ? '<p class="text-center py-4 text-gray-500">কোন পণ্য নেই</p>' : ''}
             </div>
           </div>
 
+          <!-- সাম্প্রতিক অর্ডার -->
           <div class="section-card">
             <h3 class="text-xl font-bold mb-4">সাম্প্রতিক অর্ডার</h3>
             <div class="data-table">
@@ -1656,21 +1861,53 @@
           </div>
         `;
 
-        // Render chart
-        const ctx = document.getElementById('ordersChart')?.getContext('2d');
-        if (ctx) {
-          if (chartInstance) chartInstance.destroy();
-          chartInstance = new Chart(ctx, {
-            type: 'line',
+        // Render charts
+        if (chartInstance1) chartInstance1.destroy();
+        if (chartInstance2) chartInstance2.destroy();
+
+        // Orders Status Chart
+        const ctx1 = document.getElementById('ordersStatusChart')?.getContext('2d');
+        if (ctx1) {
+          chartInstance1 = new Chart(ctx1, {
+            type: 'doughnut',
             data: {
-              labels: chartData.labels || [],
+              labels: ['পেন্ডিং', 'নিশ্চিত', 'প্রক্রিয়াধীন', 'পাঠানো', 'ডেলিভারি', 'বাতিল'],
               datasets: [{
-                label: 'অর্ডার সংখ্যা',
-                data: chartData.data || [],
-                borderColor: '#1877F2',
-                backgroundColor: 'rgba(24, 119, 242, 0.1)',
-                tension: 0.3,
-                fill: true
+                data: [
+                  data.stats.pendingOrders || 0,
+                  data.stats.confirmedOrders || 0,
+                  data.stats.processingOrders || 0,
+                  data.stats.shippedOrders || 0,
+                  data.stats.deliveredOrders || 0,
+                  data.stats.cancelledOrders || 0
+                ],
+                backgroundColor: ['#fef3c7', '#dbeafe', '#e0e7ff', '#cffafe', '#d1fae5', '#fee2e2'],
+                borderColor: ['#92400e', '#1e40af', '#3730a3', '#0e7490', '#065f46', '#991b1b'],
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { position: 'bottom' }
+              }
+            }
+          });
+        }
+
+        // Category Chart
+        const ctx2 = document.getElementById('categoryChart')?.getContext('2d');
+        if (ctx2) {
+          chartInstance2 = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+              labels: categoryLabels,
+              datasets: [{
+                label: 'পণ্যের সংখ্যা',
+                data: categoryData,
+                backgroundColor: '#1877F2',
+                borderRadius: 8
               }]
             },
             options: {
@@ -1751,10 +1988,8 @@
 
     window.showCategoryForm = (category = null) => {
       const modal = document.getElementById('modal');
-      if (!modal) return;
 
       const modalContent = document.getElementById('modalContent');
-
       modalContent.innerHTML = `
         <h3 class="text-2xl font-bold mb-6">${category ? 'ক্যাটাগরি সম্পাদনা' : 'নতুন ক্যাটাগরি'}</h3>
         <form id="categoryForm" onsubmit="saveCategory(event, '${category?._id || ''}')">
@@ -1787,7 +2022,7 @@
         </form>
       `;
 
-      modal.classList.add('open');
+      modal.classList.add('active');
     };
 
     window.saveCategory = async (e, id) => {
@@ -1926,8 +2161,6 @@
       productImages = product?.images || (product?.img ? [product.img] : []);
 
       const modal = document.getElementById('modal');
-      if (!modal) return;
-
       const modalContent = document.getElementById('modalContent');
 
       // Load categories for dropdown
@@ -2000,7 +2233,7 @@
         </form>
       `;
 
-      modal.classList.add('open');
+      modal.classList.add('active');
     };
 
     window.saveProduct = async (e, id) => {
@@ -2020,20 +2253,21 @@
         price: parseInt(formData.get('price')) || 0,
         stock: parseInt(formData.get('stock')) || 10,
         sold: parseInt(formData.get('sold')) || 0,
-        featured: formData.get('featured') === 'on'
+        featured: formData.get('featured') === 'on',
+        images: productImages
       };
 
-      const formDataToSend = new FormData();
-      formDataToSend.append('data', JSON.stringify(data));
-      
       try {
         const url = id ? `${API_BASE}/admin/products/${id}` : `${API_BASE}/admin/products`;
         const method = id ? 'PUT' : 'POST';
 
         const res = await fetch(url, {
           method,
-          headers: { 'Authorization': `Bearer ${token}` },
-          body: formDataToSend
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(data)
         });
 
         if (res.ok) {
@@ -2333,7 +2567,7 @@
 
         if (!res.ok) throw new Error('Failed to load reviews');
 
-        const reviews = await res.json();
+        const data = await res.json();
 
         content.innerHTML = `
           <div class="section-card">
@@ -2362,7 +2596,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  ${reviews.map(review => `
+                  ${(data.reviews || []).map(review => `
                     <tr>
                       <td>${review.name || ''}</td>
                       <td>${review.address || ''}</td>
@@ -2377,7 +2611,7 @@
                       </td>
                     </tr>
                   `).join('')}
-                  ${reviews.length === 0 ? '<tr><td colspan="7" class="text-center py-4">কোন রিভিউ নেই</td></tr>' : ''}
+                  ${(!data.reviews || data.reviews.length === 0) ? '<tr><td colspan="7" class="text-center py-4">কোন রিভিউ নেই</td></tr>' : ''}
                 </tbody>
               </table>
             </div>
@@ -2397,11 +2631,11 @@
 
         if (!res.ok) throw new Error('Failed to filter reviews');
 
-        const reviews = await res.json();
+        const data = await res.json();
 
         const tbody = document.querySelector('tbody');
         if (tbody) {
-          tbody.innerHTML = reviews.map(review => `
+          tbody.innerHTML = (data.reviews || []).map(review => `
             <tr>
               <td>${review.name || ''}</td>
               <td>${review.address || ''}</td>
@@ -2417,7 +2651,7 @@
             </tr>
           `).join('');
           
-          if (reviews.length === 0) {
+          if (data.reviews.length === 0) {
             tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">কোন রিভিউ নেই</td></tr>';
           }
         }
@@ -2546,8 +2780,6 @@
       slideImage = slider?.imageUrl || '';
 
       const modal = document.getElementById('modal');
-      if (!modal) return;
-
       const modalContent = document.getElementById('modalContent');
 
       modalContent.innerHTML = `
@@ -2599,7 +2831,7 @@
         </form>
       `;
 
-      modal.classList.add('open');
+      modal.classList.add('active');
     };
 
     window.saveSlider = async (e, id) => {
@@ -2691,7 +2923,18 @@
 
         content.innerHTML = `
           <div class="section-card">
-            <h3 class="text-xl font-bold mb-6">সাইট সেটিংস</h3>
+            <div class="section-header">
+              <h3 class="text-xl font-bold">সাইট সেটিংস</h3>
+              <button class="btn-primary" onclick="openLogoModal()">
+                <i class="fas fa-image mr-2"></i>লোগো আপলোড
+              </button>
+            </div>
+            ${settings.logo ? `
+              <div class="mb-6 p-4 bg-gray-50 rounded-lg flex items-center gap-4">
+                <img src="${settings.logo}" class="h-16 object-contain">
+                <span class="text-gray-600">বর্তমান লোগো</span>
+              </div>
+            ` : ''}
             <form id="settingsForm" onsubmit="saveSettings(event)">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="form-group">
@@ -2846,10 +3089,6 @@
     };
 
     // ========== UTILITY FUNCTIONS ==========
-    window.closeModal = () => {
-      document.getElementById('modal')?.classList.remove('open');
-    };
-
     async function loadUnreadCounts() {
       try {
         const [ordersRes, reviewsRes] = await Promise.all([
