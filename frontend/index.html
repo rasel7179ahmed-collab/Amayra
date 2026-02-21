@@ -530,53 +530,64 @@ body {
     font-size: 0.95rem;
   }
   
-  /* মোবাইলে বাটন সম্পূর্ণ হাইড */
+  /* মোবাইলে বাটন ডিফল্টভাবে হাইড */
   .slide-nav-btn {
-    width: 38px;
-    height: 38px;
-    font-size: 1.1rem;
-    opacity: 0 !important;
-    pointer-events: none !important;
+    width: 42px;
+    height: 42px;
+    font-size: 1.2rem;
+    opacity: 0;
+    pointer-events: none;
     background: rgba(255, 255, 255, 0.95);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
-    display: none; /* সম্পূর্ণরূপে লুকানো */
+    transition: opacity 0.2s ease;
   }
   
-  /* মোবাইলে হোভার, ক্লিক, ট্যাপ কোন কিছুই কাজ করবে না */
-  .hero-slide:hover .slide-nav-btn,
-  .hero-slide:focus .slide-nav-btn,
+  /* স্লাইডারে টাচ/ক্লিক করলে বাটন দেখাবে */
   .hero-slide:active .slide-nav-btn,
-  .slide-nav-btn:hover,
-  .slide-nav-btn:focus,
+  .hero-slide:focus .slide-nav-btn,
+  .hero-slide:focus-within .slide-nav-btn {
+    opacity: 0.9;
+    pointer-events: auto;
+  }
+  
+  /* বাটনে টাচ করলে হাইলাইট */
   .slide-nav-btn:active {
-    opacity: 0 !important;
-    pointer-events: none !important;
-    display: none !important;
+    background: #1877F2;
+    color: white;
+    transform: translateY(-50%) scale(1.1);
   }
   
   .slide-nav-left {
-    left: 10px;
+    left: 12px;
   }
   
   .slide-nav-right {
-    right: 10px;
+    right: 12px;
   }
 }
 
 /* টাচ স্ক্রিন ডিভাইসের জন্য স্পেশাল স্টাইল (আইফোন/অ্যান্ড্রয়েড) */
 @media (hover: none) and (pointer: coarse) {
+  /* ডিফল্ট অবস্থায় হাইড */
   .slide-nav-btn {
-    opacity: 0 !important;
-    pointer-events: none !important;
-    display: none !important;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
   }
   
-  .hero-slide:hover .slide-nav-btn,
+  /* স্লাইডারে ট্যাপ করলে বাটন দেখাবে */
+  .hero-slide:active .slide-nav-btn,
   .hero-slide:focus .slide-nav-btn,
-  .hero-slide:active .slide-nav-btn {
-    opacity: 0 !important;
-    pointer-events: none !important;
-    display: none !important;
+  .hero-slide:focus-within .slide-nav-btn {
+    opacity: 0.9 !important;
+    pointer-events: auto !important;
+  }
+  
+  /* বাটনে ট্যাপ করলে ফিডব্যাক */
+  .slide-nav-btn:active {
+    background: #1877F2 !important;
+    color: white !important;
+    transform: translateY(-50%) scale(1.1) !important;
   }
 }
 
@@ -597,18 +608,17 @@ body {
   }
   
   .slide-nav-btn {
-    width: 34px;
-    height: 34px;
-    font-size: 1rem;
-    display: none;
+    width: 38px;
+    height: 38px;
+    font-size: 1.1rem;
   }
   
   .slide-nav-left {
-    left: 5px;
+    left: 8px;
   }
   
   .slide-nav-right {
-    right: 5px;
+    right: 8px;
   }
 }
 
@@ -2660,6 +2670,60 @@ function renderSliders() {
   document.querySelector('.hero-slide')?.addEventListener('mouseleave', () => {
     startSlideShow();
   });
+
+
+  // মোবাইলে স্লাইডার টাচ করলে বাটন দেখাবে এবং ৩ সেকেন্ড পর হাইড হবে
+function setupMobileSliderButtons() {
+  const heroSlide = document.querySelector('.hero-slide');
+  const slideButtons = document.querySelectorAll('.slide-nav-btn');
+  let hideTimeout;
+  
+  if (!heroSlide) return;
+  
+  // টাচ ইভেন্ট হ্যান্ডলার
+  heroSlide.addEventListener('touchstart', function() {
+    // বাটন দেখাও
+    slideButtons.forEach(btn => {
+      btn.style.opacity = '0.9';
+      btn.style.pointerEvents = 'auto';
+    });
+    
+    // আগের টাইমআউট ক্যান্সেল কর
+    if (hideTimeout) clearTimeout(hideTimeout);
+    
+    // ৩ সেকেন্ড পর বাটন হাইড কর
+    hideTimeout = setTimeout(() => {
+      slideButtons.forEach(btn => {
+        btn.style.opacity = '0';
+        btn.style.pointerEvents = 'none';
+      });
+    }, 3000);
+  });
+  
+  // বাটনে ক্লিক করলে টাইমআউট রিসেট
+  slideButtons.forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      
+      // টাইমআউট রিসেট
+      if (hideTimeout) clearTimeout(hideTimeout);
+      
+      // ৩ সেকেন্ড পর আবার হাইড
+      hideTimeout = setTimeout(() => {
+        slideButtons.forEach(btn => {
+          btn.style.opacity = '0';
+          btn.style.pointerEvents = 'none';
+        });
+      }, 3000);
+    });
+  });
+}
+
+// DOM লোড হওয়ার পর ফাংশন কল করুন
+document.addEventListener('DOMContentLoaded', function() {
+  // আপনার বিদ্যমান কোডের পরে এই লাইন যোগ করুন
+  setupMobileSliderButtons();
+});
 </script>
 </body>
 </html>
