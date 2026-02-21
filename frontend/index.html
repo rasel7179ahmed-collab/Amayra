@@ -25,7 +25,8 @@
   <link rel="icon" href="images/amayra.png" type="image/png">
   
 <style>
-  /* Your existing styles remain exactly the same */
+  <style>
+/* Your existing styles remain exactly the same */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { 
   background: #FFFFFF;
@@ -152,7 +153,7 @@ body {
   box-shadow: 0 25px 35px -14px rgba(24, 119, 242, 0.2);
 }
 
-/* Updated product gallery for mobile */
+/* Updated product gallery for consistent image sizing */
 .product-gallery {
   position: relative;
   width: 100%;
@@ -161,10 +162,8 @@ body {
 
 .main-image {
   width: 100%;
-  height: auto;
-  min-height: 250px;
-  max-height: 350px;
-  object-fit: cover;
+  height: 280px; /* Fixed height for all devices */
+  object-fit: cover; /* Image will be cropped to fit */
   border-radius: 30px 8px 30px 8px;
   cursor: pointer;
   transition: transform 0.3s;
@@ -172,8 +171,13 @@ body {
 
 @media (min-width: 768px) {
   .main-image {
-    min-height: 200px;
-    max-height: 300px;
+    height: 260px; /* Slightly smaller on tablets/desktop */
+  }
+}
+
+@media (min-width: 1024px) {
+  .main-image {
+    height: 240px; /* Even smaller on large desktop */
   }
 }
 
@@ -1303,6 +1307,7 @@ body.menu-open {
     transform: translateY(-7px) rotate(-45deg);
   }
 }
+</style>
 </style>
 </head>
 <body class="text-[#1C1E21]">
