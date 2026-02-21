@@ -3156,7 +3156,8 @@
     }
   }
 
-  window.showSliderForm = (slider = null) => {
+ // এই ফাংশনটি রিপ্লেস করুন
+window.showSliderForm = (slider = null) => {
     currentSlideId = slider?._id || null;
     slideImage = slider?.imageUrl || '';
 
@@ -3165,7 +3166,7 @@
 
     modalContent.innerHTML = `
       <h3 class="text-2xl font-bold mb-6">${slider ? 'স্লাইডার সম্পাদনা' : 'নতুন স্লাইডার'}</h3>
-      <form id="sliderForm" onsubmit="saveSlider(event, '${slider?._id || ''}')">
+      <form id="sliderForm" onsubmit="saveSlider(event, '${slider?._id || ''}')" enctype="multipart/form-data">
         <div class="form-group">
           <label class="form-label">শিরোনাম</label>
           <input type="text" class="form-input" name="title" value="${slider?.title || ''}" required>
@@ -3197,8 +3198,14 @@
         </div>
         <div class="form-group">
           <label class="form-label">ছবি</label>
-          ${slideImage ? `<img src="${slideImage}" class="image-preview mb-2" onerror="this.style.display='none'">` : ''}
-          <input type="file" class="form-input" name="image" accept="image/*">
+          ${slideImage ? `
+            <div class="mb-3">
+              <img src="${slideImage}" class="image-preview mb-2" style="max-width: 200px; max-height: 200px;" onerror="this.style.display='none'">
+              <p class="text-sm text-gray-500">বর্তমান ছবি (পরিবর্তন করতে নতুন ছবি আপলোড করুন)</p>
+            </div>
+          ` : ''}
+          <input type="file" class="form-input" name="image" accept="image/*" ${slider ? '' : 'required'}>
+          <small class="text-gray-500">সর্বোচ্চ ১০MB, JPG/PNG/WEBP ফরমেট</small>
         </div>
         <div class="form-group">
           <label class="flex items-center gap-2">
@@ -3213,62 +3220,89 @@
       </form>
     `;
     modal.classList.add('active');
-  };
-
-  window.saveSlider = async (e, id) => {
+};
+ // এই ফাংশনটি রিপ্লেস করুন
+window.saveSlider = async (e, id) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const submitBtn = e.target.querySelector('button[type="submit"]');
     
+    // ফর্ম ডেটা তৈরি করুন
     const data = {
-      title: formData.get('title'),
-      subtitle: formData.get('subtitle'),
-      badge: formData.get('badge'),
-      badgeColor: formData.get('badgeColor'),
-      buttonText: formData.get('buttonText'),
-      productId: parseInt(formData.get('productId')) || 0,
-      order: parseInt(formData.get('order')) || 1,
-      active: formData.get('active') === 'on'
+        title: formData.get('title'),
+        subtitle: formData.get('subtitle'),
+        badge: formData.get('badge'),
+        badgeColor: formData.get('badgeColor'),
+        buttonText: formData.get('buttonText'),
+        productId: parseInt(formData.get('productId')) || 0,
+        order: parseInt(formData.get('order')) || 1,
+        active: formData.get('active') === 'on'
     };
 
+    // FormData তৈরি করুন সার্ভারে পাঠানোর জন্য
     const formDataToSend = new FormData();
     formDataToSend.append('data', JSON.stringify(data));
     
     const imageFile = formData.get('image');
     if (imageFile && imageFile.size > 0) {
-      formDataToSend.append('image', imageFile);
+        formDataToSend.append('image', imageFile);
+    } else if (!id && (!imageFile || imageFile.size === 0)) {
+        // নতুন স্লাইডার তৈরি করার সময় ছবি বাধ্যতামূলক
+        showPopup('ছবি আপলোড করা আবশ্যক', 'error');
+        return;
     }
 
     submitBtn.disabled = true;
     submitBtn.innerHTML = 'সংরক্ষণ হচ্ছে...';
 
     try {
-      const url = id ? `${API_BASE}/admin/sliders/${id}` : `${API_BASE}/admin/sliders`;
-      const method = id ? 'PUT' : 'POST';
+        const url = id ? `${API_BASE}/admin/sliders/${id}` : `${API_BASE}/admin/sliders`;
+        const method = id ? 'PUT' : 'POST';
 
-      const res = await fetchWithRetry(url, {
-        method,
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formDataToSend
-      }, 2);
+        console.log('Sending request to:', url);
+        console.log('Method:', method);
+        console.log('Data:', data);
 
-      if (res.ok) {
-        showPopup(id ? 'স্লাইডার আপডেট হয়েছে' : 'স্লাইডার তৈরি হয়েছে', 'success');
-        closeModal();
-        loadSliders();
-      } else {
-        const error = await res.json();
-        showPopup(error.error || 'ব্যর্থ হয়েছে', 'error');
-      }
+        const res = await fetch(url, {
+            method,
+            headers: {
+                'Authorization': `Bearer ${token}`
+                // Content-Type header সেট করবেন না - ব্রাউজার নিজেই সেট করবে
+            },
+            body: formDataToSend
+        });
+
+        console.log('Response status:', res.status);
+
+        if (res.ok) {
+            const responseData = await res.json();
+            console.log('Response data:', responseData);
+            showPopup(id ? 'স্লাইডার আপডেট হয়েছে' : 'স্লাইডার তৈরি হয়েছে', 'success');
+            closeModal();
+            loadSliders();
+        } else {
+            let errorMessage = 'ব্যর্থ হয়েছে';
+            try {
+                const errorData = await res.json();
+                errorMessage = errorData.error || errorMessage;
+                console.error('Error response:', errorData);
+            } catch (e) {
+                console.error('Failed to parse error response:', e);
+            }
+            showPopup(errorMessage, 'error');
+        }
     } catch (error) {
-      console.error('Save slider error:', error);
-      showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
+        console.error('Save slider error:', error);
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack
+        });
+        showPopup('সার্ভার সংযোগ ব্যর্থ: ' + error.message, 'error');
     } finally {
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = 'সংরক্ষণ';
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'সংরক্ষণ';
     }
-  };
-
+};
   window.confirmDeleteSlider = (id) => {
     openConfirmModal(
       'স্লাইডার মুছবেন?',
