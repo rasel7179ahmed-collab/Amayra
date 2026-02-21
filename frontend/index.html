@@ -645,7 +645,7 @@ function updateBestsellerDisplay() {
   const discount = product.discountPercent || Math.round((1 - product.price / product.original) * 100);
   const reviews = getRandomReviewsForProduct(product.id, 2);
   const container = document.getElementById('bestsellerContainer');
-  container.innerHTML = `<div class="bestseller-item"><div class="product-section"><img src="${images[0]}" class="w-24 h-24 object-cover rounded-[25px_6px_25px_6px]" onerror="this.src='https://via.placeholder.com/90'"><div class="bestseller-info"><h4>${product.name}</h4><p class="text-sm text-gray-500 mb-1">${product.desc.substring(0, 40)}${product.desc.length > 40 ? '...' : ''}</p><div class="bestseller-price"><span class="current">৳${product.price}</span><span class="original">৳${product.original}</span></div><span class="bestseller-discount">-${discount}% ছাড়</span></div></div><div class="bestseller-reviews">${reviews.map((review, index) => `<div class="bestseller-review-item" style="animation-delay: ${index * 0.2}s"><div class="bestseller-review-header"><span class="bestseller-review-name">${review.name}</span><span class="bestseller-review-rating">${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}</span></div><p class="bestseller-review-text">"${review.text}"</p><div class="bestseller-review-location"><i class="fas fa-map-marker-alt"></i> ${review.address}</div></div>`).join('')}</div><a href="#product-${product.id}" onclick="addToCart(${product.id}); return false;" class="bestseller-btn" ${product.stock <= 0 ? 'style="opacity:0.5;pointer-events:none;"' : ''}><i class="fa-solid fa-bag-shopping"></i>অর্ডার করুন</a></div>`;
+  container.innerHTML = `<div class="bestseller-item"><div class="product-section"><img src="${images[0]}" class="w-24 h-24 object-cover rounded-[25px_6px_25px_6px]" onerror="this.src='https://via.placeholder.com/90'"><div class="bestseller-info"><h4>${product.name}</h4><p class="text-sm text-gray-500 mb-1">${product.desc.substring(0, 40)}${product.desc.length > 40 ? '...' : ''}</p><div class="bestseller-price"><span class="current">৳${product.price}</span><span class="original">৳${product.original}</span></div><span class="bestseller-discount">-${discount}% ছাড়</span></div></div><div class="bestseller-reviews">${reviews.map((review, index) => `<div class="bestseller-review-item" style="animation-delay: ${index * 0.2}s"><div class="bestseller-review-header"><span class="bestseller-review-name">${review.name}</span><span class="bestseller-review-rating">${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}</span></div><p class="bestseller-review-text">"${review.text}"</p><div class="bestseller-review-location"><i class="fas fa-map-marker-alt"></i> ${review.address}</div></div>`).join('')}</div><a href="javascript:void(0)" onclick="addToCart(${product.id}); return false;" class="bestseller-btn" ${product.stock <= 0 ? 'style="opacity:0.5;pointer-events:none;"' : ''}><i class="fa-solid fa-bag-shopping"></i>অর্ডার করুন</a></div>`;
   const nav = document.getElementById('bestsellerNav');
   if (bestsellerProducts.length > 1) { nav.innerHTML = `<button onclick="changeBestseller(-1)"><i class="fas fa-chevron-left"></i></button><span>${currentBestsellerIndex + 1}/${bestsellerProducts.length}</span><button onclick="changeBestseller(1)"><i class="fas fa-chevron-right"></i></button>`; } else nav.innerHTML = '';
 }
@@ -684,7 +684,18 @@ window.filterProducts = (category, element) => {
   element.classList.add('active');
   currentFilter = category;
   renderProducts();
+  window.location.hash = `collection-${category}`;
 };
+
+function scrollToOrderAndFocus() {
+  document.getElementById('order').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const orderFormCard = document.getElementById('orderFormCard');
+  if (orderFormCard) {
+    orderFormCard.classList.add('highlight');
+    setTimeout(() => orderFormCard.classList.remove('highlight'), 1500);
+  }
+  setTimeout(() => document.getElementById('name').focus(), 500);
+}
 
 window.addToCart = (productId) => {
   const product = products.find(p => p.id === productId);
@@ -702,7 +713,7 @@ window.addToCart = (productId) => {
     lastAddedItemId = productId;
   }
   updateCart();
-  Swal.fire({ icon: 'success', title: 'কার্টে যুক্ত হয়েছে!', text: 'পণ্য কার্টে যুক্ত হয়েছে', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500, timerProgressBar: true });
+  scrollToOrderAndFocus();
 };
 
 window.quickOrder = async (productId) => {
@@ -714,13 +725,7 @@ window.quickOrder = async (productId) => {
     if (product.stock <= 0) { Swal.fire({ icon: 'error', title: 'স্টক শেষ', text: 'এই প্রোডাক্টটি বর্তমানে স্টকে নেই', confirmButtonColor: '#1877F2', confirmButtonText: 'ঠিক আছে' }); return; }
     cart = [{ id: product.id, name: product.name, price: product.price, quantity: 1, stock: product.stock, image: product.images && product.images.length ? product.images[0] : product.img }];
     updateCart();
-    setTimeout(() => {
-      document.getElementById('order').scrollIntoView({ behavior: 'smooth', block: 'start' });
-      const orderFormCard = document.getElementById('orderFormCard');
-      if (orderFormCard) { orderFormCard.classList.add('highlight'); setTimeout(() => orderFormCard.classList.remove('highlight'), 1500); }
-      document.getElementById('name').focus();
-    }, 100);
-    Swal.fire({ icon: 'success', title: 'প্রোডাক্ট যুক্ত হয়েছে!', text: 'অর্ডার ফর্ম পূরণ করে অর্ডার সম্পন্ন করুন', confirmButtonText: 'অর্ডার সম্পন্ন করুন', confirmButtonColor: '#FF7A00', timer: 3000, timerProgressBar: true });
+    scrollToOrderAndFocus();
   } catch (error) {
     console.error('Error quick order:', error);
     Swal.fire({ icon: 'error', title: 'ব্যর্থ হয়েছে', text: 'প্রোডাক্ট লোড করতে ব্যর্থ হয়েছে। দয়া করে আবার চেষ্টা করুন।', confirmButtonColor: '#1877F2', confirmButtonText: 'ঠিক আছে' });
@@ -854,7 +859,17 @@ function setupEventListeners() {
   overlay.addEventListener('click', closeMenu);
   menuLinks.forEach(link => link.addEventListener('click', closeMenu));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && sidebar.classList.contains('open')) closeMenu(); });
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => { anchor.addEventListener('click', function (e) { const href = this.getAttribute('href'); if (href === '#') return; const target = document.querySelector(href); if (target && !href.includes('product-') && !href.includes('collection-')) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth' }); } }); });
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+      const href = this.getAttribute('href');
+      if (href === '#') return;
+      const target = document.querySelector(href);
+      if (target && !href.includes('product-') && !href.includes('collection-')) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  });
 }
 
 window.slideChange = (direction) => {
