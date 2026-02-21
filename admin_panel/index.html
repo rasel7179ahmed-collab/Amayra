@@ -839,7 +839,7 @@ async function loadUnreadCounts() {
     const bestsellers = await bestsellerRes.json();
     document.getElementById('bestsellerCount').textContent = bestsellers.length;
   } catch (error) { console.error('Error loading unread counts:', error); }
-}
+} 
 </script>
 </body>
 </html>
