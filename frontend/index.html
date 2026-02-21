@@ -3,9 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="google-site-verification" content="SFq3YDKWo-0iRrNXCwYND3ygW9ThJJUQaK1zTMiqf44">
+
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="প্রিমিয়াম কোয়ালিটির ফরমাল, ক্যাজুয়াল ও প্রিমিয়াম শার্ট সেরা দামে। AMAYRA তে অর্ডার করুন দ্রুত ডেলিভারি পাবেন।">
+  <meta name="keywords" content="শার্ট, ফরমাল শার্ট, ক্যাজুয়াল শার্ট, প্রিমিয়াম শার্ট, পাঞ্জাবি, ঢাকা, বাংলাদেশ, AMAYRA">
+  <meta name="author" content="AMAYRA">
   <title>AMAYRA · প্রিমিয়াম শার্ট কালেকশন</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -1106,6 +1111,7 @@
   </div>
 </section>
 
+<!-- collection section with hash fragments for each category -->
 <section id="collection" class="container-1200 px-4 py-10">
   <div class="text-center">
     <h2 class="text-4xl font-bold text-[#1C1E21]">আমাদের <span class="text-[#1877F2]" id="collectionTitle">সংকলন</span></h2>
@@ -1113,7 +1119,11 @@
   </div>
   
   <div class="flex flex-wrap justify-center gap-3 my-8" id="categoryPills">
-    <span class="cat-pill active" onclick="filterProducts('all', this)">সকল</span>
+    <!-- category links with proper href fragments for SEO -->
+    <a href="#collection-all" class="cat-pill active" onclick="filterProducts('all', this); return false;">সকল</a>
+    <a href="#collection-formal" class="cat-pill" onclick="filterProducts('formal', this); return false;">ফরমাল</a>
+    <a href="#collection-casual" class="cat-pill" onclick="filterProducts('casual', this); return false;">ক্যাজুয়াল</a>
+    <a href="#collection-premium" class="cat-pill" onclick="filterProducts('premium', this); return false;">প্রিমিয়াম</a>
   </div>
 
   <div id="productGrid" class="product-grid-1200">
@@ -1284,7 +1294,50 @@
     
     setupEventListeners();
     startSlideShow();
+
+    // Check URL hash on load and scroll to appropriate section/category/product
+    checkHashAndScroll();
   });
+
+  // Function to check URL hash and navigate accordingly
+  function checkHashAndScroll() {
+    const hash = window.location.hash;
+    if (!hash) return;
+
+    // Handle category filters (e.g., #collection-all, #collection-formal)
+    const categoryMatch = hash.match(/^#collection-(.+)$/);
+    if (categoryMatch) {
+      const category = categoryMatch[1];
+      const categoryPill = document.querySelector(`a[href="#collection-${category}"]`);
+      if (categoryPill) {
+        setTimeout(() => {
+          filterProducts(category, categoryPill);
+          document.getElementById('collection').scrollIntoView({ behavior: 'smooth' });
+        }, 500);
+      }
+      return;
+    }
+
+    // Handle product links (e.g., #product-1, #product-2)
+    const productMatch = hash.match(/^#product-(\d+)$/);
+    if (productMatch) {
+      const productId = parseInt(productMatch[1]);
+      setTimeout(() => {
+        addToCart(productId);
+      }, 500);
+      return;
+    }
+
+    // Handle regular section links
+    const element = document.querySelector(hash);
+    if (element) {
+      setTimeout(() => {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  }
+
+  window.addEventListener('hashchange', checkHashAndScroll);
 
   async function loadSettings() {
     try {
@@ -1377,23 +1430,11 @@
     try {
       const res = await fetchWithRetry(`${API_BASE}/categories`);
       categories = await res.json();
-      renderCategoryPills();
+      // Note: We're not dynamically rendering pills anymore because we want static hrefs for SEO
+      // The HTML already has static category links
     } catch (error) {
       console.error('Error loading categories:', error);
-      categories = [];
-      renderCategoryPills();
     }
-  }
-
-  function renderCategoryPills() {
-    const container = document.getElementById('categoryPills');
-    container.innerHTML = '<span class="cat-pill active" onclick="filterProducts(\'all\', this)">সকল</span>';
-    
-    categories.forEach(cat => {
-      container.innerHTML += `
-        <span class="cat-pill" onclick="filterProducts('${cat.name}', this)">${cat.banglaName}</span>
-      `;
-    });
   }
 
   async function loadProducts() {
@@ -1434,8 +1475,11 @@
       const images = product.images && product.images.length ? product.images : [product.img];
       const currentIndex = currentProductImages[product.id] || 0;
       
+      // Create a unique link for each product
+      const productLink = `#product-${product.id}`;
+      
       html += `
-        <div class="product-tile p-4">
+        <div class="product-tile p-4" id="product-${product.id}">
           <div class="product-gallery">
             <img src="${images[currentIndex]}" class="main-image" id="mainImg-${product.id}" onclick="openFullscreen('${product.id}')" onerror="this.src='https://via.placeholder.com/300x400?text=AMAYRA'">
             ${isSoldOut ? '<span class="sold-out">স্টক আউট</span>' : `<span class="absolute top-2 right-2 bg-[#FF7A00] text-white px-3 py-1 rounded-full text-xs">-${discount}%</span>`}
@@ -1459,9 +1503,10 @@
                 <span class="text-2xl font-bold text-[#FF7A00]">৳${product.price}</span>
                 <span class="line-through text-[#1C1E21]/40 text-sm">৳${product.original}</span>
               </span>
-              <button onclick="addToCart(${product.id})" class="btn-primary px-4 py-2 text-sm" ${isSoldOut ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>
+              <!-- Order button with unique link -->
+              <a href="${productLink}" onclick="addToCart(${product.id}); return false;" class="btn-primary px-4 py-2 text-sm inline-block" ${isSoldOut ? 'style="opacity:0.5;pointer-events:none;"' : ''}>
                 <i class="fa-solid fa-bag-shopping mr-1"></i> অর্ডার
-              </button>
+              </a>
             </div>
           </div>
         </div>
@@ -1624,10 +1669,10 @@
           `).join('')}
         </div>
         
-        <button onclick="addToCart(${product.id})" class="bestseller-btn" ${product.stock <= 0 ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>
+        <a href="#product-${product.id}" onclick="addToCart(${product.id}); return false;" class="bestseller-btn" ${product.stock <= 0 ? 'style="opacity:0.5;pointer-events:none;"' : ''}>
           <i class="fa-solid fa-bag-shopping"></i>
           অর্ডার করুন
-        </button>
+        </a>
       </div>
     `;
 
@@ -1757,6 +1802,9 @@
         showConfirm: false,
         timer: 1500
       });
+
+      // Update URL hash without scrolling
+      history.pushState(null, null, `#product-${productId}`);
     }, 300);
   };
 
@@ -2166,9 +2214,14 @@
 
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
+        // Don't prevent default for hash links to maintain browser history
+        // But we need to handle smooth scroll
+        const href = this.getAttribute('href');
+        if (href === '#') return;
+        
+        const target = document.querySelector(href);
+        if (target && !href.includes('product-') && !href.includes('collection-')) {
+          e.preventDefault();
           target.scrollIntoView({ behavior: 'smooth' });
         }
       });
