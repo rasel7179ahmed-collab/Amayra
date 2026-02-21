@@ -45,7 +45,7 @@
     @media (min-width: 1024px) { .product-grid-1200 { grid-template-columns: repeat(4, 1fr); } }
     
     /* প্রোডাক্ট কার্ড - সাইজ কমানো */
-    .product-tile { background: white; border-radius: 2rem 0.8rem 2rem 0.8rem; transition: 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.1); border: 1px solid #F0F2F5; box-shadow: 0 8px 20px -8px rgba(24, 119, 242, 0.1); overflow: hidden; display: flex; flex-direction: column; height: 100%; }
+    .product-tile { background: white; border-radius: 2rem 0.8rem 2rem 0.8rem; transition: 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.1); border: 1px solid #F0F2F5; box-shadow: 0 8px 20px -8px rgba(24, 119, 242, 0.1); overflow: hidden; display: flex; flex-direction: column; height: 100%; position: relative; }
     .product-tile:hover { border-radius: 1rem 2rem 1rem 2rem; box-shadow: 0 20px 30px -12px rgba(24, 119, 242, 0.2); }
     
     /* প্রোডাক্ট ইমেজ - হাইট কমানো */
@@ -88,13 +88,13 @@
     .glass-card { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 2rem 1rem 2rem 1rem; box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.1); }
     
     /* বাটন */
-    .btn-primary { background: #1877F2; color: white; transition: all 0.2s; box-shadow: 0 4px 10px rgba(24, 119, 242, 0.3); border-radius: 30px 8px 30px 8px; font-weight: 600; letter-spacing: 0.3px; padding: 0.5rem 1rem; font-size: 0.9rem; }
+    .btn-primary { background: #1877F2; color: white; transition: all 0.2s; box-shadow: 0 4px 10px rgba(24, 119, 242, 0.3); border-radius: 30px 8px 30px 8px; font-weight: 600; letter-spacing: 0.3px; padding: 0.5rem 1rem; font-size: 0.9rem; display: inline-block; text-decoration: none; }
     .btn-primary:hover { background: #1666d9; transform: scale(1.02) translateY(-2px); box-shadow: 0 8px 15px -5px #1877F2; }
     
-    .btn-cta { background: #FF7A00; color: white; transition: all 0.2s; box-shadow: 0 4px 10px rgba(255, 122, 0, 0.3); border-radius: 30px 8px 30px 8px; font-weight: 600; letter-spacing: 0.3px; padding: 0.5rem 1rem; font-size: 0.9rem; }
+    .btn-cta { background: #FF7A00; color: white; transition: all 0.2s; box-shadow: 0 4px 10px rgba(255, 122, 0, 0.3); border-radius: 30px 8px 30px 8px; font-weight: 600; letter-spacing: 0.3px; padding: 0.5rem 1rem; font-size: 0.9rem; display: inline-block; text-decoration: none; }
     .btn-cta:hover { background: #e66e00; transform: scale(1.02) translateY(-2px); box-shadow: 0 8px 15px -5px #FF7A00; }
     
-    .btn-secondary { background: #F0F2F5; color: #1C1E21; border-radius: 30px 8px 30px 8px; font-weight: 600; transition: 0.2s; padding: 0.5rem 1rem; font-size: 0.9rem; }
+    .btn-secondary { background: #F0F2F5; color: #1C1E21; border-radius: 30px 8px 30px 8px; font-weight: 600; transition: 0.2s; padding: 0.5rem 1rem; font-size: 0.9rem; display: inline-block; text-decoration: none; }
     .btn-secondary:hover { background: #e2e4e8; }
     
     /* ফুলস্ক্রিন মোডাল */
@@ -119,7 +119,7 @@
     .dropdown-overlay.open { display: block; }
     
     /* ক্যাটাগরি পিল */
-    .cat-pill { background: #F0F2F5; padding: 0.4rem 1.5rem; border-radius: 40px 8px 40px 8px; font-weight: 500; color: #1C1E21; cursor: pointer; transition: 0.2s; border: 1px solid transparent; white-space: nowrap; font-size: 0.9rem; }
+    .cat-pill { background: #F0F2F5; padding: 0.4rem 1.5rem; border-radius: 40px 8px 40px 8px; font-weight: 500; color: #1C1E21; cursor: pointer; transition: 0.2s; border: 1px solid transparent; white-space: nowrap; font-size: 0.9rem; display: inline-block; text-decoration: none; }
     .cat-pill.active { background: #1877F2; color: white; border-color: #1877F2; box-shadow: 0 4px 10px rgba(24, 119, 242, 0.3); }
     
     /* কার্ট আইটেম */
@@ -163,7 +163,7 @@
     .bestseller-price .original { font-size: 0.9rem; color: #a0aec0; text-decoration: line-through; }
     .bestseller-discount { background: linear-gradient(135deg, #FF7A00, #ff9a3c); color: white; padding: 0.2rem 0.8rem; border-radius: 16px 2px 16px 2px; font-size: 0.8rem; font-weight: 600; display: inline-block; margin-bottom: 0.8rem; }
     
-    /* বেস্টসেলার রিভিউ - আপডেটেড স্টাইল */
+    /* বেস্টসেলার রিভিউ */
     .bestseller-reviews { margin: 0.8rem 0; padding: 0.5rem 0; border-top: 1px dashed rgba(24, 119, 242, 0.2); border-bottom: 1px dashed rgba(24, 119, 242, 0.2); max-height: 160px; overflow-y: auto; scrollbar-width: thin; }
     .bestseller-reviews::-webkit-scrollbar { width: 3px; }
     .bestseller-reviews::-webkit-scrollbar-track { background: #f1f1f1; }
@@ -178,7 +178,7 @@
     .bestseller-review-location i { font-size: 0.55rem; }
     
     /* বেস্টসেলার বাটন */
-    .bestseller-btn { background: linear-gradient(135deg, #1877F2, #1666d9); color: white; border: none; border-radius: 24px 4px 24px 4px; padding: 0.6rem 1.2rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.3s; width: 100%; margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .bestseller-btn { background: linear-gradient(135deg, #1877F2, #1666d9); color: white; border: none; border-radius: 24px 4px 24px 4px; padding: 0.6rem 1.2rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.3s; width: 100%; margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; }
     .bestseller-btn:hover { background: linear-gradient(135deg, #1666d9, #0a5bc4); transform: translateY(-2px); box-shadow: 0 8px 15px -5px #1877F2; }
     
     /* বেস্টসেলার নেভিগেশন */
@@ -197,7 +197,7 @@
     .reviews-card::-webkit-scrollbar-thumb { background: #1877F2; border-radius: 3px; }
     
     /* কল বাটন */
-    .call-button { background: linear-gradient(135deg, #FF7A00, #ff9a3c); color: white; padding: 0.5rem 1.2rem; border-radius: 30px 8px 30px 8px; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; transition: all 0.3s; box-shadow: 0 4px 10px rgba(255,122,0,0.3); font-size: 0.9rem; }
+    .call-button { background: linear-gradient(135deg, #FF7A00, #ff9a3c); color: white; padding: 0.5rem 1.2rem; border-radius: 30px 8px 30px 8px; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; transition: all 0.3s; box-shadow: 0 4px 10px rgba(255,122,0,0.3); font-size: 0.9rem; text-decoration: none; }
     .call-button:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(255,122,0,0.4); }
     
     /* হোয়াটসঅ্যাপ ফ্লোট */
@@ -228,9 +228,39 @@
     #orderFormCard.highlight { animation: formHighlight 0.5s ease 2; border: 2px solid #FF7A00; }
     @keyframes formHighlight { 0% { box-shadow: 0 0 0 0 rgba(255, 122, 0, 0.7); transform: scale(1); } 50% { box-shadow: 0 0 25px 10px rgba(255, 122, 0, 0.3); transform: scale(1.02); } 100% { box-shadow: 0 0 0 0 rgba(255, 122, 0, 0); transform: scale(1); } }
     
-    /* হোভার লিংক */
-    .product-link-hover { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; opacity: 0; }
-    .order-btn-container { position: relative; z-index: 10; }
+    /* স্লাইডার স্টাইল - ফিক্সড */
+    .hero-slide { border-radius: 50px 20px 50px 20px; overflow: hidden; box-shadow: 0 30px 30px -20px rgba(24, 119, 242, 0.2); position: relative; width: 100%; }
+    #sliderTrack { display: flex; transition: transform 0.5s ease-in-out; width: 100%; }
+    .slide-item { flex: 0 0 100%; width: 100%; }
+    .slide-bg { background-size: cover; background-position: center; background-repeat: no-repeat; min-height: 280px; position: relative; width: 100%; }
+    .slide-bg::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.15) 100%); z-index: 1; }
+    @media (min-width: 768px) { .slide-bg { min-height: 450px; } }
+    .slide-content { position: relative; z-index: 2; background: rgba(10, 25, 47, 0.4); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border-radius: 60px 20px 60px 20px; padding: 2rem 2.5rem; border: 1px solid rgba(255, 255, 255, 0.15); max-width: 550px; margin: 2rem; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3); animation: slideContentFade 0.5s ease-out; }
+    @keyframes slideContentFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .slide-content span { display: inline-block; font-weight: 600; letter-spacing: 0.5px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); }
+    .slide-content h2 { font-size: 2.8rem; font-weight: 800; line-height: 1.2; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); margin-bottom: 0.5rem; }
+    .slide-content p { font-size: 1.2rem; margin-bottom: 1.5rem; opacity: 0.95; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3); }
+    .slide-nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255, 255, 255, 0.9); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2); opacity: 0; transition: opacity 0.3s ease, transform 0.2s ease, background 0.3s; border: 2px solid white; color: #1877F2; font-size: 1.4rem; z-index: 10; pointer-events: none; }
+    .hero-slide:hover .slide-nav-btn { opacity: 1; pointer-events: auto; }
+    .slide-nav-left { left: 20px; }
+    .slide-nav-right { right: 20px; }
+    .slide-nav-btn:hover { background: #1877F2; color: white; transform: translateY(-50%) scale(1.15); box-shadow: 0 10px 25px rgba(24, 119, 242, 0.5); border-color: #1877F2; }
+    @media (max-width: 768px) { .slide-content { padding: 1.2rem 1.5rem; margin: 1rem; max-width: 100%; } .slide-content h2 { font-size: 1.8rem; } .slide-content p { font-size: 1rem; } .slide-nav-btn { width: 38px; height: 38px; font-size: 1.1rem; opacity: 0 !important; pointer-events: none !important; display: none; } }
+    @media (max-width: 480px) { .slide-content { padding: 1rem; margin: 0.75rem; } .slide-content h2 { font-size: 1.5rem; } .slide-content p { font-size: 0.9rem; } }
+    #sliderDots { display: flex; gap: 10px; padding: 8px 12px; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); border-radius: 30px; bottom: 15px; }
+    #sliderDots span { width: 8px; height: 8px; transition: all 0.3s ease; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); }
+    #sliderDots span:hover { transform: scale(1.3); background: #1877F2 !important; }
+    
+    /* অর্ডার বাটন লিংক - শুধু বাটনে হোভার করলে দেখাবে */
+    .order-btn-container { position: relative; display: inline-block; }
+    .order-btn-container a { text-decoration: none; }
+    .order-link-tooltip { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #1C1E21; color: white; font-size: 0.7rem; padding: 0.3rem 0.6rem; border-radius: 16px 4px 16px 4px; white-space: nowrap; opacity: 0; visibility: hidden; transition: all 0.2s; pointer-events: none; margin-bottom: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+    .order-btn-container:hover .order-link-tooltip { opacity: 1; visibility: visible; }
+    .order-link-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border-width: 5px; border-style: solid; border-color: #1C1E21 transparent transparent transparent; }
+    
+    /* প্রোডাক্ট টাইটেল ও ডেসক্রিপশনে কোন হোভার লিংক থাকবে না */
+    .product-title-link { text-decoration: none; color: inherit; cursor: default; }
+    .product-title-link:hover { color: inherit; }
   </style>
 </head>
 <body class="text-[#1C1E21]">
@@ -290,7 +320,7 @@
 
 <section id="home" class="pt-4 pb-3 px-4 container-1200">
   <div class="relative hero-slide">
-    <div class="flex transition-transform duration-500 ease-out" id="sliderTrack"></div>
+    <div id="sliderTrack" class="flex"></div>
     <button class="slide-nav-btn slide-nav-left" onclick="slideChange(-1, event)" aria-label="Previous slide"><i class="fa-solid fa-chevron-left"></i></button>
     <button class="slide-nav-btn slide-nav-right" onclick="slideChange(1, event)" aria-label="Next slide"><i class="fa-solid fa-chevron-right"></i></button>
     <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-3" id="sliderDots"></div>
@@ -563,39 +593,64 @@ function renderSliders() {
   const track = document.getElementById('sliderTrack');
   const dots = document.getElementById('sliderDots');
   
+  track.innerHTML = '';
+  dots.innerHTML = '';
+  
   if (!sliders || sliders.length === 0) {
-    track.innerHTML = `
-      <div class="w-full flex-shrink-0 slide-bg" style="background-image: url('https://images.unsplash.com/photo-1598033128083-2f68a5d9b1b1?w=1200&q=85');">
+    // ডিফল্ট স্লাইডার
+    const defaultSlides = [
+      {
+        imageUrl: 'https://images.unsplash.com/photo-1598033128083-2f68a5d9b1b1?w=1200&q=85',
+        badge: 'সীমিত অফার',
+        badgeColor: '#1877F2',
+        title: 'প্রিমিয়াম কালেকশন',
+        subtitle: 'আড়ম্বরপূর্ণ ডিজাইন, অনন্য গুণগত মান',
+        buttonText: 'এখনই দেখুন',
+        productId: 1
+      },
+      {
+        imageUrl: 'https://images.unsplash.com/photo-1602810316693-3667c854239a?w=1200&q=85',
+        badge: 'বেস্টসেলার',
+        badgeColor: '#FF7A00',
+        title: 'হোয়াইট প্রিমিয়াম',
+        subtitle: 'হাতের ছোঁয়ায় প্রিমিয়াম সুতি',
+        buttonText: 'এখনই কিনুন',
+        productId: 2
+      }
+    ];
+    
+    defaultSlides.forEach((slide, index) => {
+      const slideDiv = document.createElement('div');
+      slideDiv.className = 'w-full flex-shrink-0 slide-bg';
+      slideDiv.style.backgroundImage = `url('${slide.imageUrl}')`;
+      slideDiv.innerHTML = `
         <div class="w-full h-full flex items-center justify-start p-4 md:p-8">
           <div class="slide-content text-white">
-            <span class="bg-[#1877F2] px-3 py-1 rounded-full text-xs inline-block mb-2">সীমিত অফার</span>
-            <h2 class="text-2xl md:text-4xl font-bold mb-1">প্রিমিয়াম কালেকশন</h2>
-            <p class="text-sm md:text-base mb-3 opacity-90">আড়ম্বরপূর্ণ ডিজাইন, অনন্য গুণগত মান</p>
-            <a href="#collection" class="btn-cta px-5 py-2 md:px-6 md:py-2.5 text-sm md:text-base inline-block">এখনই দেখুন</a>
+            <span class="px-3 py-1 rounded-full text-xs inline-block mb-2" style="background: ${slide.badgeColor}">${slide.badge}</span>
+            <h2 class="text-2xl md:text-4xl font-bold mb-1">${slide.title}</h2>
+            <p class="text-sm md:text-base mb-3 opacity-90">${slide.subtitle}</p>
+            <a href="#collection" class="btn-cta px-5 py-2 md:px-6 md:py-2.5 text-sm md:text-base inline-block">${slide.buttonText}</a>
           </div>
         </div>
-      </div>
-      <div class="w-full flex-shrink-0 slide-bg" style="background-image: url('https://images.unsplash.com/photo-1602810316693-3667c854239a?w=1200&q=85');">
-        <div class="w-full h-full flex items-center justify-start p-4 md:p-8">
-          <div class="slide-content text-white">
-            <span class="bg-[#FF7A00] px-3 py-1 rounded-full text-xs inline-block mb-2">বেস্টসেলার</span>
-            <h2 class="text-2xl md:text-4xl font-bold mb-1">হোয়াইট প্রিমিয়াম</h2>
-            <p class="text-sm md:text-base mb-3 opacity-90">হাতের ছোঁয়ায় প্রিমিয়াম সুতি</p>
-            <a href="#collection" class="btn-cta px-5 py-2 md:px-6 md:py-2.5 text-sm md:text-base inline-block">এখনই কিনুন</a>
-          </div>
-        </div>
-      </div>
-    `;
-    dots.innerHTML = `
-      <span class="w-2 h-2 rounded-full bg-[#1877F2] cursor-pointer" onclick="jumpToSlide(0)"></span>
-      <span class="w-2 h-2 rounded-full bg-white/70 cursor-pointer" onclick="jumpToSlide(1)"></span>
-    `;
-    sliders = [{}, {}];
+      `;
+      track.appendChild(slideDiv);
+      
+      const dot = document.createElement('span');
+      dot.className = `w-2 h-2 rounded-full ${index === 0 ? 'bg-[#1877F2]' : 'bg-white/70'} cursor-pointer hover:scale-150 transition`;
+      dot.onclick = () => jumpToSlide(index);
+      dots.appendChild(dot);
+    });
+    
+    sliders = defaultSlides;
     return;
   }
   
-  track.innerHTML = sliders.map((slider, index) => `
-    <div class="w-full flex-shrink-0 slide-bg" style="background-image: url('${slider.imageUrl}');">
+  // API থেকে পাওয়া স্লাইডার
+  sliders.forEach((slider, index) => {
+    const slideDiv = document.createElement('div');
+    slideDiv.className = 'w-full flex-shrink-0 slide-bg';
+    slideDiv.style.backgroundImage = `url('${slider.imageUrl}')`;
+    slideDiv.innerHTML = `
       <div class="w-full h-full flex items-center justify-start p-4 md:p-8">
         <div class="slide-content text-white">
           <span class="px-3 py-1 rounded-full text-xs inline-block mb-2" style="background: ${slider.badgeColor}">${slider.badge}</span>
@@ -604,12 +659,14 @@ function renderSliders() {
           <a href="#product-${slider.productId}" onclick="quickOrder(${slider.productId}); return false;" class="btn-cta px-5 py-2 md:px-6 md:py-2.5 text-sm md:text-base inline-block">${slider.buttonText}</a>
         </div>
       </div>
-    </div>
-  `).join('');
-  
-  dots.innerHTML = sliders.map((_, index) => `
-    <span class="w-2 h-2 rounded-full ${index === 0 ? 'bg-[#1877F2]' : 'bg-white/70'} cursor-pointer hover:scale-150 transition" onclick="jumpToSlide(${index})"></span>
-  `).join('');
+    `;
+    track.appendChild(slideDiv);
+    
+    const dot = document.createElement('span');
+    dot.className = `w-2 h-2 rounded-full ${index === 0 ? 'bg-[#1877F2]' : 'bg-white/70'} cursor-pointer hover:scale-150 transition`;
+    dot.onclick = () => jumpToSlide(index);
+    dots.appendChild(dot);
+  });
 }
 
 async function loadCategories() {
@@ -679,23 +736,21 @@ function renderProducts() {
 
     html += `
       <div class="product-tile p-3" id="product-${product.id}">
-        <a href="#product-${product.id}" class="block" onclick="highlightProduct(${product.id}); return false;">
+        <div>
           <div class="product-gallery">
-            <img src="${images[currentIndex]}" class="main-image" id="mainImg-${product.id}" onclick="openFullscreen('${product.id}'); return false;" onerror="this.src='https://via.placeholder.com/300x400?text=AMAYRA'">
+            <img src="${images[currentIndex]}" class="main-image" id="mainImg-${product.id}" onclick="openFullscreen('${product.id}')" onerror="this.src='https://via.placeholder.com/300x400?text=AMAYRA'">
             ${isSoldOut ? '<span class="sold-out">স্টক আউট</span>' : `<span class="absolute top-2 right-2 bg-[#FF7A00] text-white px-2 py-0.5 rounded-full text-xs">-${discount}%</span>`}
-            <div class="thumbnail-container" id="thumbs-${product.id}" onclick="event.stopPropagation()">
+            <div class="thumbnail-container" id="thumbs-${product.id}">
               ${images.map((img, i) => `<img src="${img}" class="${i === currentIndex ? 'active' : ''}" onclick="changeProductImage(${product.id}, ${i}, event)" onerror="this.src='https://via.placeholder.com/45?text=IMG'">`).join('')}
             </div>
           </div>
-        </a>
+        </div>
         
         <div class="mt-2">
-          <a href="#product-${product.id}" onclick="highlightProduct(${product.id}); return false;" class="block hover:text-[#1877F2]">
-            <h4 class="font-bold text-base text-[#1C1E21]">${product.name}</h4>
-            <p class="text-xs text-[#1C1E21]/70 line-clamp-2">${product.desc}</p>
-          </a>
+          <h4 class="font-bold text-base text-[#1C1E21]">${product.name}</h4>
+          <p class="text-xs text-[#1C1E21]/70 line-clamp-2">${product.desc}</p>
           
-          <div class="mt-2" onclick="event.stopPropagation()">
+          <div class="mt-2">
             <label class="text-xs font-medium text-gray-700">সাইজ:</label>
             <div class="flex flex-wrap gap-1 mt-1">
               ${product.sizes ? product.sizes.map(s => `
@@ -715,7 +770,7 @@ function renderProducts() {
           </div>
           
           ${hasColors ? `
-            <div class="mt-2" onclick="event.stopPropagation()">
+            <div class="mt-2">
               <label class="text-xs font-medium text-gray-700">রং:</label>
               <div class="flex flex-wrap gap-1 mt-1">
                 ${colors.map((color, idx) => `
@@ -734,9 +789,10 @@ function renderProducts() {
               <span class="line-through text-[#1C1E21]/40 text-xs ml-1">৳${product.original}</span>
             </div>
             <div class="order-btn-container">
-              <button onclick="addToCartWithOptions(${product.id}); event.stopPropagation();" class="btn-primary px-3 py-1.5 text-xs" ${isSoldOut ? 'style="opacity:0.5;pointer-events:none;"' : ''}>
+              <button onclick="addToCartWithOptions(${product.id})" class="btn-primary px-3 py-1.5 text-xs" ${isSoldOut ? 'style="opacity:0.5;pointer-events:none;"' : ''}>
                 <i class="fa-solid fa-bag-shopping mr-1"></i> অর্ডার
               </button>
+              <span class="order-link-tooltip">#product-${product.id}</span>
             </div>
           </div>
           
@@ -751,18 +807,6 @@ function renderProducts() {
   
   document.getElementById('productGrid').innerHTML = html;
 }
-
-window.highlightProduct = function(productId) {
-  const productElement = document.getElementById(`product-${productId}`);
-  if (productElement) {
-    productElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    productElement.classList.add('ring-2', 'ring-[#1877F2]', 'ring-offset-2');
-    setTimeout(() => {
-      productElement.classList.remove('ring-2', 'ring-[#1877F2]', 'ring-offset-2');
-    }, 2000);
-  }
-  window.location.hash = `product-${productId}`;
-};
 
 window.changeProductImage = (productId, index, event) => {
   event.stopPropagation();
@@ -956,10 +1000,10 @@ function updateCart() {
           </span>
         </div>
         <div class="flex gap-1 items-center">
-          <button onclick="updateQuantity(${index}, -1); event.stopPropagation();" class="bg-white w-6 h-6 rounded-[8px_1px_8px_1px] hover:bg-[#F0F2F5] transition text-[#1877F2] text-xs"><i class="fa-solid fa-minus"></i></button>
+          <button onclick="updateQuantity(${index}, -1)" class="bg-white w-6 h-6 rounded-[8px_1px_8px_1px] hover:bg-[#F0F2F5] transition text-[#1877F2] text-xs"><i class="fa-solid fa-minus"></i></button>
           <span class="text-[#1C1E21] text-xs">${item.quantity}</span>
-          <button onclick="updateQuantity(${index}, 1); event.stopPropagation();" class="bg-white w-6 h-6 rounded-[8px_1px_8px_1px] hover:bg-[#F0F2F5] transition text-[#1877F2] text-xs"><i class="fa-solid fa-plus"></i></button>
-          <button onclick="removeFromCart(${index}); event.stopPropagation();" class="text-[#FF7A00] hover:text-[#e66e00] transition text-xs"><i class="fa-regular fa-trash-can"></i></button>
+          <button onclick="updateQuantity(${index}, 1)" class="bg-white w-6 h-6 rounded-[8px_1px_8px_1px] hover:bg-[#F0F2F5] transition text-[#1877F2] text-xs"><i class="fa-solid fa-plus"></i></button>
+          <button onclick="removeFromCart(${index})" class="text-[#FF7A00] hover:text-[#e66e00] transition text-xs"><i class="fa-regular fa-trash-can"></i></button>
         </div>
       </div>
     `;
@@ -1365,31 +1409,22 @@ function setupEventListeners() {
 
 window.slideChange = (direction, event) => {
   if (event) event.preventDefault();
-  if (!sliders || sliders.length === 0) {
-    const track = document.getElementById('sliderTrack');
-    const totalSlides = 2;
-    currentSlide = (currentSlide + direction + totalSlides) % totalSlides;
-    track.style.transform = `translateX(-${currentSlide * 100}%)`;
-    updateSliderDots();
-    return;
-  }
   const track = document.getElementById('sliderTrack');
-  const totalSlides = sliders.length;
+  const totalSlides = track.children.length;
+  if (totalSlides === 0) return;
+  
   currentSlide = (currentSlide + direction + totalSlides) % totalSlides;
   track.style.transform = `translateX(-${currentSlide * 100}%)`;
   updateSliderDots();
 };
 
 window.jumpToSlide = (index) => {
-  if (!sliders || sliders.length === 0) {
-    const track = document.getElementById('sliderTrack');
-    currentSlide = index;
-    track.style.transform = `translateX(-${index * 100}%)`;
-    updateSliderDots();
-    return;
-  }
+  const track = document.getElementById('sliderTrack');
+  const totalSlides = track.children.length;
+  if (totalSlides === 0) return;
+  
   currentSlide = index;
-  document.getElementById('sliderTrack').style.transform = `translateX(-${index * 100}%)`;
+  track.style.transform = `translateX(-${index * 100}%)`;
   updateSliderDots();
 };
 
