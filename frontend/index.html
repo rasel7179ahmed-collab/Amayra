@@ -88,14 +88,23 @@
     .glass-card { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 2rem 1rem 2rem 1rem; box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.1); }
     
     /* বাটন */
-    .btn-primary { background: #1877F2; color: white; transition: all 0.2s; box-shadow: 0 4px 10px rgba(24, 119, 242, 0.3); border-radius: 30px 8px 30px 8px; font-weight: 600; letter-spacing: 0.3px; padding: 0.5rem 1rem; font-size: 0.9rem; display: inline-block; text-decoration: none; }
+    .btn-primary { background: #1877F2; color: white; transition: all 0.2s; box-shadow: 0 4px 10px rgba(24, 119, 242, 0.3); border-radius: 30px 8px 30px 8px; font-weight: 600; letter-spacing: 0.3px; padding: 0.5rem 1rem; font-size: 0.9rem; display: inline-block; text-decoration: none; border: none; cursor: pointer; }
     .btn-primary:hover { background: #1666d9; transform: scale(1.02) translateY(-2px); box-shadow: 0 8px 15px -5px #1877F2; }
     
-    .btn-cta { background: #FF7A00; color: white; transition: all 0.2s; box-shadow: 0 4px 10px rgba(255, 122, 0, 0.3); border-radius: 30px 8px 30px 8px; font-weight: 600; letter-spacing: 0.3px; padding: 0.5rem 1rem; font-size: 0.9rem; display: inline-block; text-decoration: none; }
+    .btn-cta { background: #FF7A00; color: white; transition: all 0.2s; box-shadow: 0 4px 10px rgba(255, 122, 0, 0.3); border-radius: 30px 8px 30px 8px; font-weight: 600; letter-spacing: 0.3px; padding: 0.5rem 1rem; font-size: 0.9rem; display: inline-block; text-decoration: none; border: none; cursor: pointer; }
     .btn-cta:hover { background: #e66e00; transform: scale(1.02) translateY(-2px); box-shadow: 0 8px 15px -5px #FF7A00; }
     
     .btn-secondary { background: #F0F2F5; color: #1C1E21; border-radius: 30px 8px 30px 8px; font-weight: 600; transition: 0.2s; padding: 0.5rem 1rem; font-size: 0.9rem; display: inline-block; text-decoration: none; }
     .btn-secondary:hover { background: #e2e4e8; }
+    
+    /* নরমাল লিংক স্টাইল - হোম, সংকলন, অর্ডার, রিভিউ এর মত */
+    .normal-link { color: #1C1E21; text-decoration: none; transition: color 0.2s; }
+    .normal-link:hover { color: #1877F2; }
+    
+    /* প্রোডাক্ট লিংক - হোম, সংকলন এর মত */
+    .product-link { color: inherit; text-decoration: none; transition: color 0.2s; display: block; }
+    .product-link:hover .product-title { color: #1877F2; }
+    .product-title { transition: color 0.2s; }
     
     /* ফুলস্ক্রিন মোডাল */
     .fullscreen-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all 0.3s; }
@@ -228,7 +237,7 @@
     #orderFormCard.highlight { animation: formHighlight 0.5s ease 2; border: 2px solid #FF7A00; }
     @keyframes formHighlight { 0% { box-shadow: 0 0 0 0 rgba(255, 122, 0, 0.7); transform: scale(1); } 50% { box-shadow: 0 0 25px 10px rgba(255, 122, 0, 0.3); transform: scale(1.02); } 100% { box-shadow: 0 0 0 0 rgba(255, 122, 0, 0); transform: scale(1); } }
     
-    /* স্লাইডার স্টাইল - ফিক্সড */
+    /* স্লাইডার স্টাইল */
     .hero-slide { border-radius: 50px 20px 50px 20px; overflow: hidden; box-shadow: 0 30px 30px -20px rgba(24, 119, 242, 0.2); position: relative; width: 100%; }
     #sliderTrack { display: flex; transition: transform 0.5s ease-in-out; width: 100%; }
     .slide-item { flex: 0 0 100%; width: 100%; }
@@ -250,17 +259,6 @@
     #sliderDots { display: flex; gap: 10px; padding: 8px 12px; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); border-radius: 30px; bottom: 15px; }
     #sliderDots span { width: 8px; height: 8px; transition: all 0.3s ease; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); }
     #sliderDots span:hover { transform: scale(1.3); background: #1877F2 !important; }
-    
-    /* অর্ডার বাটন লিংক - শুধু বাটনে হোভার করলে দেখাবে */
-    .order-btn-container { position: relative; display: inline-block; }
-    .order-btn-container a { text-decoration: none; }
-    .order-link-tooltip { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #1C1E21; color: white; font-size: 0.7rem; padding: 0.3rem 0.6rem; border-radius: 16px 4px 16px 4px; white-space: nowrap; opacity: 0; visibility: hidden; transition: all 0.2s; pointer-events: none; margin-bottom: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
-    .order-btn-container:hover .order-link-tooltip { opacity: 1; visibility: visible; }
-    .order-link-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border-width: 5px; border-style: solid; border-color: #1C1E21 transparent transparent transparent; }
-    
-    /* প্রোডাক্ট টাইটেল ও ডেসক্রিপশনে কোন হোভার লিংক থাকবে না */
-    .product-title-link { text-decoration: none; color: inherit; cursor: default; }
-    .product-title-link:hover { color: inherit; }
   </style>
 </head>
 <body class="text-[#1C1E21]">
@@ -299,10 +297,10 @@
       </div>
     </a>
     <nav class="hidden md:flex gap-6 text-[#1C1E21] font-medium text-sm">
-      <a href="#home" class="hover:text-[#1877F2] border-b-2 border-transparent hover:border-[#1877F2] transition">হোম</a>
-      <a href="#collection" class="hover:text-[#1877F2] border-b-2 border-transparent hover:border-[#1877F2] transition">সংকলন</a>
-      <a href="#order" class="hover:text-[#1877F2] border-b-2 border-transparent hover:border-[#1877F2] transition">অর্ডার</a>
-      <a href="#reviews" class="hover:text-[#1877F2] border-b-2 border-transparent hover:border-[#1877F2] transition">রিভিউ</a>
+      <a href="#home" class="normal-link hover:text-[#1877F2] border-b-2 border-transparent hover:border-[#1877F2] transition">হোম</a>
+      <a href="#collection" class="normal-link hover:text-[#1877F2] border-b-2 border-transparent hover:border-[#1877F2] transition">সংকলন</a>
+      <a href="#order" class="normal-link hover:text-[#1877F2] border-b-2 border-transparent hover:border-[#1877F2] transition">অর্ডার</a>
+      <a href="#reviews" class="normal-link hover:text-[#1877F2] border-b-2 border-transparent hover:border-[#1877F2] transition">রিভিউ</a>
     </nav>
     <div class="flex items-center gap-3">
       <a href="tel:+8801712345678" class="hidden md:flex call-button" id="headerPhone">
@@ -597,7 +595,6 @@ function renderSliders() {
   dots.innerHTML = '';
   
   if (!sliders || sliders.length === 0) {
-    // ডিফল্ট স্লাইডার
     const defaultSlides = [
       {
         imageUrl: 'https://images.unsplash.com/photo-1598033128083-2f68a5d9b1b1?w=1200&q=85',
@@ -645,7 +642,6 @@ function renderSliders() {
     return;
   }
   
-  // API থেকে পাওয়া স্লাইডার
   sliders.forEach((slider, index) => {
     const slideDiv = document.createElement('div');
     slideDiv.className = 'w-full flex-shrink-0 slide-bg';
@@ -736,21 +732,23 @@ function renderProducts() {
 
     html += `
       <div class="product-tile p-3" id="product-${product.id}">
-        <div>
+        <a href="#product-${product.id}" class="product-link" onclick="highlightProduct(${product.id}); return false;">
           <div class="product-gallery">
-            <img src="${images[currentIndex]}" class="main-image" id="mainImg-${product.id}" onclick="openFullscreen('${product.id}')" onerror="this.src='https://via.placeholder.com/300x400?text=AMAYRA'">
+            <img src="${images[currentIndex]}" class="main-image" id="mainImg-${product.id}" onclick="openFullscreen('${product.id}'); return false;" onerror="this.src='https://via.placeholder.com/300x400?text=AMAYRA'">
             ${isSoldOut ? '<span class="sold-out">স্টক আউট</span>' : `<span class="absolute top-2 right-2 bg-[#FF7A00] text-white px-2 py-0.5 rounded-full text-xs">-${discount}%</span>`}
-            <div class="thumbnail-container" id="thumbs-${product.id}">
+            <div class="thumbnail-container" id="thumbs-${product.id}" onclick="event.stopPropagation()">
               ${images.map((img, i) => `<img src="${img}" class="${i === currentIndex ? 'active' : ''}" onclick="changeProductImage(${product.id}, ${i}, event)" onerror="this.src='https://via.placeholder.com/45?text=IMG'">`).join('')}
             </div>
           </div>
-        </div>
+        </a>
         
         <div class="mt-2">
-          <h4 class="font-bold text-base text-[#1C1E21]">${product.name}</h4>
-          <p class="text-xs text-[#1C1E21]/70 line-clamp-2">${product.desc}</p>
+          <a href="#product-${product.id}" class="product-link" onclick="highlightProduct(${product.id}); return false;">
+            <h4 class="product-title font-bold text-base text-[#1C1E21]">${product.name}</h4>
+            <p class="text-xs text-[#1C1E21]/70 line-clamp-2">${product.desc}</p>
+          </a>
           
-          <div class="mt-2">
+          <div class="mt-2" onclick="event.stopPropagation()">
             <label class="text-xs font-medium text-gray-700">সাইজ:</label>
             <div class="flex flex-wrap gap-1 mt-1">
               ${product.sizes ? product.sizes.map(s => `
@@ -770,7 +768,7 @@ function renderProducts() {
           </div>
           
           ${hasColors ? `
-            <div class="mt-2">
+            <div class="mt-2" onclick="event.stopPropagation()">
               <label class="text-xs font-medium text-gray-700">রং:</label>
               <div class="flex flex-wrap gap-1 mt-1">
                 ${colors.map((color, idx) => `
@@ -788,12 +786,9 @@ function renderProducts() {
               <span class="text-lg font-bold text-[#FF7A00]">৳${product.price}</span>
               <span class="line-through text-[#1C1E21]/40 text-xs ml-1">৳${product.original}</span>
             </div>
-            <div class="order-btn-container">
-              <button onclick="addToCartWithOptions(${product.id})" class="btn-primary px-3 py-1.5 text-xs" ${isSoldOut ? 'style="opacity:0.5;pointer-events:none;"' : ''}>
-                <i class="fa-solid fa-bag-shopping mr-1"></i> অর্ডার
-              </button>
-              <span class="order-link-tooltip">#product-${product.id}</span>
-            </div>
+            <button onclick="addToCartWithOptions(${product.id}); event.stopPropagation();" class="btn-primary px-3 py-1.5 text-xs" ${isSoldOut ? 'style="opacity:0.5;pointer-events:none;"' : ''}>
+              <i class="fa-solid fa-bag-shopping mr-1"></i> অর্ডার
+            </button>
           </div>
           
           <div class="flex justify-between mt-1 text-[10px] text-gray-500">
@@ -807,6 +802,18 @@ function renderProducts() {
   
   document.getElementById('productGrid').innerHTML = html;
 }
+
+window.highlightProduct = function(productId) {
+  const productElement = document.getElementById(`product-${productId}`);
+  if (productElement) {
+    productElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    productElement.classList.add('ring-2', 'ring-[#1877F2]', 'ring-offset-2');
+    setTimeout(() => {
+      productElement.classList.remove('ring-2', 'ring-[#1877F2]', 'ring-offset-2');
+    }, 2000);
+  }
+  window.location.hash = `product-${productId}`;
+};
 
 window.changeProductImage = (productId, index, event) => {
   event.stopPropagation();
