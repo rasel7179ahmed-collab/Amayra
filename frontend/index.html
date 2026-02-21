@@ -1910,52 +1910,132 @@
     }, 300);
   };
 
-  window.quickOrder = async (productId) => {
-    try {
+window.quickOrder = async (productId) => {
+  try {
+    // প্রথমে প্রোডাক্ট লোড করার চেষ্টা করি
+    let product;
+    
+    // যদি products অ্যারে ইতিমধ্যে লোড করা থাকে তবে সেখান থেকে খুঁজি
+    if (products && products.length > 0) {
+      product = products.find(p => p.id === productId);
+    }
+    
+    // যদি না পাওয়া যায় তবে API থেকে লোড করি
+    if (!product) {
       const res = await fetchWithRetry(`${API_BASE}/products/${productId}`);
-      const product = await res.json();
-      
-      if (!product || product.stock <= 0) {
-        Swal.fire({
-          icon: 'error',
-          title: 'স্টক শেষ',
-          text: 'এই প্রোডাক্টটি বর্তমানে স্টকে নেই',
-          confirmButtonColor: '#1877F2'
-        });
-        return;
-      }
-
-      const productImage = product.images && product.images.length ? product.images[0] : product.img;
-      
-      cart = [{
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        quantity: 1,
-        stock: product.stock,
-        image: productImage
-      }];
-      
-      updateCart();
-      
-      document.getElementById('order').scrollIntoView({ behavior: 'smooth' });
-      
-      Swal.fire({
-        icon: 'success',
-        title: 'প্রোডাক্ট যুক্ত হয়েছে',
-        text: 'অর্ডার ফর্ম পূরণ করুন',
-        confirmButtonColor: '#1877F2'
-      });
-      
-    } catch (error) {
-      console.error('Error quick order:', error);
+      product = await res.json();
+    }
+    
+    if (!product) {
       Swal.fire({
         icon: 'error',
-        text: 'প্রোডাক্ট লোড করতে ব্যর্থ',
-        confirmButtonColor: '#1877F2'
+        title: 'প্রোডাক্ট পাওয়া যায়নি',
+        text: 'এই প্রোডাক্টটি খুঁজে পাওয়া যায়নি',
+        confirmButtonColor: '#1877F2',
+        confirmButtonText: 'ঠিক আছে'
       });
+      return;
     }
-  };
+
+    if (product.stock <= 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'স্টক শেষ',
+        text: 'এই প্রোডাক্টটি বর্তমানে স্টকে নেই',
+        confirmButtonColor: '#1877F2',
+        confirmButtonText: 'ঠিক আছে'
+      });
+      return;
+    }
+
+    // পুরাতন কার্ট ক্লিয়ার করে নতুন প্রোডাক্ট যোগ করি
+    cart = [{
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
+      stock: product.stock,
+      image: product.images && product.images.length ? product.images[0] : product.img
+    }];
+    
+    // কার্ট আপডেট করি
+    updateCart();
+    
+    // স্লাইডারের ইন্টারভাল ক্লিয়ার করি (ঐচ্ছিক)
+    if (slideInterval) {
+      clearInterval(slideInterval);
+    }
+    
+    // অর্ডার ফর্মে স্ক্রোল করি - একটি ছোট ডেলAY দিয়ে
+    setTimeout(() => {
+      document.getElementById('order').scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+      
+      // অর্ডার ফর্ম কার্ডে হাইলাইট ইফেক্ট যোগ করি
+      const orderFormCard = document.getElementById('orderFormCard');
+      if (orderFormCard) {
+        orderFormCard.classList.add('highlight');
+        setTimeout(() => {
+          orderFormCard.classList.remove('highlight');
+        }, 1000);
+      }
+    }, 100);
+    
+    // শুধুমাত্র একটি সাকসেস মেসেজ দেখাই
+    Swal.fire({
+      icon: 'success',
+      title: 'প্রোডাক্ট যুক্ত হয়েছে!',
+      text: 'অর্ডার ফর্ম পূরণ করে অর্ডার সম্পন্ন করুন',
+      toast: false,
+      position: 'center',
+      showConfirmButton: true,
+      confirmButtonText: 'অর্ডার সম্পন্ন করুন',
+      confirmButtonColor: '#FF7A00',
+      timer: 3000,
+      timerProgressBar: true,
+      didClose: () => {
+        // ইউজার যদি অটো ক্লোজ হওয়ার পরও অর্ডার ফর্মে না থাকে তবে আবার ফোকাস করি
+        setTimeout(() => {
+          document.getElementById('order').scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }).then((result) => {
+      // ইউজার যদি "অর্ডার সম্পন্ন করুন" বাটনে ক্লিক করে, তাহলে অর্ডার ফর্মে ফোকাস করি
+      if (result.isConfirmed) {
+        document.getElementById('order').scrollIntoView({ behavior: 'smooth' });
+        // নাম ইনপুট ফিল্ডে ফোকাস করি
+        document.getElementById('name').focus();
+      }
+    });
+
+  } catch (error) {
+    console.error('Error quick order:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'ব্যর্থ হয়েছে',
+      text: 'প্রোডাক্ট লোড করতে ব্যর্থ হয়েছে। দয়া করে আবার চেষ্টা করুন।',
+      confirmButtonColor: '#1877F2',
+      confirmButtonText: 'ঠিক আছে'
+    });
+  }
+};
+
+// স্টাইল যোগ করি ফর্ম হাইলাইট করার জন্য
+const style = document.createElement('style');
+style.textContent = `
+  #orderFormCard.highlight {
+    animation: formHighlight 0.5s ease 2;
+  }
+  
+  @keyframes formHighlight {
+    0% { box-shadow: 0 0 0 0 rgba(255, 122, 0, 0.7); }
+    50% { box-shadow: 0 0 20px 10px rgba(255, 122, 0, 0.3); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 122, 0, 0); }
+  }
+`;
+document.head.appendChild(style);
 
   function updateCart() {
     const cartContainer = document.getElementById('cartItems');
