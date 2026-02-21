@@ -866,6 +866,28 @@
         opacity: 1;
       }
     }
+
+    .seo-section {
+      background: #f8fafc;
+      border-left: 4px solid #1877F2;
+      padding: 1rem;
+      border-radius: 20px 4px 20px 4px;
+      margin-bottom: 1.5rem;
+    }
+
+    .seo-section h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #0A192F;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .seo-section h4 i {
+      color: #1877F2;
+    }
   </style>
 </head>
 <body>
@@ -951,6 +973,10 @@
         <div class="menu-item" data-page="sliders">
           <i class="fas fa-images"></i>
           <span>স্লাইডার</span>
+        </div>
+        <div class="menu-item" data-page="seo">
+          <i class="fas fa-globe"></i>
+          <span>SEO সেটিংস</span>
         </div>
         <div class="menu-item" data-page="settings">
           <i class="fas fa-gear"></i>
@@ -1190,79 +1216,19 @@
     document.getElementById('sidebarAdminName').textContent = adminUsername || 'অ্যাডমিন';
     loadDashboard();
     loadUnreadCounts();
-    loadNotificationSettings();
     startNotificationChecker();
-  }
-
-  function loadNotificationSettings() {
-    const saved = localStorage.getItem('notificationSettings');
-    if (saved) {
-      notificationSettings = JSON.parse(saved);
-    }
-  }
-
-  function playNotificationSound() {
-    if (!notificationSettings.sound) return;
-    
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-    
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.5);
-  }
-
-  function showNotificationPopup(message, type) {
-    if (notificationSettings.browser && Notification.permission === 'granted') {
-      new Notification('AMAYRA অ্যাডমিন', {
-        body: message,
-        icon: 'https://via.placeholder.com/64/1877F2/ffffff?text=AM'
-      });
-    }
-    
-    const popup = document.createElement('div');
-    popup.className = 'notification-popup';
-    popup.innerHTML = `
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-[#1877F2] flex items-center justify-center text-white">
-          <i class="fas ${type === 'order' ? 'fa-truck' : 'fa-star'}"></i>
-        </div>
-        <div class="flex-1">
-          <div class="font-bold">${type === 'order' ? 'নতুন অর্ডার' : 'নতুন রিভিউ'}</div>
-          <div class="text-sm text-gray-600">${message}</div>
-        </div>
-      </div>
-    `;
-    
-    document.body.appendChild(popup);
-    
-    setTimeout(() => {
-      popup.style.animation = 'slideInRight 0.3s ease reverse';
-      setTimeout(() => popup.remove(), 300);
-    }, 4000);
   }
 
   function startNotificationChecker() {
     if (notificationInterval) clearInterval(notificationInterval);
     checkNotifications();
-    notificationInterval = setInterval(checkNotifications, 3000);
+    notificationInterval = setInterval(checkNotifications, 5000);
   }
 
   async function checkNotifications() {
     if (!token) return;
     
     try {
-      const previousOrderCount = parseInt(document.getElementById('orderBadge').textContent) || 0;
-      const previousReviewCount = parseInt(document.getElementById('reviewBadge').textContent) || 0;
-      
       const [ordersRes, reviewsRes] = await Promise.allSettled([
         fetchWithRetry(`${API_BASE}/admin/orders/unread-count`, {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -1282,6 +1248,9 @@
         reviewsData = await reviewsRes.value.json();
       }
 
+      const previousOrderCount = parseInt(document.getElementById('orderBadge').textContent) || 0;
+      const previousReviewCount = parseInt(document.getElementById('reviewBadge').textContent) || 0;
+
       const orderBadge = document.getElementById('orderBadge');
       const reviewBadge = document.getElementById('reviewBadge');
       const totalBadge = document.getElementById('notificationTotalBadge');
@@ -1289,12 +1258,10 @@
       const totalUnread = (ordersData.count || 0) + (reviewsData.count || 0);
 
       if (ordersData.count > previousOrderCount) {
-        playNotificationSound();
         showNotificationPopup(`${ordersData.count - previousOrderCount}টি নতুন অর্ডার এসেছে`, 'order');
       }
       
       if (reviewsData.count > previousReviewCount) {
-        playNotificationSound();
         showNotificationPopup(`${reviewsData.count - previousReviewCount}টি নতুন রিভিউ এসেছে`, 'review');
       }
 
@@ -1330,6 +1297,29 @@
     }
   }
 
+  function showNotificationPopup(message, type) {
+    const popup = document.createElement('div');
+    popup.className = 'notification-popup';
+    popup.innerHTML = `
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-[#1877F2] flex items-center justify-center text-white">
+          <i class="fas ${type === 'order' ? 'fa-truck' : 'fa-star'}"></i>
+        </div>
+        <div class="flex-1">
+          <div class="font-bold">${type === 'order' ? 'নতুন অর্ডার' : 'নতুন রিভিউ'}</div>
+          <div class="text-sm text-gray-600">${message}</div>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(popup);
+    
+    setTimeout(() => {
+      popup.style.animation = 'slideInRight 0.3s ease reverse';
+      setTimeout(() => popup.remove(), 300);
+    }, 4000);
+  }
+
   document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const username = document.getElementById('username').value;
@@ -1353,10 +1343,6 @@
         token = data.token;
         localStorage.setItem('token', token);
         localStorage.setItem('adminUsername', username);
-        
-        if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-          Notification.requestPermission();
-        }
         
         document.getElementById('loginPage').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'block';
@@ -1418,6 +1404,7 @@
           orders: 'অর্ডার',
           reviews: 'রিভিউ',
           sliders: 'স্লাইডার',
+          seo: 'SEO সেটিংস',
           settings: 'সেটিংস',
           'change-password': 'পাসওয়ার্ড পরিবর্তন'
         }[page] || 'ড্যাশবোর্ড';
@@ -1434,6 +1421,7 @@
           case 'orders': loadOrders(); break;
           case 'reviews': loadReviews(); break;
           case 'sliders': loadSliders(); break;
+          case 'seo': loadSEOSettings(); break;
           case 'settings': loadSettings(); break;
           case 'change-password': loadChangePassword(); break;
         }
@@ -3196,7 +3184,7 @@
         </div>
         <div class="form-group">
           <label class="form-label">বাটন টেক্সট</label>
-                   <input type="text" class="form-input" name="buttonText" value="${slider?.buttonText || 'এখনই কিনুন'}" required>
+          <input type="text" class="form-input" name="buttonText" value="${slider?.buttonText || 'এখনই কিনুন'}" required>
         </div>
         <div class="form-group">
           <label class="form-label">প্রোডাক্ট আইডি</label>
@@ -3210,7 +3198,7 @@
         <div class="form-group">
           <label class="form-label">ছবি</label>
           ${slideImage ? `<img src="${slideImage}" class="image-preview mb-2" onerror="this.style.display='none'">` : ''}
-          <input type="file" class="form-input" name="image" accept="image/*" ${slider ? '' : 'required'}>
+          <input type="file" class="form-input" name="image" accept="image/*">
         </div>
         <div class="form-group">
           <label class="flex items-center gap-2">
@@ -3245,8 +3233,10 @@
 
     const formDataToSend = new FormData();
     formDataToSend.append('data', JSON.stringify(data));
-    if (formData.get('image').size > 0) {
-      formDataToSend.append('image', formData.get('image'));
+    
+    const imageFile = formData.get('image');
+    if (imageFile && imageFile.size > 0) {
+      formDataToSend.append('image', imageFile);
     }
 
     submitBtn.disabled = true;
@@ -3304,6 +3294,131 @@
     } catch (error) {
       console.error('Delete slider error:', error);
       showPopup('মুছতে সমস্যা হয়েছে', 'error');
+    }
+  };
+
+  async function loadSEOSettings() {
+    const content = document.getElementById('pageContent');
+    showLoading('SEO সেটিংস লোড হচ্ছে...');
+
+    try {
+      const res = await fetchWithRetry(`${API_BASE}/admin/settings`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const settings = await res.json();
+
+      content.innerHTML = `
+        <div class="section-card">
+          <div class="section-header">
+            <h3 class="text-xl font-bold">SEO সেটিংস</h3>
+          </div>
+          
+          <div class="seo-section">
+            <h4><i class="fas fa-tag"></i> বেসিক মেটা ট্যাগ</h4>
+            <form id="seoForm" onsubmit="saveSEOSettings(event)">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="form-group">
+                  <label class="form-label">মেটা টাইটেল</label>
+                 <input type="text" class="form-input" name="metaTitle" value="${settings.metaTitle || 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন'}" required>
+                  <small class="text-gray-500">ব্রাউজার ট্যাবে দেখাবে (৫০-৬০ অক্ষর)</small>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">মেটা বিবরণ</label>
+                  <textarea class="form-textarea" name="metaDescription" rows="3" required>${settings.metaDescription || 'প্রিমিয়াম কোয়ালিটির ফরমাল, ক্যাজুয়াল ও প্রিমিয়াম শার্ট সেরা দামে। AMAYRA তে অর্ডার করুন দ্রুত ডেলিভারি পাবেন।'}</textarea>
+                  <small class="text-gray-500">সার্চ ইঞ্জিনে দেখাবে (১৫০-১৬০ অক্ষর)</small>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">মেটা কীওয়ার্ড</label>
+                  <input type="text" class="form-input" name="metaKeywords" value="${settings.metaKeywords || 'শার্ট, ফরমাল শার্ট, ক্যাজুয়াল শার্ট, প্রিমিয়াম শার্ট, পাঞ্জাবি, ঢাকা, বাংলাদেশ, AMAYRA'}" required>
+                  <small class="text-gray-500">কমা দিয়ে আলাদা করুন</small>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">মেটা অথর</label>
+                  <input type="text" class="form-input" name="metaAuthor" value="${settings.metaAuthor || 'AMAYRA'}" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="seo-section">
+              <h4><i class="fab fa-facebook"></i> ওপেন গ্রাফ (সোশ্যাল মিডিয়া)</h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="form-group">
+                  <label class="form-label">OG টাইটেল</label>
+                  <input type="text" class="form-input" name="ogTitle" value="${settings.ogTitle || 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন'}" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">OG বিবরণ</label>
+                  <textarea class="form-textarea" name="ogDescription" rows="2" required>${settings.ogDescription || 'প্রিমিয়াম কোয়ালিটির ফরমাল, ক্যাজুয়াল ও প্রিমিয়াম শার্ট সেরা দামে।'}</textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">OG ছবির URL</label>
+                  <input type="text" class="form-input" name="ogImage" value="${settings.ogImage || 'images/Amayra.jpg'}" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="seo-section">
+              <h4><i class="fas fa-search"></i> গুগল সার্চ কনসোল</h4>
+              <div class="grid grid-cols-1 gap-4">
+                <div class="form-group">
+                  <label class="form-label">গুগল সাইট ভেরিফিকেশন কোড</label>
+                  <input type="text" class="form-input" name="googleSiteVerification" value="${settings.googleSiteVerification || 'SFq3YDKWo-0iRrNXCwYND3ygW9ThJJUQaK1zTMiqf44'}">
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-end mt-6">
+              <button type="submit" class="btn-primary px-8 py-3">SEO সেটিংস সংরক্ষণ</button>
+            </div>
+          </form>
+        </div>
+      `;
+    } catch (error) {
+      content.innerHTML = `
+        <div class="text-center py-8">
+          <p class="text-red-500 mb-4">SEO সেটিংস লোড করতে ব্যর্থ হয়েছে</p>
+          <button onclick="loadSEOSettings()" class="btn-primary px-6 py-2">
+            <i class="fas fa-sync-alt mr-2"></i>আবার চেষ্টা করুন
+          </button>
+        </div>
+      `;
+    } finally {
+      hideLoading();
+    }
+  }
+
+  window.saveSEOSettings = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    
+    const data = Object.fromEntries(formData.entries());
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'সংরক্ষণ হচ্ছে...';
+
+    try {
+      const res = await fetchWithRetry(`${API_BASE}/admin/settings`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+      }, 2);
+
+      if (res.ok) {
+        showPopup('SEO সেটিংস সংরক্ষিত হয়েছে', 'success');
+      } else {
+        const error = await res.json();
+        showPopup(error.error || 'ব্যর্থ হয়েছে', 'error');
+      }
+    } catch (error) {
+      console.error('Save SEO settings error:', error);
+      showPopup('সার্ভার সংযোগ ব্যর্থ', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'SEO সেটিংস সংরক্ষণ';
     }
   };
 
