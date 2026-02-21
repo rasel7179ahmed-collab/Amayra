@@ -381,20 +381,181 @@ const dropdown = document.getElementById('notificationDropdown');
 bell.addEventListener('click', (e) => { e.stopPropagation(); dropdown.classList.toggle('show'); if (dropdown.classList.contains('show')) loadNotifications(); });
 document.addEventListener('click', (e) => { if (!dropdown.contains(e.target) && !bell.contains(e.target)) dropdown.classList.remove('show'); });
 
+// loadNotifications ফাংশন আপডেট করুন
 async function loadNotifications() {
   const listDiv = document.getElementById('notificationList');
   listDiv.innerHTML = '<div class="p-4 text-center"><div class="loading-spinner mx-auto"></div></div>';
   try {
-    const ordersRes = await fetchWithRetry(`${API_BASE}/admin/orders?limit=10&isRead=false`, { headers: { 'Authorization': `Bearer ${token}` } });
+    // শুধু unread অর্ডার দেখানো হচ্ছে
+    const ordersRes = await fetchWithRetry(`${API_BASE}/admin/orders?limit=10&isRead=false`, { 
+      headers: { 'Authorization': `Bearer ${token}` } 
+    });
     let ordersData = { orders: [] };
     if (ordersRes.ok) ordersData = await ordersRes.json();
-    const notifications = (ordersData.orders || []).map(order => ({ type: 'order', id: order._id, title: `নতুন অর্ডার #${order.orderId}`, description: `${order.customerName || 'N/A'} - ৳${order.total || 0}`, time: order.createdAt, orderId: order._id, read: false, onClick: () => { showOrderDetails(order); markOrderAsRead(order._id); dropdown.classList.remove('show'); setTimeout(() => { document.querySelector('[data-page="orders"]').click(); }, 300); } }));
+    
+    const notifications = (ordersData.orders || []).map(order => ({
+      type: 'order',
+      id: order._id,
+      title: `নতুন অর্ডার #${order.orderId}`,
+      description: `${order.customerName || 'N/A'} - ৳${order.total || 0}`,
+      time: order.createdAt,
+      orderId: order._id,
+      read: false
+    }));
+    
     notifications.sort((a,b) => new Date(b.time) - new Date(a.time));
-    if (notifications.length === 0) { listDiv.innerHTML = '<div class="p-4 text-center text-gray-500">কোন নতুন অর্ডার নেই</div>'; return; }
-    listDiv.innerHTML = notifications.map(n => `<div class="notification-item unread" onclick="(${n.onClick})()"><div class="flex justify-between items-start"><div class="flex-1"><div class="flex items-center gap-2"><span class="font-medium">${n.title}</span><span class="notification-type">অর্ডার</span></div><p class="text-sm text-gray-600 mt-1">${n.description}</p><p class="notification-time mt-1">${new Date(n.time).toLocaleString('bn-BD')}</p></div></div></div>`).join('');
-  } catch (error) { console.error('Error loading notifications:', error); listDiv.innerHTML = '<div class="p-4 text-center text-red-500">নোটিফিকেশন লোড করতে ব্যর্থ</div>'; }
+    
+    if (notifications.length === 0) {
+      listDiv.innerHTML = '<div class="p-4 text-center text-gray-500">কোন নতুন অর্ডার নেই</div>';
+      return;
+    }
+    
+    listDiv.innerHTML = notifications.map(n => `
+      <div class="notification-item unread" onclick="handleNotificationClick('${n.orderId}')">
+        <div class="flex justify-between items-start">
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <span class="font-medium">${n.title}</span>
+              <span class="notification-type">অর্ডার</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">${n.description}</p>
+            <p class="notification-time mt-1">${new Date(n.time).toLocaleString('bn-BD')}</p>
+          </div>
+        </div>
+      </div>
+    `).join('');
+    
+  } catch (error) {
+    console.error('Error loading notifications:', error);
+    listDiv.innerHTML = '<div class="p-4 text-center text-red-500">নোটিফিকেশন লোড করতে ব্যর্থ</div>';
+  }
 }
 
+// নতুন ফাংশন: নোটিফিকেশন ক্লিক হ্যান্ডলার
+window.handleNotificationClick = async function(orderId) {
+  try {
+    // নোটিফিকেশন ড্রপডাউন বন্ধ করুন
+    document.getElementById('notificationDropdown').classList.remove('show');
+    
+    // নোটিফিকেশন read হিসেবে মার্ক করুন
+    await markOrderAsRead(orderId);
+    
+    // অর্ডার পৃষ্ঠায় যান
+    document.querySelector('[data-page="orders"]').click();
+    
+    // অর্ডার ডিটেইলস দেখান (ঐচ্ছিক)
+    setTimeout(() => {
+      fetchOrderDetails(orderId);
+    }, 500);
+    
+  } catch (error) {
+    console.error('Error handling notification click:', error);
+  }
+};
+
+// markOrderAsRead ফাংশন আপডেট করুন
+async function markOrderAsRead(orderId) {
+  try {
+    const res = await fetchWithRetry(`${API_BASE}/admin/orders/${orderId}/read`, { 
+      method: 'PUT', 
+      headers: { 'Authorization': `Bearer ${token}` } 
+    }, 2);
+    
+    if (res.ok) {
+      // Unread কাউন্ট আপডেট করুন
+      await loadUnreadCounts();
+      
+      // ড্রপডাউন রিফ্রেশ করুন যদি খোলা থাকে
+      const dropdown = document.getElementById('notificationDropdown');
+      if (dropdown.classList.contains('show')) {
+        await loadNotifications();
+      }
+    }
+  } catch (error) {
+    console.error('Error marking order as read:', error);
+  }
+}
+
+// markAllRead ইভেন্ট লিসেনার আপডেট করুন
+document.getElementById('markAllRead').addEventListener('click', async () => {
+  try {
+    // সব unread অর্ডার read হিসেবে মার্ক করার জন্য API কল
+    const res = await fetchWithRetry(`${API_BASE}/admin/orders/mark-all-read`, { 
+      method: 'PUT', 
+      headers: { 'Authorization': `Bearer ${token}` } 
+    }, 2);
+    
+    if (res.ok) {
+      document.getElementById('notificationDropdown').classList.remove('show');
+      await loadUnreadCounts();
+      showPopup('সব নোটিফিকেশন দেখা হয়েছে', 'success');
+    }
+  } catch (error) {
+    console.error('Error marking all as read:', error);
+  }
+});
+
+// checkNotifications ফাংশন আপডেট করুন (পপআপ নোটিফিকেশনের জন্য)
+async function checkNotifications() {
+  if (!token) return;
+  try {
+    const ordersRes = await fetchWithRetry(`${API_BASE}/admin/orders/unread-count`, { 
+      headers: { 'Authorization': `Bearer ${token}` } 
+    });
+    let ordersData = { count: 0 };
+    if (ordersRes.ok) ordersData = await ordersRes.json();
+    
+    const previousOrderCount = parseInt(document.getElementById('orderBadge').textContent) || 0;
+    const orderBadge = document.getElementById('orderBadge');
+    const reviewBadge = document.getElementById('reviewBadge');
+    const totalBadge = document.getElementById('notificationTotalBadge');
+    
+    // নতুন অর্ডার এলে পপআপ দেখান
+    if (ordersData.count > previousOrderCount) {
+      showNotificationPopup(`${ordersData.count - previousOrderCount}টি নতুন অর্ডার এসেছে`, 'order');
+    }
+    
+    // ব্যাজ আপডেট করুন
+    if (ordersData.count > 0) { 
+      orderBadge.style.display = 'flex'; 
+      orderBadge.textContent = ordersData.count; 
+    } else {
+      orderBadge.style.display = 'none';
+    }
+    
+    if (ordersData.count > 0) { 
+      totalBadge.style.display = 'flex'; 
+      totalBadge.textContent = ordersData.count; 
+      document.title = `(${ordersData.count}) AMAYRA · অ্যাডমিন প্যানেল`; 
+    } else { 
+      totalBadge.style.display = 'none'; 
+      document.title = 'AMAYRA · অ্যাডমিন প্যানেল'; 
+    }
+    
+    // রিভিউ আনরিড কাউন্ট
+    const reviewsRes = await fetchWithRetry(`${API_BASE}/admin/reviews/unread-count`, { 
+      headers: { 'Authorization': `Bearer ${token}` } 
+    });
+    if (reviewsRes.ok) { 
+      const reviewsData = await reviewsRes.json(); 
+      if (reviewsData.count > 0) { 
+        reviewBadge.style.display = 'flex'; 
+        reviewBadge.textContent = reviewsData.count; 
+      } else {
+        reviewBadge.style.display = 'none';
+      }
+    }
+    
+    // ড্রপডাউন রিফ্রেশ করুন যদি খোলা থাকে
+    const dropdown = document.getElementById('notificationDropdown');
+    if (dropdown.classList.contains('show')) {
+      loadNotifications();
+    }
+    
+  } catch (error) {
+    console.error('Error checking notifications:', error);
+  }
+}
 window.viewAllNotifications = () => { dropdown.classList.remove('show'); document.querySelector('[data-page="orders"]').click(); };
 async function markOrderAsRead(orderId) { try { await fetchWithRetry(`${API_BASE}/admin/orders/${orderId}/read`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } }, 2); loadUnreadCounts(); } catch (error) { console.error('Error marking order as read:', error); } }
 async function markReviewAsRead(reviewId) { try { await fetchWithRetry(`${API_BASE}/admin/reviews/${reviewId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ isRead: true }) }, 2); loadUnreadCounts(); } catch (error) { console.error('Error marking review as read:', error); } }
