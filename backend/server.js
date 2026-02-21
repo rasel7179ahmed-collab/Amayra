@@ -157,9 +157,9 @@ app.get('/api/admin/dashboard', auth, async (req, res) => {
 app.get('/api/admin/chart-data', auth, async (req, res) => {
   try { const sevenDaysAgo = new Date(); sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7); const orders = await Order.aggregate([ { $match: { createdAt: { $gte: sevenDaysAgo } } }, { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, count: { $sum: 1 } } }, { $sort: { _id: 1 } } ]); const labels = []; const data = []; for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); const dateStr = d.toISOString().split('T')[0]; labels.push(dateStr); const found = orders.find(o => o._id === dateStr); data.push(found ? found.count : 0); } res.json({ labels, data }); } catch (error) { res.status(500).json({ error: error.message }); }
 });
- 
+
 app.get('/api/admin/notifications/unread', auth, async (req, res) => {
   try { const [pendingOrders, pendingReviews] = await Promise.all([ Order.countDocuments({ status: 'pending', isRead: false }), Review.countDocuments({ status: 'pending', isRead: false }) ]); const notifications = []; if (pendingOrders > 0) { const recentOrders = await Order.find({ status: 'pending', isRead: false }).sort({ createdAt: -1 }).limit(5).select('orderId customerName createdAt'); notifications.push({ type: 'order', count: pendingOrders, items: recentOrders }); } if (pendingReviews > 0) { const recentReviews = await Review.find({ status: 'pending', isRead: false }).sort({ createdAt: -1 }).limit(5).select('name text createdAt'); notifications.push({ type: 'review', count: pendingReviews, items: recentReviews }); } res.json({ total: pendingOrders + pendingReviews, notifications }); } catch (error) { res.status(500).json({ error: error.message }); }
-}); 
+});
 
 initializeDatabase().then(() => { const PORT = process.env.PORT || 5000; app.listen(PORT, () => { console.log(`🚀 Server running on port ${PORT}`); console.log(`✅ Allowed origins:`, allowedOrigins); }); });
