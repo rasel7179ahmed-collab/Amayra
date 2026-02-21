@@ -1865,47 +1865,71 @@ window.addToCart = (productId) => {
     return;
   }
 
-  const existingItem = cart.find(item => item.id === productId);
-  const productImage = product.images && product.images.length ? product.images[0] : product.img;
-  
-  if (existingItem) {
-    if (existingItem.quantity < product.stock) {
-      existingItem.quantity++;
-      lastAddedItemId = productId;
-    } else {
-      Swal.fire({
-        icon: 'error',
-        text: 'স্টক সীমা অতিক্রম করেছে',
-        confirmButtonColor: '#1877F2',
-        confirmButtonText: 'ঠিক আছে'
-      });
-      return;
-    }
-  } else {
-    cart.push({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      quantity: 1,
-      stock: product.stock,
-      image: productImage
+  // Single smooth scroll to order section
+  const orderSection = document.getElementById('order');
+  if (orderSection) {
+    orderSection.scrollIntoView({ 
+      behavior: 'smooth',
+      block: 'start'
     });
-    lastAddedItemId = productId;
   }
   
-  updateCart();
-  
-  // Show success message - only message
-  Swal.fire({
-    icon: 'success',
-    title: 'কার্টে যুক্ত হয়েছে!',
-    text: 'অর্ডার ফর্ম পূরণ করে অর্ডার সম্পন্ন করুন',
-    confirmButtonText: 'ঠিক আছে',
-    confirmButtonColor: '#1877F2'
-  });
+  setTimeout(() => {
+    const existingItem = cart.find(item => item.id === productId);
+    const productImage = product.images && product.images.length ? product.images[0] : product.img;
+    
+    if (existingItem) {
+      if (existingItem.quantity < product.stock) {
+        existingItem.quantity++;
+        lastAddedItemId = productId;
+      } else {
+        Swal.fire({
+          icon: 'error',
+          text: 'স্টক সীমা অতিক্রম করেছে',
+          confirmButtonColor: '#1877F2',
+          confirmButtonText: 'ঠিক আছে'
+        });
+        return;
+      }
+    } else {
+      cart.push({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        quantity: 1,
+        stock: product.stock,
+        image: productImage
+      });
+      lastAddedItemId = productId;
+    }
+    
+    updateCart();
+    
+    // Highlight the added item
+    setTimeout(() => {
+      const addedItem = document.querySelector(`.cart-item-new[data-product-id="${productId}"]`);
+      if (addedItem) {
+        addedItem.classList.add('highlight');
+        setTimeout(() => {
+          addedItem.classList.remove('highlight');
+        }, 1000);
+      }
+    }, 100);
+    
+    // Show single success message
+    Swal.fire({
+      icon: 'success',
+      title: 'কার্টে যুক্ত হয়েছে!',
+      text: 'অর্ডার ফর্ম পূরণ করে অর্ডার সম্পন্ন করুন',
+      confirmButtonText: 'ঠিক আছে',
+      confirmButtonColor: '#1877F2',
+      timer: 2000,
+      timerProgressBar: true
+    });
 
-  // Update URL hash without scrolling
-  history.pushState(null, null, `#product-${productId}`);
+    // Update URL hash without scrolling
+    history.pushState(null, null, `#product-${productId}`);
+  }, 500); // Wait for scroll to complete
 };
 window.quickOrder = async (productId) => {
   try {
