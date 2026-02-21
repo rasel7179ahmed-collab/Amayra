@@ -4,19 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
   <meta name="google-site-verification" content="SFq3YDKWo-0iRrNXCwYND3ygW9ThJJUQaK1zTMiqf44">
-
-  <!-- SEO Meta Tags -->
-  <meta name="description" content="প্রিমিয়াম কোয়ালিটির ফরমাল, ক্যাজুয়াল ও প্রিমিয়াম শার্ট সেরা দামে। AMAYRA তে অর্ডার করুন দ্রুত ডেলিভারি পাবেন।">
-  <meta name="keywords" content="শার্ট, ফরমাল শার্ট, ক্যাজুয়াল শার্ট, প্রিমিয়াম শার্ট, পাঞ্জাবি, ঢাকা, বাংলাদেশ, AMAYRA">
-  <meta name="author" content="AMAYRA">
-  <title>AMAYRA · প্রিমিয়াম শার্ট কালেকশন</title>
+  
+  <!-- Dynamic SEO Meta Tags - Admin Controlled -->
+  <meta name="description" id="metaDescription" content="প্রিমিয়াম কোয়ালিটির ফরমাল, ক্যাজুয়াল ও প্রিমিয়াম শার্ট সেরা দামে। AMAYRA তে অর্ডার করুন দ্রুত ডেলিভারি পাবেন।">
+  <meta name="keywords" id="metaKeywords" content="শার্ট, ফরমাল শার্ট, ক্যাজুয়াল শার্ট, প্রিমিয়াম শার্ট, পাঞ্জাবি, ঢাকা, বাংলাদেশ, AMAYRA">
+  <meta name="author" id="metaAuthor" content="AMAYRA">
+  <title id="metaTitle">AMAYRA · প্রিমিয়াম শার্ট কালেকশন</title>
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" id="ogTitle" content="AMAYRA · প্রিমিয়াম শার্ট কালেকশন">
+  <meta property="og:description" id="ogDescription" content="প্রিমিয়াম কোয়ালিটির ফরমাল, ক্যাজুয়াল ও প্রিমিয়াম শার্ট সেরা দামে।">
+  <meta property="og:image" id="ogImage" content="images/Amayra.jpg">
+  <meta property="og:url" content="https://amayra.online">
+  <meta property="og:type" content="website">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-   <link rel="icon" href="images/amayra.png" type="image/png">
+  <link rel="icon" href="images/amayra.png" type="image/png">
+  
   <style>
+    /* Your existing styles remain exactly the same */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { 
       background: #FFFFFF;
@@ -963,7 +972,6 @@
       font-weight: 600;
     }
 
-    /* হ্যামবার্গার মেনু স্টাইল - মোবাইলের জন্য */
     .hamburger {
       width: 32px;
       height: 32px;
@@ -1119,7 +1127,6 @@
   </div>
   
   <div class="flex flex-wrap justify-center gap-3 my-8" id="categoryPills">
-    <!-- category links with proper href fragments for SEO -->
     <a href="#collection-all" class="cat-pill active" onclick="filterProducts('all', this); return false;">সকল</a>
     <a href="#collection-formal" class="cat-pill" onclick="filterProducts('formal', this); return false;">ফরমাল</a>
     <a href="#collection-casual" class="cat-pill" onclick="filterProducts('casual', this); return false;">ক্যাজুয়াল</a>
@@ -1339,10 +1346,58 @@
 
   window.addEventListener('hashchange', checkHashAndScroll);
 
+  // Function to update SEO meta tags from admin settings
+  function updateSEOTags(settings) {
+    if (!settings) return;
+    
+    // Update meta description
+    const metaDescription = document.getElementById('metaDescription');
+    if (metaDescription) {
+      metaDescription.content = settings.metaDescription || 'প্রিমিয়াম কোয়ালিটির ফরমাল, ক্যাজুয়াল ও প্রিমিয়াম শার্ট সেরা দামে। AMAYRA তে অর্ডার করুন দ্রুত ডেলিভারি পাবেন।';
+    }
+    
+    // Update meta keywords
+    const metaKeywords = document.getElementById('metaKeywords');
+    if (metaKeywords) {
+      metaKeywords.content = settings.metaKeywords || 'শার্ট, ফরমাল শার্ট, ক্যাজুয়াল শার্ট, প্রিমিয়াম শার্ট, পাঞ্জাবি, ঢাকা, বাংলাদেশ, AMAYRA';
+    }
+    
+    // Update meta author
+    const metaAuthor = document.getElementById('metaAuthor');
+    if (metaAuthor) {
+      metaAuthor.content = settings.metaAuthor || 'AMAYRA';
+    }
+    
+    // Update title
+    const metaTitle = document.getElementById('metaTitle');
+    if (metaTitle) {
+      metaTitle.textContent = settings.metaTitle || 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন';
+    }
+    
+    // Update Open Graph tags
+    const ogTitle = document.getElementById('ogTitle');
+    if (ogTitle) {
+      ogTitle.content = settings.ogTitle || 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন';
+    }
+    
+    const ogDescription = document.getElementById('ogDescription');
+    if (ogDescription) {
+      ogDescription.content = settings.ogDescription || 'প্রিমিয়াম কোয়ালিটির ফরমাল, ক্যাজুয়াল ও প্রিমিয়াম শার্ট সেরা দামে।';
+    }
+    
+    const ogImage = document.getElementById('ogImage');
+    if (ogImage) {
+      ogImage.content = settings.ogImage || 'images/Amayra.jpg';
+    }
+  }
+
   async function loadSettings() {
     try {
       const res = await fetchWithRetry(`${API_BASE}/settings`);
       settings = await res.json();
+      
+      // Update SEO tags
+      updateSEOTags(settings);
       
       document.getElementById('headerBrandName').textContent = settings.siteName || 'AMAYRA';
       document.getElementById('headerBrandSubtitle').textContent = 'PREMIUM SHIRT COLLECTION';
@@ -1371,8 +1426,14 @@
         deliveryChargeOutside: 120,
         freeDeliveryThreshold: 2000,
         footerText: 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন · ২০২৫',
-        facebook: '@amayra.shirt'
+        facebook: '@amayra.shirt',
+        metaDescription: 'প্রিমিয়াম কোয়ালিটির ফরমাল, ক্যাজুয়াল ও প্রিমিয়াম শার্ট সেরা দামে। AMAYRA তে অর্ডার করুন দ্রুত ডেলিভারি পাবেন।',
+        metaKeywords: 'শার্ট, ফরমাল শার্ট, ক্যাজুয়াল শার্ট, প্রিমিয়াম শার্ট, পাঞ্জাবি, ঢাকা, বাংলাদেশ, AMAYRA',
+        metaTitle: 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন'
       };
+      
+      // Update SEO with default values
+      updateSEOTags(settings);
     }
   }
 
@@ -1430,8 +1491,6 @@
     try {
       const res = await fetchWithRetry(`${API_BASE}/categories`);
       categories = await res.json();
-      // Note: We're not dynamically rendering pills anymore because we want static hrefs for SEO
-      // The HTML already has static category links
     } catch (error) {
       console.error('Error loading categories:', error);
     }
@@ -1475,7 +1534,6 @@
       const images = product.images && product.images.length ? product.images : [product.img];
       const currentIndex = currentProductImages[product.id] || 0;
       
-      // Create a unique link for each product
       const productLink = `#product-${product.id}`;
       
       html += `
@@ -1503,7 +1561,6 @@
                 <span class="text-2xl font-bold text-[#FF7A00]">৳${product.price}</span>
                 <span class="line-through text-[#1C1E21]/40 text-sm">৳${product.original}</span>
               </span>
-              <!-- Order button with unique link -->
               <a href="${productLink}" onclick="addToCart(${product.id}); return false;" class="btn-primary px-4 py-2 text-sm inline-block" ${isSoldOut ? 'style="opacity:0.5;pointer-events:none;"' : ''}>
                 <i class="fa-solid fa-bag-shopping mr-1"></i> অর্ডার
               </a>
@@ -2214,8 +2271,6 @@
 
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener('click', function (e) {
-        // Don't prevent default for hash links to maintain browser history
-        // But we need to handle smooth scroll
         const href = this.getAttribute('href');
         if (href === '#') return;
         
