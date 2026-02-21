@@ -51,8 +51,76 @@ mongoose.connection.on('reconnected', () => console.log('✅ MongoDB reconnected
 const AdminSchema = new mongoose.Schema({ username: { type: String, required: true, unique: true }, password: { type: String, required: true }, name: { type: String, default: 'Admin' }, role: { type: String, default: 'super_admin' }, createdAt: { type: Date, default: Date.now }, lastLogin: { type: Date } });
 const CategorySchema = new mongoose.Schema({ name: { type: String, required: true }, slug: { type: String, required: true, unique: true }, banglaName: { type: String, required: true }, description: { type: String }, imageUrl: { type: String }, icon: { type: String, default: 'fa-tags' }, order: { type: Number, default: 0 }, active: { type: Boolean, default: true } });
 const SliderSchema = new mongoose.Schema({ title: { type: String, required: true }, subtitle: { type: String, required: true }, badge: { type: String, required: true }, badgeColor: { type: String, default: '#1877F2' }, imageUrl: { type: String, required: true }, publicId: { type: String }, buttonText: { type: String, default: 'এখনই কিনুন' }, productId: { type: Number }, order: { type: Number, default: 0 }, active: { type: Boolean, default: true }, createdAt: { type: Date, default: Date.now } });
-const ProductSchema = new mongoose.Schema({ id: { type: Number, required: true, unique: true }, name: { type: String, required: true }, desc: { type: String, required: true }, original: { type: Number, required: true }, price: { type: Number, required: true }, discountPercent: { type: Number, default: 0 }, category: { type: String, required: true }, stock: { type: Number, default: 10 }, sold: { type: Number, default: 0 }, img: { type: String, required: true }, images: [{ type: String }], publicIds: [{ type: String }], featured: { type: Boolean, default: false }, views: { type: Number, default: 0 }, createdAt: { type: Date, default: Date.now }, updatedAt: { type: Date, default: Date.now } });
-const OrderSchema = new mongoose.Schema({ orderId: { type: String, required: true, unique: true }, customerName: { type: String, required: true }, phone: { type: String, required: true }, district: { type: String, required: true }, address: { type: String, required: true }, items: [{ id: Number, name: String, price: Number, quantity: Number }], subtotal: { type: Number, required: true }, deliveryCharge: { type: Number, required: true }, total: { type: Number, required: true }, status: { type: String, enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'], default: 'pending' }, paymentMethod: { type: String, default: 'Cash on Delivery' }, paymentStatus: { type: String, default: 'pending' }, notes: { type: String }, trackingCode: { type: String }, isRead: { type: Boolean, default: false }, createdAt: { type: Date, default: Date.now }, updatedAt: { type: Date, default: Date.now } });
+
+const ProductSchema = new mongoose.Schema({
+  id: { type: Number, required: true, unique: true },
+  name: { type: String, required: true },
+  desc: { type: String, required: true },
+  original: { type: Number, required: true },
+  price: { type: Number, required: true },
+  discountPercent: { type: Number, default: 0 },
+  category: { type: String, required: true },
+  stock: { type: Number, default: 10 },
+  sold: { type: Number, default: 0 },
+  img: { type: String, required: true },
+  images: [{ type: String }],
+  publicIds: [{ type: String }],
+  featured: { type: Boolean, default: false },
+  views: { type: Number, default: 0 },
+  sizes: {
+    type: [{
+      size: { type: String, enum: ['M', 'L', 'XL', 'XXL'], required: true },
+      stock: { type: Number, default: 0 }
+    }],
+    default: [
+      { size: 'M', stock: 10 },
+      { size: 'L', stock: 10 },
+      { size: 'XL', stock: 10 },
+      { size: 'XXL', stock: 5 }
+    ]
+  },
+  colors: {
+    type: [{
+      name: { type: String, required: true },
+      code: { type: String, required: true },
+      imageUrl: { type: String, required: true },
+      publicId: { type: String }
+    }],
+    validate: [function(val) { return val.length <= 3; }, 'সর্বোচ্চ ৩টি কালার সেট করা যাবে']
+  },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
+
+const OrderSchema = new mongoose.Schema({
+  orderId: { type: String, required: true, unique: true },
+  customerName: { type: String, required: true },
+  phone: { type: String, required: true },
+  district: { type: String, required: true },
+  address: { type: String, required: true },
+  items: [{
+    id: Number,
+    name: String,
+    price: Number,
+    quantity: Number,
+    size: { type: String, enum: ['M', 'L', 'XL', 'XXL'], required: true },
+    color: { type: String, required: true },
+    colorCode: { type: String },
+    colorImage: { type: String }
+  }],
+  subtotal: { type: Number, required: true },
+  deliveryCharge: { type: Number, required: true },
+  total: { type: Number, required: true },
+  status: { type: String, enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'], default: 'pending' },
+  paymentMethod: { type: String, default: 'Cash on Delivery' },
+  paymentStatus: { type: String, default: 'pending' },
+  notes: { type: String },
+  trackingCode: { type: String },
+  isRead: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
+
 const ReviewSchema = new mongoose.Schema({ name: { type: String, required: true }, address: { type: String, required: true }, text: { type: String, required: true }, rating: { type: Number, required: true, min: 1, max: 5 }, productId: { type: Number }, status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' }, isRead: { type: Boolean, default: false }, isFeatured: { type: Boolean, default: false }, createdAt: { type: Date, default: Date.now } });
 const SettingsSchema = new mongoose.Schema({ siteName: { type: String, default: 'AMAYRA' }, siteTitle: { type: String, default: 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন' }, siteSubtitle: { type: String, default: 'PREMIUM SHIRT COLLECTION' }, phoneNumber: { type: String, default: '01712345678' }, whatsappNumber: { type: String, default: '8801712345678' }, email: { type: String, default: 'info@amayra.com' }, facebook: { type: String, default: '@amayra.shirt' }, instagram: { type: String, default: '@amayra' }, address: { type: String, default: 'Dhaka, Bangladesh' }, deliveryChargeDhaka: { type: Number, default: 60 }, deliveryChargeOutside: { type: Number, default: 120 }, freeDeliveryThreshold: { type: Number, default: 2000 }, footerText: { type: String, default: 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন · ২০২৫' }, currency: { type: String, default: '৳' }, themeColor: { type: String, default: '#1877F2' }, logo: { type: String }, metaTitle: { type: String, default: 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন' }, metaDescription: { type: String, default: 'প্রিমিয়াম কোয়ালিটির ফরমাল, ক্যাজুয়াল ও প্রিমিয়াম শার্ট সেরা দামে। AMAYRA তে অর্ডার করুন দ্রুত ডেলিভারি পাবেন।' }, metaKeywords: { type: String, default: 'শার্ট, ফরমাল শার্ট, ক্যাজুয়াল শার্ট, প্রিমিয়াম শার্ট, পাঞ্জাবি, ঢাকা, বাংলাদেশ, AMAYRA' }, metaAuthor: { type: String, default: 'AMAYRA' }, ogTitle: { type: String, default: 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন' }, ogDescription: { type: String, default: 'প্রিমিয়াম কোয়ালিটির ফরমাল, ক্যাজুয়াল ও প্রিমিয়াম শার্ট সেরা দামে।' }, ogImage: { type: String, default: 'images/Amayra.jpg' }, googleSiteVerification: { type: String, default: 'SFq3YDKWo-0iRrNXCwYND3ygW9ThJJUQaK1zTMiqf44' }, updatedAt: { type: Date, default: Date.now } });
 
@@ -95,9 +163,63 @@ app.get('/api/products', async (req, res) => {
   try { const { category, search, featured, sort, limit } = req.query; let filter = {}; let sortOptions = {}; if (category && category !== 'all') filter.category = category; if (featured === 'true') filter.featured = true; if (search) filter.$or = [ { name: { $regex: search, $options: 'i' } }, { desc: { $regex: search, $options: 'i' } } ]; if (sort === 'sold') sortOptions = { sold: -1 }; else sortOptions = { id: 1 }; let query = Product.find(filter).sort(sortOptions); if (limit) query = query.limit(parseInt(limit)); const products = await query; res.json(products); } catch (error) { res.status(500).json({ error: error.message }); }
 });
 app.get('/api/products/:id', async (req, res) => { try { const product = await Product.findOne({ id: parseInt(req.params.id) }); if (!product) return res.status(404).json({ error: 'Product not found' }); product.views += 1; await product.save(); res.json(product); } catch (error) { res.status(500).json({ error: error.message }); } });
-app.post('/api/orders', [ body('customerName').notEmpty(), body('phone').matches(/^01[3-9]\d{8}$/), body('address').notEmpty(), body('items').isArray().notEmpty() ], validate, async (req, res) => {
-  try { const { customerName, phone, district, address, items, subtotal, deliveryCharge, total, notes } = req.body; const orderId = 'ORD' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 5).toUpperCase(); const order = new Order({ orderId, customerName, phone, district, address, items, subtotal, deliveryCharge, total, notes }); await order.save(); for (const item of items) { await Product.findOneAndUpdate({ id: item.id }, { $inc: { sold: item.quantity, stock: -item.quantity } }); } res.status(201).json({ orderId, message: 'Order placed successfully' }); } catch (error) { res.status(500).json({ error: error.message }); }
+
+app.post('/api/orders', [
+  body('customerName').notEmpty(),
+  body('phone').matches(/^01[3-9]\d{8}$/),
+  body('address').notEmpty(),
+  body('items').isArray().notEmpty()
+], validate, async (req, res) => {
+  try {
+    const { customerName, phone, district, address, items, subtotal, deliveryCharge, total, notes } = req.body;
+    
+    for (const item of items) {
+      if (!item.size || !item.color) {
+        return res.status(400).json({ error: 'প্রতিটি পণ্যের জন্য সাইজ এবং কালার নির্বাচন করুন' });
+      }
+    }
+
+    const orderId = 'ORD' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 5).toUpperCase();
+    const order = new Order({
+      orderId,
+      customerName,
+      phone,
+      district,
+      address,
+      items,
+      subtotal,
+      deliveryCharge,
+      total,
+      notes
+    });
+    
+    await order.save();
+
+    for (const item of items) {
+      const product = await Product.findOne({ id: item.id });
+      if (product) {
+        await Product.findOneAndUpdate(
+          { id: item.id },
+          { $inc: { sold: item.quantity } }
+        );
+        
+        if (product.sizes) {
+          const sizeIndex = product.sizes.findIndex(s => s.size === item.size);
+          if (sizeIndex !== -1) {
+            product.sizes[sizeIndex].stock -= item.quantity;
+            await product.save();
+          }
+        }
+      }
+    }
+
+    res.status(201).json({ orderId, message: 'Order placed successfully' });
+  } catch (error) {
+    console.error('Order creation error:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
+
 app.get('/api/reviews', async (req, res) => { try { const { featured } = req.query; let filter = { status: 'approved' }; if (featured === 'true') filter.isFeatured = true; const reviews = await Review.find(filter).sort('-createdAt').limit(20); res.json(reviews); } catch (error) { res.status(500).json({ error: error.message }); } });
 app.post('/api/reviews', [ body('name').notEmpty(), body('address').notEmpty(), body('text').notEmpty(), body('rating').isInt({ min: 1, max: 5 }) ], validate, async (req, res) => { try { const { name, address, text, rating, productId } = req.body; const review = new Review({ name, address, text, rating, productId }); await review.save(); res.status(201).json({ message: 'Review submitted successfully' }); } catch (error) { res.status(500).json({ error: error.message }); } });
 app.get('/api/settings', async (req, res) => { try { let settings = await Settings.findOne(); if (!settings) settings = await Settings.create({}); res.json(settings); } catch (error) { res.status(500).json({ error: error.message }); } });
@@ -120,21 +242,176 @@ app.put('/api/admin/sliders/:id', auth, upload.single('image'), async (req, res)
 app.delete('/api/admin/sliders/:id', auth, async (req, res) => { try { const slider = await Slider.findById(req.params.id); if (slider?.publicId) await cloudinary.uploader.destroy(slider.publicId); await Slider.findByIdAndDelete(req.params.id); res.json({ message: 'Slider deleted successfully' }); } catch (error) { res.status(500).json({ error: error.message }); } });
 
 app.get('/api/admin/products', auth, async (req, res) => { try { const products = await Product.find().sort('id'); res.json(products); } catch (error) { res.status(500).json({ error: error.message }); } });
-app.get('/api/admin/bestsellers', auth, async (req, res) => { try { const bestsellers = await Product.find().sort({ sold: -1 }).limit(5).select('id name desc original price images sold discountPercent stock'); res.json(bestsellers); } catch (error) { res.status(500).json({ error: error.message }); } });
+app.get('/api/admin/bestsellers', auth, async (req, res) => { try { const bestsellers = await Product.find().sort({ sold: -1 }).limit(5).select('id name desc original price images sold discountPercent stock sizes colors'); res.json(bestsellers); } catch (error) { res.status(500).json({ error: error.message }); } });
 app.post('/api/admin/products/temp-upload', auth, upload.array('images', 10), async (req, res) => { try { if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'No images uploaded' }); const urls = req.files.map(f => f.path); res.json({ urls }); } catch (error) { res.status(500).json({ error: error.message }); } });
+
 app.post('/api/admin/products', auth, upload.array('images', 10), async (req, res) => {
-  try { const productData = JSON.parse(req.body.data || '{}'); const lastProduct = await Product.findOne().sort('-id'); const nextId = lastProduct ? lastProduct.id + 1 : 13; const imageUrls = req.files && req.files.length > 0 ? req.files.map(f => f.path) : (productData.images && productData.images.length > 0 ? productData.images : []); const publicIds = req.files && req.files.length > 0 ? req.files.map(f => f.filename) : []; if (imageUrls.length === 0) return res.status(400).json({ error: 'At least one image is required' }); const product = new Product({ id: nextId, name: productData.name, desc: productData.desc, original: productData.original, price: productData.price, discountPercent: productData.discountPercent || Math.round(((productData.original - productData.price) / productData.original) * 100), category: productData.category, stock: productData.stock || 10, sold: productData.sold || 0, img: imageUrls[0], images: imageUrls, publicIds, featured: productData.featured || false }); await product.save(); res.status(201).json(product); } catch (error) { res.status(500).json({ error: error.message }); }
+  try {
+    const productData = JSON.parse(req.body.data || '{}');
+    const lastProduct = await Product.findOne().sort('-id');
+    const nextId = lastProduct ? lastProduct.id + 1 : 13;
+
+    const imageUrls = req.files && req.files.length > 0 
+      ? req.files.map(f => f.path) 
+      : (productData.images && productData.images.length > 0 ? productData.images : []);
+    
+    const publicIds = req.files && req.files.length > 0 
+      ? req.files.map(f => f.filename) 
+      : [];
+
+    if (imageUrls.length === 0) {
+      return res.status(400).json({ error: 'At least one image is required' });
+    }
+
+    let colors = [];
+    if (productData.colors && Array.isArray(productData.colors)) {
+      colors = productData.colors.slice(0, 3).map(color => ({
+        name: color.name,
+        code: color.code,
+        imageUrl: color.imageUrl || imageUrls[0],
+        publicId: color.publicId
+      }));
+    }
+
+    let sizes = [];
+    if (productData.sizes && Array.isArray(productData.sizes)) {
+      sizes = productData.sizes;
+    } else {
+      sizes = [
+        { size: 'M', stock: parseInt(productData.stockM) || 10 },
+        { size: 'L', stock: parseInt(productData.stockL) || 10 },
+        { size: 'XL', stock: parseInt(productData.stockXL) || 10 },
+        { size: 'XXL', stock: parseInt(productData.stockXXL) || 5 }
+      ];
+    }
+
+    const product = new Product({
+      id: nextId,
+      name: productData.name,
+      desc: productData.desc,
+      original: productData.original,
+      price: productData.price,
+      discountPercent: productData.discountPercent || Math.round(((productData.original - productData.price) / productData.original) * 100),
+      category: productData.category,
+      stock: sizes.reduce((sum, s) => sum + s.stock, 0),
+      sold: productData.sold || 0,
+      img: imageUrls[0],
+      images: imageUrls,
+      publicIds,
+      featured: productData.featured || false,
+      sizes: sizes,
+      colors: colors
+    });
+
+    await product.save();
+    res.status(201).json(product);
+  } catch (error) {
+    console.error('Product creation error:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
+
 app.put('/api/admin/products/:id', auth, upload.array('images', 10), async (req, res) => {
-  try { const productData = JSON.parse(req.body.data || '{}'); const product = await Product.findById(req.params.id); let imageUrls = product.images; let publicIds = product.publicIds; if (req.files && req.files.length > 0) { if (product.publicIds && product.publicIds.length > 0) { for (const publicId of product.publicIds) { await cloudinary.uploader.destroy(publicId); } } imageUrls = req.files.map(f => f.path); publicIds = req.files.map(f => f.filename); } else if (productData.images && productData.images.length > 0) imageUrls = productData.images; const updatedProduct = await Product.findByIdAndUpdate(req.params.id, { name: productData.name, desc: productData.desc, original: productData.original, price: productData.price, discountPercent: productData.discountPercent || Math.round(((productData.original - productData.price) / productData.original) * 100), category: productData.category, stock: productData.stock, sold: productData.sold, img: imageUrls[0], images: imageUrls, publicIds, featured: productData.featured, updatedAt: Date.now() }, { new: true }); res.json(updatedProduct); } catch (error) { res.status(500).json({ error: error.message }); }
+  try {
+    const productData = JSON.parse(req.body.data || '{}');
+    const product = await Product.findById(req.params.id);
+    
+    let imageUrls = product.images;
+    let publicIds = product.publicIds;
+
+    if (req.files && req.files.length > 0) {
+      if (product.publicIds && product.publicIds.length > 0) {
+        for (const publicId of product.publicIds) {
+          await cloudinary.uploader.destroy(publicId);
+        }
+      }
+      imageUrls = req.files.map(f => f.path);
+      publicIds = req.files.map(f => f.filename);
+    } else if (productData.images && productData.images.length > 0) {
+      imageUrls = productData.images;
+    }
+
+    let colors = [];
+    if (productData.colors && Array.isArray(productData.colors)) {
+      colors = productData.colors.slice(0, 3).map(color => ({
+        name: color.name,
+        code: color.code,
+        imageUrl: color.imageUrl || imageUrls[0],
+        publicId: color.publicId
+      }));
+    }
+
+    let sizes = [];
+    if (productData.sizes && Array.isArray(productData.sizes)) {
+      sizes = productData.sizes;
+    } else {
+      sizes = [
+        { size: 'M', stock: parseInt(productData.stockM) || 10 },
+        { size: 'L', stock: parseInt(productData.stockL) || 10 },
+        { size: 'XL', stock: parseInt(productData.stockXL) || 10 },
+        { size: 'XXL', stock: parseInt(productData.stockXXL) || 5 }
+      ];
+    }
+
+    const updatedProduct = await Product.findByIdAndUpdate(req.params.id, {
+      name: productData.name,
+      desc: productData.desc,
+      original: productData.original,
+      price: productData.price,
+      discountPercent: productData.discountPercent || Math.round(((productData.original - productData.price) / productData.original) * 100),
+      category: productData.category,
+      stock: sizes.reduce((sum, s) => sum + s.stock, 0),
+      sold: productData.sold,
+      img: imageUrls[0],
+      images: imageUrls,
+      publicIds,
+      featured: productData.featured,
+      sizes: sizes,
+      colors: colors,
+      updatedAt: Date.now()
+    }, { new: true });
+
+    res.json(updatedProduct);
+  } catch (error) {
+    console.error('Product update error:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
+
 app.delete('/api/admin/products/:id', auth, async (req, res) => { try { const product = await Product.findById(req.params.id); if (product?.publicIds && product.publicIds.length > 0) { for (const publicId of product.publicIds) { await cloudinary.uploader.destroy(publicId); } } await Product.findByIdAndDelete(req.params.id); res.json({ message: 'Product deleted successfully' }); } catch (error) { res.status(500).json({ error: error.message }); } });
 
 app.get('/api/admin/orders', auth, async (req, res) => {
   try { const { status, page = 1, limit = 20, search, isRead } = req.query; const query = {}; if (status && status !== 'all') query.status = status; if (isRead !== undefined) query.isRead = isRead === 'true'; if (search) query.$or = [ { orderId: { $regex: search, $options: 'i' } }, { customerName: { $regex: search, $options: 'i' } }, { phone: { $regex: search, $options: 'i' } } ]; const orders = await Order.find(query).sort('-createdAt').limit(parseInt(limit)).skip((parseInt(page) - 1) * parseInt(limit)); const total = await Order.countDocuments(query); res.json({ orders, totalPages: Math.ceil(total / limit), currentPage: parseInt(page), total }); } catch (error) { res.status(500).json({ error: error.message }); }
 });
+
 app.get('/api/admin/orders/unread-count', auth, async (req, res) => { try { const count = await Order.countDocuments({ isRead: false }); res.json({ count }); } catch (error) { res.status(500).json({ error: error.message }); } });
-app.get('/api/admin/orders/:id', auth, async (req, res) => { try { const order = await Order.findById(req.params.id); if (!order) return res.status(404).json({ error: 'Order not found' }); await Order.findByIdAndUpdate(req.params.id, { isRead: true }); res.json(order); } catch (error) { res.status(500).json({ error: error.message }); } });
+
+app.get('/api/admin/orders/:id', auth, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    
+    const enrichedItems = await Promise.all(order.items.map(async (item) => {
+      const product = await Product.findOne({ id: item.id });
+      if (product && product.colors) {
+        const colorInfo = product.colors.find(c => c.name === item.color);
+        if (colorInfo) {
+          item.colorImage = colorInfo.imageUrl;
+          item.colorCode = colorInfo.code;
+        }
+      }
+      return item;
+    }));
+    
+    order.items = enrichedItems;
+    await Order.findByIdAndUpdate(req.params.id, { isRead: true });
+    
+    res.json(order);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.put('/api/admin/orders/:id', auth, async (req, res) => { try { const { status, paymentStatus, notes, trackingCode } = req.body; const order = await Order.findByIdAndUpdate(req.params.id, { status, paymentStatus, notes, trackingCode, updatedAt: Date.now() }, { new: true }); res.json(order); } catch (error) { res.status(500).json({ error: error.message }); } });
 app.put('/api/admin/orders/:id/read', auth, async (req, res) => { try { await Order.findByIdAndUpdate(req.params.id, { isRead: true }); res.json({ message: 'Order marked as read' }); } catch (error) { res.status(500).json({ error: error.message }); } });
 app.delete('/api/admin/orders/:id', auth, async (req, res) => { try { await Order.findByIdAndDelete(req.params.id); res.json({ message: 'Order deleted successfully' }); } catch (error) { res.status(500).json({ error: error.message }); } });
