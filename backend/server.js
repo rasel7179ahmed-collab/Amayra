@@ -229,6 +229,7 @@ const ReviewSchema = new mongoose.Schema({
 });
 
 const SettingsSchema = new mongoose.Schema({
+  // Basic Settings
   siteName: { type: String, default: 'AMAYRA' },
   siteTitle: { type: String, default: 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন' },
   siteSubtitle: { type: String, default: 'PREMIUM SHIRT COLLECTION' },
@@ -245,6 +246,17 @@ const SettingsSchema = new mongoose.Schema({
   currency: { type: String, default: '৳' },
   themeColor: { type: String, default: '#1877F2' },
   logo: { type: String },
+  
+  // SEO Settings
+  metaTitle: { type: String, default: 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন' },
+  metaDescription: { type: String, default: 'প্রিমিয়াম কোয়ালিটির ফরমাল, ক্যাজুয়াল ও প্রিমিয়াম শার্ট সেরা দামে। AMAYRA তে অর্ডার করুন দ্রুত ডেলিভারি পাবেন।' },
+  metaKeywords: { type: String, default: 'শার্ট, ফরমাল শার্ট, ক্যাজুয়াল শার্ট, প্রিমিয়াম শার্ট, পাঞ্জাবি, ঢাকা, বাংলাদেশ, AMAYRA' },
+  metaAuthor: { type: String, default: 'AMAYRA' },
+  ogTitle: { type: String, default: 'AMAYRA · প্রিমিয়াম শার্ট কালেকশন' },
+  ogDescription: { type: String, default: 'প্রিমিয়াম কোয়ালিটির ফরমাল, ক্যাজুয়াল ও প্রিমিয়াম শার্ট সেরা দামে।' },
+  ogImage: { type: String, default: 'images/Amayra.jpg' },
+  googleSiteVerification: { type: String, default: 'SFq3YDKWo-0iRrNXCwYND3ygW9ThJJUQaK1zTMiqf44' },
+  
   updatedAt: { type: Date, default: Date.now }
 });
 
@@ -414,6 +426,7 @@ app.post('/api/admin/change-password', auth, async (req, res) => {
   }
 });
 
+// Public Routes
 app.get('/api/categories', async (req, res) => {
   try {
     const categories = await Category.find({ active: true }).sort('order');
@@ -564,6 +577,7 @@ app.get('/api/settings', async (req, res) => {
   }
 });
 
+// Admin Routes
 app.get('/api/admin/categories', auth, async (req, res) => {
   try {
     const categories = await Category.find().sort('order');
@@ -651,6 +665,10 @@ app.post('/api/admin/sliders', auth, upload.single('image'), async (req, res) =>
       }
     }
     
+    if (!req.file) {
+      return res.status(400).json({ error: 'Image is required' });
+    }
+    
     const newSlider = new Slider({
       title: sliderData.title,
       subtitle: sliderData.subtitle,
@@ -660,13 +678,14 @@ app.post('/api/admin/sliders', auth, upload.single('image'), async (req, res) =>
       productId: sliderData.productId,
       order: sliderData.order || 0,
       active: sliderData.active === true || sliderData.active === 'true',
-      imageUrl: req.file ? req.file.path : sliderData.imageUrl,
-      publicId: req.file ? req.file.filename : null
+      imageUrl: req.file.path,
+      publicId: req.file.filename
     });
 
     await newSlider.save();
     res.status(201).json(newSlider);
   } catch (error) {
+    console.error('Error creating slider:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -706,6 +725,7 @@ app.put('/api/admin/sliders/:id', auth, upload.single('image'), async (req, res)
     const slider = await Slider.findByIdAndUpdate(req.params.id, updateData, { new: true });
     res.json(slider);
   } catch (error) {
+    console.error('Error updating slider:', error);
     res.status(500).json({ error: error.message });
   }
 });
