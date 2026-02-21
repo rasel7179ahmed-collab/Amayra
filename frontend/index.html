@@ -1865,71 +1865,47 @@ window.addToCart = (productId) => {
     return;
   }
 
-  // Single smooth scroll to order section
-  const orderSection = document.getElementById('order');
-  if (orderSection) {
-    orderSection.scrollIntoView({ 
-      behavior: 'smooth',
-      block: 'start'
+  const existingItem = cart.find(item => item.id === productId);
+  const productImage = product.images && product.images.length ? product.images[0] : product.img;
+  
+  if (existingItem) {
+    if (existingItem.quantity < product.stock) {
+      existingItem.quantity++;
+      lastAddedItemId = productId;
+    } else {
+      Swal.fire({
+        icon: 'error',
+        text: 'স্টক সীমা অতিক্রম করেছে',
+        confirmButtonColor: '#1877F2',
+        confirmButtonText: 'ঠিক আছে'
+      });
+      return;
+    }
+  } else {
+    cart.push({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
+      stock: product.stock,
+      image: productImage
     });
+    lastAddedItemId = productId;
   }
   
-  setTimeout(() => {
-    const existingItem = cart.find(item => item.id === productId);
-    const productImage = product.images && product.images.length ? product.images[0] : product.img;
-    
-    if (existingItem) {
-      if (existingItem.quantity < product.stock) {
-        existingItem.quantity++;
-        lastAddedItemId = productId;
-      } else {
-        Swal.fire({
-          icon: 'error',
-          text: 'স্টক সীমা অতিক্রম করেছে',
-          confirmButtonColor: '#1877F2',
-          confirmButtonText: 'ঠিক আছে'
-        });
-        return;
-      }
-    } else {
-      cart.push({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        quantity: 1,
-        stock: product.stock,
-        image: productImage
-      });
-      lastAddedItemId = productId;
-    }
-    
-    updateCart();
-    
-    // Highlight the added item
-    setTimeout(() => {
-      const addedItem = document.querySelector(`.cart-item-new[data-product-id="${productId}"]`);
-      if (addedItem) {
-        addedItem.classList.add('highlight');
-        setTimeout(() => {
-          addedItem.classList.remove('highlight');
-        }, 1000);
-      }
-    }, 100);
-    
-    // Show single success message
-    Swal.fire({
-      icon: 'success',
-      title: 'কার্টে যুক্ত হয়েছে!',
-      text: 'অর্ডার ফর্ম পূরণ করে অর্ডার সম্পন্ন করুন',
-      confirmButtonText: 'ঠিক আছে',
-      confirmButtonColor: '#1877F2',
-      timer: 2000,
-      timerProgressBar: true
-    });
+  updateCart();
+  
+  // Show success message - only message
+  Swal.fire({
+    icon: 'success',
+    title: 'কার্টে যুক্ত হয়েছে!',
+    text: 'অর্ডার ফর্ম পূরণ করে অর্ডার সম্পন্ন করুন',
+    confirmButtonText: 'ঠিক আছে',
+    confirmButtonColor: '#1877F2'
+  });
 
-    // Update URL hash without scrolling
-    history.pushState(null, null, `#product-${productId}`);
-  }, 500); // Wait for scroll to complete
+  // Update URL hash without scrolling
+  history.pushState(null, null, `#product-${productId}`);
 };
 window.quickOrder = async (productId) => {
   try {
@@ -1991,52 +1967,15 @@ window.quickOrder = async (productId) => {
     // Close loading
     Swal.close();
 
-    // Pause slider animation temporarily
-    if (slideInterval) {
-      clearInterval(slideInterval);
-    }
-
-    // Single smooth scroll to order section
-    const orderSection = document.getElementById('order');
-    if (orderSection) {
-      orderSection.scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'start'
-      });
-    }
-
-    // Add highlight effect to order form
-    setTimeout(() => {
-      const orderFormCard = document.getElementById('orderFormCard');
-      if (orderFormCard) {
-        orderFormCard.classList.add('highlight');
-        setTimeout(() => {
-          orderFormCard.classList.remove('highlight');
-        }, 1500);
-      }
-      
-      // Focus on name input
-      const nameInput = document.getElementById('name');
-      if (nameInput) {
-        nameInput.focus();
-      }
-    }, 500); // Small delay to ensure scroll completes
-
-    // Show success message with single button
+    // Show success message - only message, no scroll
     Swal.fire({
       icon: 'success',
       title: 'প্রোডাক্ট যুক্ত হয়েছে!',
       text: 'অর্ডার ফর্ম পূরণ করে অর্ডার সম্পন্ন করুন',
-      confirmButtonText: 'অর্ডার সম্পন্ন করুন',
-      confirmButtonColor: '#FF7A00',
-      showCancelButton: false,
+      confirmButtonText: 'ঠিক আছে',
+      confirmButtonColor: '#1877F2',
       allowOutsideClick: true
     });
-
-    // Restart slider after user interaction
-    setTimeout(() => {
-      startSlideShow();
-    }, 10000); // Restart after 10 seconds
 
   } catch (error) {
     console.error('Error quick order:', error);
