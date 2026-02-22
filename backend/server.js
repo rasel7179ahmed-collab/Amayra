@@ -70,23 +70,15 @@ const ProductSchema = new mongoose.Schema({
   sizes: {
     type: [{
       size: { type: String, enum: ['M', 'L', 'XL', 'XXL'], required: true },
-      stock: { type: Number, default: 0 }
+      stock: { type: Number, default: 0 },
+      sold: { type: Number, default: 0 }
     }],
     default: [
-      { size: 'M', stock: 10 },
-      { size: 'L', stock: 10 },
-      { size: 'XL', stock: 10 },
-      { size: 'XXL', stock: 5 }
+      { size: 'M', stock: 10, sold: 0 },
+      { size: 'L', stock: 10, sold: 0 },
+      { size: 'XL', stock: 10, sold: 0 },
+      { size: 'XXL', stock: 5, sold: 0 }
     ]
-  },
-  colors: {
-    type: [{
-      name: { type: String, required: true },
-      code: { type: String, required: true },
-      imageUrl: { type: String, required: true },
-      publicId: { type: String }
-    }],
-    validate: [function(val) { return val.length <= 3; }, 'সর্বোচ্চ ৩টি কালার সেট করা যাবে']
   },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
@@ -104,9 +96,8 @@ const OrderSchema = new mongoose.Schema({
     price: Number,
     quantity: Number,
     size: { type: String, enum: ['M', 'L', 'XL', 'XXL'], required: true },
-    color: { type: String, required: true },
-    colorCode: { type: String },
-    colorImage: { type: String }
+    designIndex: { type: Number, default: 0 },
+    designImage: { type: String }
   }],
   subtotal: { type: Number, required: true },
   deliveryCharge: { type: Number, required: true },
@@ -174,8 +165,8 @@ app.post('/api/orders', [
     const { customerName, phone, district, address, items, subtotal, deliveryCharge, total, notes } = req.body;
     
     for (const item of items) {
-      if (!item.size || !item.color) {
-        return res.status(400).json({ error: 'প্রতিটি পণ্যের জন্য সাইজ এবং কালার নির্বাচন করুন' });
+      if (!item.size) {
+        return res.status(400).json({ error: 'প্রতিটি পণ্যের জন্য সাইজ নির্বাচন করুন' });
       }
     }
 
@@ -207,6 +198,7 @@ app.post('/api/orders', [
           const sizeIndex = product.sizes.findIndex(s => s.size === item.size);
           if (sizeIndex !== -1) {
             product.sizes[sizeIndex].stock -= item.quantity;
+            product.sizes[sizeIndex].sold += item.quantity;
             await product.save();
           }
         }
@@ -242,7 +234,7 @@ app.put('/api/admin/sliders/:id', auth, upload.single('image'), async (req, res)
 app.delete('/api/admin/sliders/:id', auth, async (req, res) => { try { const slider = await Slider.findById(req.params.id); if (slider?.publicId) await cloudinary.uploader.destroy(slider.publicId); await Slider.findByIdAndDelete(req.params.id); res.json({ message: 'Slider deleted successfully' }); } catch (error) { res.status(500).json({ error: error.message }); } });
 
 app.get('/api/admin/products', auth, async (req, res) => { try { const products = await Product.find().sort('id'); res.json(products); } catch (error) { res.status(500).json({ error: error.message }); } });
-app.get('/api/admin/bestsellers', auth, async (req, res) => { try { const bestsellers = await Product.find().sort({ sold: -1 }).limit(5).select('id name desc original price images sold discountPercent stock sizes colors'); res.json(bestsellers); } catch (error) { res.status(500).json({ error: error.message }); } });
+app.get('/api/admin/bestsellers', auth, async (req, res) => { try { const bestsellers = await Product.find().sort({ sold: -1 }).limit(5).select('id name desc original price images sold discountPercent stock sizes'); res.json(bestsellers); } catch (error) { res.status(500).json({ error: error.message }); } });
 app.post('/api/admin/products/temp-upload', auth, upload.array('images', 10), async (req, res) => { try { if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'No images uploaded' }); const urls = req.files.map(f => f.path); res.json({ urls }); } catch (error) { res.status(500).json({ error: error.message }); } });
 
 app.post('/api/admin/products', auth, upload.array('images', 10), async (req, res) => {
@@ -263,25 +255,15 @@ app.post('/api/admin/products', auth, upload.array('images', 10), async (req, re
       return res.status(400).json({ error: 'At least one image is required' });
     }
 
-    let colors = [];
-    if (productData.colors && Array.isArray(productData.colors)) {
-      colors = productData.colors.slice(0, 3).map(color => ({
-        name: color.name,
-        code: color.code,
-        imageUrl: color.imageUrl || imageUrls[0],
-        publicId: color.publicId
-      }));
-    }
-
     let sizes = [];
     if (productData.sizes && Array.isArray(productData.sizes)) {
       sizes = productData.sizes;
     } else {
       sizes = [
-        { size: 'M', stock: parseInt(productData.stockM) || 10 },
-        { size: 'L', stock: parseInt(productData.stockL) || 10 },
-        { size: 'XL', stock: parseInt(productData.stockXL) || 10 },
-        { size: 'XXL', stock: parseInt(productData.stockXXL) || 5 }
+        { size: 'M', stock: parseInt(productData.stockM) || 10, sold: 0 },
+        { size: 'L', stock: parseInt(productData.stockL) || 10, sold: 0 },
+        { size: 'XL', stock: parseInt(productData.stockXL) || 10, sold: 0 },
+        { size: 'XXL', stock: parseInt(productData.stockXXL) || 5, sold: 0 }
       ];
     }
 
@@ -294,13 +276,12 @@ app.post('/api/admin/products', auth, upload.array('images', 10), async (req, re
       discountPercent: productData.discountPercent || Math.round(((productData.original - productData.price) / productData.original) * 100),
       category: productData.category,
       stock: sizes.reduce((sum, s) => sum + s.stock, 0),
-      sold: productData.sold || 0,
+      sold: 0,
       img: imageUrls[0],
       images: imageUrls,
       publicIds,
       featured: productData.featured || false,
-      sizes: sizes,
-      colors: colors
+      sizes: sizes
     });
 
     await product.save();
@@ -331,25 +312,15 @@ app.put('/api/admin/products/:id', auth, upload.array('images', 10), async (req,
       imageUrls = productData.images;
     }
 
-    let colors = [];
-    if (productData.colors && Array.isArray(productData.colors)) {
-      colors = productData.colors.slice(0, 3).map(color => ({
-        name: color.name,
-        code: color.code,
-        imageUrl: color.imageUrl || imageUrls[0],
-        publicId: color.publicId
-      }));
-    }
-
     let sizes = [];
     if (productData.sizes && Array.isArray(productData.sizes)) {
       sizes = productData.sizes;
     } else {
       sizes = [
-        { size: 'M', stock: parseInt(productData.stockM) || 10 },
-        { size: 'L', stock: parseInt(productData.stockL) || 10 },
-        { size: 'XL', stock: parseInt(productData.stockXL) || 10 },
-        { size: 'XXL', stock: parseInt(productData.stockXXL) || 5 }
+        { size: 'M', stock: parseInt(productData.stockM) || 10, sold: product.sizes?.find(s => s.size === 'M')?.sold || 0 },
+        { size: 'L', stock: parseInt(productData.stockL) || 10, sold: product.sizes?.find(s => s.size === 'L')?.sold || 0 },
+        { size: 'XL', stock: parseInt(productData.stockXL) || 10, sold: product.sizes?.find(s => s.size === 'XL')?.sold || 0 },
+        { size: 'XXL', stock: parseInt(productData.stockXXL) || 5, sold: product.sizes?.find(s => s.size === 'XXL')?.sold || 0 }
       ];
     }
 
@@ -361,13 +332,12 @@ app.put('/api/admin/products/:id', auth, upload.array('images', 10), async (req,
       discountPercent: productData.discountPercent || Math.round(((productData.original - productData.price) / productData.original) * 100),
       category: productData.category,
       stock: sizes.reduce((sum, s) => sum + s.stock, 0),
-      sold: productData.sold,
+      sold: product.sold,
       img: imageUrls[0],
       images: imageUrls,
       publicIds,
       featured: productData.featured,
       sizes: sizes,
-      colors: colors,
       updatedAt: Date.now()
     }, { new: true });
 
@@ -391,19 +361,6 @@ app.get('/api/admin/orders/:id', auth, async (req, res) => {
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ error: 'Order not found' });
     
-    const enrichedItems = await Promise.all(order.items.map(async (item) => {
-      const product = await Product.findOne({ id: item.id });
-      if (product && product.colors) {
-        const colorInfo = product.colors.find(c => c.name === item.color);
-        if (colorInfo) {
-          item.colorImage = colorInfo.imageUrl;
-          item.colorCode = colorInfo.code;
-        }
-      }
-      return item;
-    }));
-    
-    order.items = enrichedItems;
     await Order.findByIdAndUpdate(req.params.id, { isRead: true });
     
     res.json(order);
@@ -439,4 +396,4 @@ app.get('/api/admin/notifications/unread', auth, async (req, res) => {
   try { const [pendingOrders, pendingReviews] = await Promise.all([ Order.countDocuments({ status: 'pending', isRead: false }), Review.countDocuments({ status: 'pending', isRead: false }) ]); const notifications = []; if (pendingOrders > 0) { const recentOrders = await Order.find({ status: 'pending', isRead: false }).sort({ createdAt: -1 }).limit(5).select('orderId customerName createdAt'); notifications.push({ type: 'order', count: pendingOrders, items: recentOrders }); } if (pendingReviews > 0) { const recentReviews = await Review.find({ status: 'pending', isRead: false }).sort({ createdAt: -1 }).limit(5).select('name text createdAt'); notifications.push({ type: 'review', count: pendingReviews, items: recentReviews }); } res.json({ total: pendingOrders + pendingReviews, notifications }); } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-initializeDatabase().then(() => { const PORT = process.env.PORT || 5000; app.listen(PORT, () => { console.log(`🚀 Server running on port ${PORT}`); console.log(`✅ Allowed origins:`, allowedOrigins); }); }); 
+initializeDatabase().then(() => { const PORT = process.env.PORT || 5000; app.listen(PORT, () => { console.log(`🚀 Server running on port ${PORT}`); console.log(`✅ Allowed origins:`, allowedOrigins); }); });

@@ -125,7 +125,6 @@
     @keyframes popup-slide { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     .loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(4px); z-index: 9998; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 1rem; }
     .loading-overlay.active { display: flex; }
-    .color-preview { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     .size-badge { display: inline-block; padding: 0.25rem 0.5rem; background: #f3f4f6; border-radius: 12px 2px 12px 2px; font-size: 0.8rem; margin-right: 0.25rem; }
     .category-filter { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
     .category-filter-btn { padding: 0.5rem 1rem; border: 1px solid #e2e8f0; border-radius: 20px; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
@@ -223,7 +222,6 @@ let adminUsername = localStorage.getItem('adminUsername');
 let currentPage = 'dashboard';
 let currentProductId = null;
 let productImages = [];
-let colorData = [];
 
 async function fetchWithRetry(url, options = {}, retries = 3, delay = 1000) {
   for (let i = 0; i < retries; i++) {
@@ -537,7 +535,6 @@ async function loadProducts() {
                 <th>ডিসকাউন্ট</th>
                 <th>মোট স্টক</th>
                 <th>সাইজ স্টক</th>
-                <th>কালার</th>
                 <th>বিক্রি</th>
                 <th>অ্যাকশন</th>
               </tr>
@@ -546,7 +543,6 @@ async function loadProducts() {
               ${products.map(product => {
                 const totalStock = product.sizes ? product.sizes.reduce((sum, s) => sum + s.stock, 0) : product.stock;
                 const sizeInfo = product.sizes ? product.sizes.map(s => `${s.size}: ${s.stock}`).join(', ') : 'M:10, L:10, XL:10, XXL:5';
-                const colorCount = product.colors ? product.colors.length : 0;
                 return `
                   <tr data-category="${product.category}">
                     <td><img src="${product.img || product.images?.[0] || ''}" class="image-preview w-12 h-12" onerror="this.src='https://via.placeholder.com/50'"></td>
@@ -556,7 +552,6 @@ async function loadProducts() {
                     <td><span class="status-badge bg-[#FF7A00] text-white">${product.discountPercent || 0}%</span></td>
                     <td>${totalStock}</td>
                     <td><span class="size-badge">${sizeInfo}</span></td>
-                    <td>${colorCount} টি</td>
                     <td>${product.sold || 0}</td>
                     <td>
                       <button onclick='showProductForm(${JSON.stringify(product).replace(/'/g, "\\'")})' class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-edit"></i></button>
@@ -565,7 +560,7 @@ async function loadProducts() {
                   </tr>
                 `;
               }).join('')}
-              ${products.length === 0 ? '<tr><td colspan="10" class="text-center py-4">কোন প্রোডাক্ট নেই</td></tr>' : ''}
+              ${products.length === 0 ? '<tr><td colspan="9" class="text-center py-4">কোন প্রোডাক্ট নেই</td></tr>' : ''}
             </tbody>
           </table>
         </div>
@@ -592,7 +587,6 @@ async function loadProducts() {
 window.showProductForm = async (product = null) => {
   currentProductId = product?._id || null;
   productImages = product?.images || (product?.img ? [product.img] : []);
-  colorData = product?.colors || [];
   
   const modal = document.getElementById('modal');
   const modalContent = document.getElementById('modalContent');
@@ -677,33 +671,6 @@ window.showProductForm = async (product = null) => {
         </div>
         
         <div class="form-group md:col-span-2">
-          <label class="form-label font-bold text-lg">কালার (সর্বোচ্চ ৩টি)</label>
-          <div id="colorContainer">
-            ${colorData.map((color, index) => `
-              <div class="color-item grid grid-cols-5 gap-2 mb-3 items-center" data-color-index="${index}">
-                <div class="col-span-2">
-                  <input type="text" class="form-input" placeholder="কালারের নাম (যেমন: কালো)" value="${color.name || ''}" onchange="updateColorData(${index}, 'name', this.value)">
-                </div>
-                <div class="col-span-1">
-                  <input type="color" class="form-input p-1 h-12" value="${color.code || '#1877F2'}" onchange="updateColorData(${index}, 'code', this.value)">
-                </div>
-                <div class="col-span-1">
-                  <img src="${color.imageUrl || ''}" class="w-12 h-12 object-cover rounded cursor-pointer" onclick="openGalleryModal(productImages, (image) => { updateColorImage(${index}, image); })" onerror="this.src='https://via.placeholder.com/50'">
-                </div>
-                <div class="col-span-1 text-right">
-                  <button type="button" onclick="removeColor(${index})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-          ${colorData.length < 3 ? `
-            <button type="button" onclick="addColorField()" class="btn-secondary text-sm px-4 py-2 mt-2">
-              <i class="fas fa-plus mr-2"></i>নতুন কালার যোগ করুন
-            </button>
-          ` : ''}
-        </div>
-        
-        <div class="form-group md:col-span-2">
           <label class="form-label">ছবি (সর্বোচ্চ ১০টি)</label>
           <button type="button" onclick="openImageModal()" class="bg-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300 mb-2">
             <i class="fas fa-upload mr-2"></i>ছবি আপলোড
@@ -736,83 +703,6 @@ window.showProductForm = async (product = null) => {
   modal.classList.add('active');
 };
 
-window.addColorField = function() {
-  const container = document.getElementById('colorContainer');
-  const index = colorData.length;
-  
-  colorData.push({ name: '', code: '#1877F2', imageUrl: '' });
-  
-  const div = document.createElement('div');
-  div.className = 'color-item grid grid-cols-5 gap-2 mb-3 items-center';
-  div.dataset.colorIndex = index;
-  div.innerHTML = `
-    <div class="col-span-2">
-      <input type="text" class="form-input" placeholder="কালারের নাম (যেমন: কালো)" value="" onchange="updateColorData(${index}, 'name', this.value)">
-    </div>
-    <div class="col-span-1">
-      <input type="color" class="form-input p-1 h-12" value="#1877F2" onchange="updateColorData(${index}, 'code', this.value)">
-    </div>
-    <div class="col-span-1">
-      <img src="https://via.placeholder.com/50" class="w-12 h-12 object-cover rounded cursor-pointer" onclick="openGalleryModal(productImages, (image) => { updateColorImage(${index}, image); })">
-    </div>
-    <div class="col-span-1 text-right">
-      <button type="button" onclick="removeColor(${index})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
-    </div>
-  `;
-  container.appendChild(div);
-  
-  const addBtn = document.querySelector('button[onclick="addColorField()"]');
-  if (addBtn && colorData.length >= 3) {
-    addBtn.style.display = 'none';
-  }
-};
-
-window.updateColorData = function(index, field, value) {
-  if (!colorData[index]) {
-    colorData[index] = {};
-  }
-  colorData[index][field] = value;
-};
-
-window.updateColorImage = function(index, imageUrl) {
-  if (!colorData[index]) {
-    colorData[index] = {};
-  }
-  colorData[index].imageUrl = imageUrl;
-  
-  const imgElement = document.querySelector(`.color-item[data-color-index="${index}"] img`);
-  if (imgElement) {
-    imgElement.src = imageUrl;
-  }
-};
-
-window.removeColor = function(index) {
-  colorData.splice(index, 1);
-  
-  const container = document.getElementById('colorContainer');
-  container.innerHTML = colorData.map((color, i) => `
-    <div class="color-item grid grid-cols-5 gap-2 mb-3 items-center" data-color-index="${i}">
-      <div class="col-span-2">
-        <input type="text" class="form-input" placeholder="কালারের নাম (যেমন: কালো)" value="${color.name || ''}" onchange="updateColorData(${i}, 'name', this.value)">
-      </div>
-      <div class="col-span-1">
-        <input type="color" class="form-input p-1 h-12" value="${color.code || '#1877F2'}" onchange="updateColorData(${i}, 'code', this.value)">
-      </div>
-      <div class="col-span-1">
-        <img src="${color.imageUrl || 'https://via.placeholder.com/50'}" class="w-12 h-12 object-cover rounded cursor-pointer" onclick="openGalleryModal(productImages, (image) => { updateColorImage(${i}, image); })">
-      </div>
-      <div class="col-span-1 text-right">
-        <button type="button" onclick="removeColor(${i})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
-      </div>
-    </div>
-  `).join('');
-  
-  const addBtn = document.querySelector('button[onclick="addColorField()"]');
-  if (addBtn) {
-    addBtn.style.display = colorData.length < 3 ? 'inline-block' : 'none';
-  }
-};
-
 window.saveProduct = async (e, id) => {
   e.preventDefault();
   const formData = new FormData(e.target);
@@ -833,20 +723,11 @@ window.saveProduct = async (e, id) => {
   }
 
   const sizes = [
-    { size: 'M', stock: parseInt(formData.get('stockM')) || 0 },
-    { size: 'L', stock: parseInt(formData.get('stockL')) || 0 },
-    { size: 'XL', stock: parseInt(formData.get('stockXL')) || 0 },
-    { size: 'XXL', stock: parseInt(formData.get('stockXXL')) || 0 }
+    { size: 'M', stock: parseInt(formData.get('stockM')) || 0, sold: 0 },
+    { size: 'L', stock: parseInt(formData.get('stockL')) || 0, sold: 0 },
+    { size: 'XL', stock: parseInt(formData.get('stockXL')) || 0, sold: 0 },
+    { size: 'XXL', stock: parseInt(formData.get('stockXXL')) || 0, sold: 0 }
   ];
-
-  const colors = colorData
-    .filter(c => c.name && c.name.trim() !== '' && c.imageUrl)
-    .map(c => ({
-      name: c.name,
-      code: c.code || '#1877F2',
-      imageUrl: c.imageUrl
-    }))
-    .slice(0, 3);
 
   const data = {
     name: formData.get('name'),
@@ -859,8 +740,7 @@ window.saveProduct = async (e, id) => {
     sold: 0,
     featured: formData.get('featured') === 'on',
     images: productImages,
-    sizes: sizes,
-    colors: colors
+    sizes: sizes
   };
 
   submitBtn.disabled = true;
@@ -984,7 +864,7 @@ async function loadOrders() {
                   <td>
                     ${order.items.map(item => `
                       <div class="text-sm">
-                        ${item.name} (${item.size}, ${item.color}) x ${item.quantity}
+                        ${item.name} (${item.size}) x ${item.quantity}
                       </div>
                     `).join('')}
                   </td>
@@ -1022,7 +902,7 @@ window.filterOrders = async (status) => {
           <td>
             ${order.items.map(item => `
               <div class="text-sm">
-                ${item.name} (${item.size}, ${item.color}) x ${item.quantity}
+                ${item.name} (${item.size}) x ${item.quantity}
               </div>
             `).join('')}
           </td>
@@ -1069,12 +949,11 @@ window.showOrderDetails = async (orderId) => {
           <div class="space-y-2">
             ${(order.items || []).map(item => `
               <div class="flex items-center gap-3 border-b pb-2">
-                ${item.colorImage ? `<img src="${item.colorImage}" class="w-12 h-12 object-cover rounded" onerror="this.src='https://via.placeholder.com/50'">` : ''}
+                ${item.designImage ? `<img src="${item.designImage}" class="w-12 h-12 object-cover rounded" onerror="this.src='https://via.placeholder.com/50'">` : ''}
                 <div class="flex-1">
                   <p class="font-medium">${item.name || 'N/A'}</p>
                   <p class="text-sm text-gray-600">
                     সাইজ: ${item.size || 'N/A'} | 
-                    রং: <span style="display:inline-block; width:16px; height:16px; background:${item.colorCode || '#ccc'}; border-radius:50%;"></span> ${item.color || 'N/A'} | 
                     ৳${item.price || 0} × ${item.quantity || 0}
                   </p>
                 </div>

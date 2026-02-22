@@ -7,7 +7,7 @@
   <meta name="description" id="metaDescription" content="প্রিমিয়াম কোয়ালিটির ফরমাল, ক্যাজুয়াল ও প্রিমিয়াম শার্ট সেরা দামে। AMAYRA তে অর্ডার করুন দ্রুত ডেলিভারি পাবেন।">
   <meta name="keywords" id="metaKeywords" content="শার্ট, ফরমাল শার্ট, ক্যাজুয়াল শার্ট, প্রিমিয়াম শার্ট, পাঞ্জাবি, ঢাকা, বাংলাদেশ, AMAYRA">
   <meta name="author" id="metaAuthor" content="AMAYRA">
-  <title id="metaTitle">AMAYRA · প্রিমিয়াম শার্ট কালেকশন</title>
+  <title id="metaTitle">AMAYRA · প্রিমিয়াম শар্ট কালেকশন</title>
   <meta property="og:title" id="ogTitle" content="AMAYRA · প্রিমিয়াম শার্ট কালেকশন">
   <meta property="og:description" id="ogDescription" content="প্রিমিয়াম কোয়ালিটির ফরমাল, ক্যাজুয়াল ও প্রিমিয়াম শার্ট সেরা দামে।">
   <meta property="og:image" id="ogImage" content="images/Amayra.jpg">
@@ -18,59 +18,38 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link rel="icon" href="images/amayra.png" type="image/png">
-  <script>
-    !function(f,b,e,v,n,t,s)
-    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-    n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t,s)}(window, document,'script',
-    'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '1817477268931069');
-    fbq('track', 'PageView');
-  </script>
-  <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1817477268931069&ev=PageView&noscript=1"/></noscript>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #FFFFFF; font-family: 'Hind Siliguri', sans-serif; color: #1C1E21; }
     
-    /* কন্টেইনার ম্যাক্স উইথ ১২০০px */
     .container-1200 { max-width: 1200px; margin-left: auto; margin-right: auto; width: 100%; padding-left: 1rem; padding-right: 1rem; }
     .header-container { max-width: 1200px; margin-left: auto; margin-right: auto; width: 100%; padding-left: 1rem; padding-right: 1rem; }
     
-    /* প্রোডাক্ট গ্রিড - ৪ কলাম */
     .product-grid-1200 { display: grid; grid-template-columns: repeat(1, 1fr); gap: 1.5rem; }
     @media (min-width: 640px) { .product-grid-1200 { grid-template-columns: repeat(2, 1fr); } }
     @media (min-width: 1024px) { .product-grid-1200 { grid-template-columns: repeat(4, 1fr); } }
     
-    /* প্রোডাক্ট কার্ড - সাইজ কমানো */
     .product-tile { background: white; border-radius: 2rem 0.8rem 2rem 0.8rem; transition: 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.1); border: 1px solid #F0F2F5; box-shadow: 0 8px 20px -8px rgba(24, 119, 242, 0.1); overflow: hidden; display: flex; flex-direction: column; height: 100%; position: relative; }
     .product-tile:hover { border-radius: 1rem 2rem 1rem 2rem; box-shadow: 0 20px 30px -12px rgba(24, 119, 242, 0.2); }
     
-    /* প্রোডাক্ট ইমেজ - হাইট কমানো */
     .product-gallery { position: relative; width: 100%; margin-bottom: 0.4rem; }
-    .main-image { width: 100%; height: 200px; object-fit: cover; border-radius: 24px 6px 24px 6px; cursor: pointer; transition: transform 0.3s; }
-    @media (min-width: 768px) { .main-image { height: 180px; } }
-    @media (min-width: 1024px) { .main-image { height: 160px; } }
+    .main-image { width: 100%; height: 220px; object-fit: cover; border-radius: 24px 6px 24px 6px; cursor: pointer; transition: transform 0.3s; }
+    @media (min-width: 768px) { .main-image { height: 200px; } }
+    @media (min-width: 1024px) { .main-image { height: 180px; } }
     .main-image:hover { transform: scale(1.02); }
     
-    /* থাম্বনেইল */
     .thumbnail-container { display: flex; gap: 0.4rem; margin-top: 0.5rem; overflow-x: auto; padding-bottom: 0.3rem; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
-    .thumbnail-container img { width: 50px; height: 50px; border-radius: 12px 2px 12px 2px; object-fit: cover; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; flex-shrink: 0; }
-    @media (max-width: 480px) { .thumbnail-container img { width: 45px; height: 45px; } }
+    .thumbnail-container img { width: 55px; height: 55px; border-radius: 12px 2px 12px 2px; object-fit: cover; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; flex-shrink: 0; }
+    @media (max-width: 480px) { .thumbnail-container img { width: 50px; height: 50px; } }
     .thumbnail-container img:hover { border-color: #1877F2; transform: scale(1.05); }
-    .thumbnail-container img.active { border-color: #1877F2; transform: scale(1.05); }
+    .thumbnail-container img.active { border-color: #1877F2; transform: scale(1.05); box-shadow: 0 0 0 2px rgba(24,119,242,0.3); }
     
-    /* সাইজ অপশন */
+    .selected-design-badge { position: absolute; bottom: 10px; right: 10px; background: #1877F2; color: white; padding: 0.2rem 0.8rem; border-radius: 16px 2px 16px 2px; font-size: 0.7rem; font-weight: 600; z-index: 5; opacity: 0.9; }
+    
     .size-option input:checked + span { background: #1877F2; color: white; border-color: #1877F2; }
     .size-option span { display: inline-block; padding: 0.2rem 0.6rem; border: 1.5px solid #e2e8f0; border-radius: 9999px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
     .size-option span:hover { border-color: #1877F2; }
     
-    /* কালার অপশন */
-    .color-option input:checked + span { transform: scale(1.2); box-shadow: 0 0 0 2px white, 0 0 0 4px #1877F2; }
-    
-    /* ব্র্যান্ড লোগো */
     .brand-logo { display: flex; align-items: center; gap: 10px; animation: pulse-slow 3s infinite ease-in-out; cursor: pointer; text-decoration: none; color: inherit; }
     .brand-logo:hover { animation: none; }
     .brand-logo img { max-height: 45px; width: auto; display: block; border-radius: 12px; box-shadow: 0 4px 8px rgba(24, 119, 242, 0.2); transition: transform 0.3s ease, box-shadow 0.3s ease; }
@@ -84,10 +63,8 @@
     
     @keyframes pulse-slow { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
     
-    /* গ্লাস কার্ড */
     .glass-card { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 2rem 1rem 2rem 1rem; box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.1); }
     
-    /* বাটন */
     .btn-primary { background: #1877F2; color: white; transition: all 0.2s; box-shadow: 0 4px 10px rgba(24, 119, 242, 0.3); border-radius: 30px 8px 30px 8px; font-weight: 600; letter-spacing: 0.3px; padding: 0.5rem 1rem; font-size: 0.9rem; display: inline-block; text-decoration: none; }
     .btn-primary:hover { background: #1666d9; transform: scale(1.02) translateY(-2px); box-shadow: 0 8px 15px -5px #1877F2; }
     
@@ -97,7 +74,6 @@
     .btn-secondary { background: #F0F2F5; color: #1C1E21; border-radius: 30px 8px 30px 8px; font-weight: 600; transition: 0.2s; padding: 0.5rem 1rem; font-size: 0.9rem; display: inline-block; text-decoration: none; }
     .btn-secondary:hover { background: #e2e4e8; }
     
-    /* ফুলস্ক্রিন মোডাল */
     .fullscreen-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all 0.3s; }
     .fullscreen-modal.active { opacity: 1; visibility: visible; }
     .fullscreen-modal img { max-width: 95%; max-height: 90%; object-fit: contain; border-radius: 20px; }
@@ -109,48 +85,39 @@
     .fullscreen-prev { left: 10px; }
     .fullscreen-next { right: 10px; }
     
-    /* হেডার */
     .morph-header { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(24, 119, 242, 0.2); position: sticky; top: 0; z-index: 40; width: 100%; }
     
-    /* ড্রপডাউন সাইডবার */
     .dropdown-sidebar { position: fixed; top: 0; left: 0; width: 100%; background: #FFFFFF; backdrop-filter: blur(12px); border-bottom: 2px solid #1877F2; box-shadow: 0 20px 30px -10px rgba(0,0,0,0.2); z-index: 999; display: none; padding: 1.5rem 2rem; border-bottom-left-radius: 40px 20px; border-bottom-right-radius: 40px 20px; }
     .dropdown-sidebar.open { display: block; }
     .dropdown-overlay { position: fixed; inset: 0; background: rgba(24, 119, 242, 0.1); backdrop-filter: blur(2px); z-index: 998; display: none; }
     .dropdown-overlay.open { display: block; }
     
-    /* ক্যাটাগরি পিল */
     .cat-pill { background: #F0F2F5; padding: 0.4rem 1.5rem; border-radius: 40px 8px 40px 8px; font-weight: 500; color: #1C1E21; cursor: pointer; transition: 0.2s; border: 1px solid transparent; white-space: nowrap; font-size: 0.9rem; display: inline-block; text-decoration: none; }
     .cat-pill.active { background: #1877F2; color: white; border-color: #1877F2; box-shadow: 0 4px 10px rgba(24, 119, 242, 0.3); }
     
-    /* কার্ট আইটেম */
     .cart-item-new { background: #F0F2F5; border-radius: 24px 6px 24px 6px; padding: 0.6rem 0.8rem; margin-bottom: 0.5rem; border-left: 4px solid #1877F2; transition: all 0.3s ease; display: flex; align-items: center; gap: 0.8rem; }
     .cart-item-new.highlight { animation: highlight-pulse 1s ease; border-left-color: #FF7A00; background: #fff3e0; }
     .cart-item-image { width: 45px; height: 45px; border-radius: 12px 2px 12px 2px; object-fit: cover; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     @keyframes highlight-pulse { 0% { transform: scale(1); background-color: #fff3e0; } 50% { transform: scale(1.02); background-color: #ffe4b5; } 100% { transform: scale(1); background-color: #fff3e0; } }
     
-    /* স্টার রেটিং */
     .star-organic i { font-size: 1.8rem; margin-right: 5px; color: #ddd; cursor: pointer; transition: all 0.2s; }
     .star-organic i.fa-solid { color: #FF7A00; }
     .star-organic i:hover { transform: scale(1.2); color: #FF7A00; }
     
-    /* অর্ডার সেকশন */
     .order-section-wrapper { display: grid; grid-template-columns: 1fr; gap: 1.5rem; align-items: stretch; }
     @media (min-width: 992px) { .order-section-wrapper { grid-template-columns: 1fr 1fr; gap: 2rem; } }
     #orderFormCard, .bestseller-slider { height: fit-content; min-height: 650px; display: flex; flex-direction: column; }
     
-    /* বেস্টসেলার স্লাইডার */
     .bestseller-slider { background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border-radius: 40px 12px 40px 12px; padding: 1.5rem; border: 2px solid rgba(24, 119, 242, 0.15); box-shadow: 0 15px 30px -10px rgba(0,0,0,0.1); position: relative; overflow: hidden; display: none; }
     @media (min-width: 992px) { .bestseller-slider { display: flex; } }
     .bestseller-slider::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #1877F2, #FF7A00, #1877F2); background-size: 200% 100%; animation: gradientMove 3s linear infinite; }
     @keyframes gradientMove { 0% { background-position: 0% 0%; } 100% { background-position: 200% 0%; } }
     
-    /* বেস্টসেলার হেডার */
     .bestseller-header { display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; padding-bottom: 0.8rem; border-bottom: 2px dashed rgba(24, 119, 242, 0.2); }
     .bestseller-header i { font-size: 2rem; color: #FF7A00; filter: drop-shadow(0 4px 6px rgba(255,122,0,0.3)); animation: flame 2s ease-in-out infinite; }
     @keyframes flame { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
     .bestseller-header h3 { font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, #1877F2, #FF7A00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     
-    /* বেস্টসেলার আইটেম */
     .bestseller-item { background: white; border-radius: 24px 6px 24px 6px; padding: 1.2rem; margin-bottom: 1rem; border: 1px solid rgba(24, 119, 242, 0.1); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; display: flex; flex-direction: column; }
     .bestseller-item:hover { transform: translateY(-3px) scale(1.01); box-shadow: 0 15px 25px -8px rgba(24, 119, 242, 0.2); border-color: #1877F2; }
     .bestseller-item .product-section { display: flex; flex-direction: row; gap: 1rem; margin-bottom: 1rem; }
@@ -163,7 +130,6 @@
     .bestseller-price .original { font-size: 0.9rem; color: #a0aec0; text-decoration: line-through; }
     .bestseller-discount { background: linear-gradient(135deg, #FF7A00, #ff9a3c); color: white; padding: 0.2rem 0.8rem; border-radius: 16px 2px 16px 2px; font-size: 0.8rem; font-weight: 600; display: inline-block; margin-bottom: 0.8rem; }
     
-    /* বেস্টসেলার রিভিউ */
     .bestseller-reviews { margin: 0.8rem 0; padding: 0.5rem 0; border-top: 1px dashed rgba(24, 119, 242, 0.2); border-bottom: 1px dashed rgba(24, 119, 242, 0.2); max-height: 160px; overflow-y: auto; scrollbar-width: thin; }
     .bestseller-reviews::-webkit-scrollbar { width: 3px; }
     .bestseller-reviews::-webkit-scrollbar-track { background: #f1f1f1; }
@@ -177,17 +143,14 @@
     .bestseller-review-location { font-size: 0.65rem; color: #1877F2; display: flex; align-items: center; gap: 3px; margin-top: 0.1rem; }
     .bestseller-review-location i { font-size: 0.55rem; }
     
-    /* বেস্টসেলার বাটন */
     .bestseller-btn { background: linear-gradient(135deg, #1877F2, #1666d9); color: white; border: none; border-radius: 24px 4px 24px 4px; padding: 0.6rem 1.2rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.3s; width: 100%; margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; }
     .bestseller-btn:hover { background: linear-gradient(135deg, #1666d9, #0a5bc4); transform: translateY(-2px); box-shadow: 0 8px 15px -5px #1877F2; }
     
-    /* বেস্টসেলার নেভিগেশন */
     .bestseller-nav { display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1.5rem; padding-top: 0.8rem; border-top: 1px solid rgba(24, 119, 242, 0.1); }
     .bestseller-nav button { width: 35px; height: 35px; border-radius: 50%; background: white; border: 2px solid #e2e8f0; cursor: pointer; transition: all 0.3s; color: #1877F2; font-size: 1rem; display: flex; align-items: center; justify-content: center; }
     .bestseller-nav button:hover { background: #1877F2; color: white; border-color: #1877F2; transform: scale(1.1); }
     .bestseller-nav span { font-size: 1rem; font-weight: 600; color: #4a5568; background: #f0f2f5; padding: 0.3rem 1.2rem; border-radius: 20px; }
     
-    /* রিভিউ সেকশন */
     .review-section-wrapper { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
     @media (min-width: 768px) { .review-section-wrapper { grid-template-columns: 1fr 1fr; } }
     .review-form-card, .reviews-card { height: 450px; display: flex; flex-direction: column; }
@@ -196,27 +159,21 @@
     .reviews-card::-webkit-scrollbar-track { background: #f1f1f1; }
     .reviews-card::-webkit-scrollbar-thumb { background: #1877F2; border-radius: 3px; }
     
-    /* কল বাটন */
     .call-button { background: linear-gradient(135deg, #FF7A00, #ff9a3c); color: white; padding: 0.5rem 1.2rem; border-radius: 30px 8px 30px 8px; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; transition: all 0.3s; box-shadow: 0 4px 10px rgba(255,122,0,0.3); font-size: 0.9rem; text-decoration: none; }
     .call-button:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(255,122,0,0.4); }
     
-    /* হোয়াটসঅ্যাপ ফ্লোট */
     .whatsapp-float { position: fixed; bottom: 20px; right: 20px; background-color: #25D366; color: white; width: 55px; height: 55px; border-radius: 50%; text-align: center; font-size: 30px; box-shadow: 0 8px 20px rgba(37, 211, 102, 0.4); z-index: 100; display: flex; align-items: center; justify-content: center; transition: all 0.3s; border: 3px solid white; animation: pulse-green 2s infinite; }
     .whatsapp-float:hover { transform: scale(1.1) rotate(5deg); background-color: #20b859; box-shadow: 0 12px 25px rgba(37, 211, 102, 0.6); animation: none; }
     @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); } 70% { box-shadow: 0 0 0 12px rgba(37, 211, 102, 0); } 100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); } }
     
-    /* ফুটার */
     .footer-custom { background: #0A192F; width: 100%; }
     .footer-text { color: #E6EDF3; font-size: 0.9rem; }
     
-    /* লোডিং স্পিনার */
     .loading-spinner { display: inline-block; width: 35px; height: 35px; border: 3px solid #f3f3f3; border-top: 3px solid #1877F2; border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     
-    /* সোল্ড আউট ব্যাজ */
     .sold-out { position: absolute; top: 8px; left: 8px; background: #dc2626; color: white; padding: 0.2rem 0.8rem; border-radius: 16px 2px 16px 2px; font-size: 0.7rem; font-weight: 600; z-index: 10; }
     
-    /* হ্যামবার্গার মেনু */
     .hamburger { width: 28px; height: 28px; display: flex; flex-direction: column; justify-content: space-around; padding: 5px 0; cursor: pointer; transition: transform 0.3s ease; z-index: 1000; background: transparent; border: none; }
     .hamburger span { display: block; width: 100%; height: 2.5px; background: #1877F2; border-radius: 3px; transition: all 0.3s ease; }
     .hamburger span:nth-child(2) { width: 70%; }
@@ -224,11 +181,9 @@
     .hamburger.open span:nth-child(2) { opacity: 0; width: 100%; }
     .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); width: 100%; }
     
-    /* হাইলাইট এফেক্ট */
     #orderFormCard.highlight { animation: formHighlight 0.5s ease 2; border: 2px solid #FF7A00; }
     @keyframes formHighlight { 0% { box-shadow: 0 0 0 0 rgba(255, 122, 0, 0.7); transform: scale(1); } 50% { box-shadow: 0 0 25px 10px rgba(255, 122, 0, 0.3); transform: scale(1.02); } 100% { box-shadow: 0 0 0 0 rgba(255, 122, 0, 0); transform: scale(1); } }
     
-    /* স্লাইডার স্টাইল - ফিক্সড */
     .hero-slide { border-radius: 50px 20px 50px 20px; overflow: hidden; box-shadow: 0 30px 30px -20px rgba(24, 119, 242, 0.2); position: relative; width: 100%; }
     #sliderTrack { display: flex; transition: transform 0.5s ease-in-out; width: 100%; }
     .slide-item { flex: 0 0 100%; width: 100%; }
@@ -251,21 +206,22 @@
     #sliderDots span { width: 8px; height: 8px; transition: all 0.3s ease; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); }
     #sliderDots span:hover { transform: scale(1.3); background: #1877F2 !important; }
     
-    /* অর্ডার বাটন লিংক - শুধু বাটনে হোভার করলে দেখাবে */
     .order-btn-container { position: relative; display: inline-block; }
     .order-btn-container a { text-decoration: none; }
     .order-link-tooltip { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #1C1E21; color: white; font-size: 0.7rem; padding: 0.3rem 0.6rem; border-radius: 16px 4px 16px 4px; white-space: nowrap; opacity: 0; visibility: hidden; transition: all 0.2s; pointer-events: none; margin-bottom: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
     .order-btn-container:hover .order-link-tooltip { opacity: 1; visibility: visible; }
     .order-link-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border-width: 5px; border-style: solid; border-color: #1C1E21 transparent transparent transparent; }
     
-    /* প্রোডাক্ট টাইটেল ও ডেসক্রিপশনে কোন হোভার লিংক থাকবে না */
     .product-title-link { text-decoration: none; color: inherit; cursor: default; }
     .product-title-link:hover { color: inherit; }
 
-    /* ইমেজ জুম ইফেক্ট */
     .zoom-container { position: relative; overflow: hidden; }
     .zoom-image { transition: transform 0.3s; }
     .zoom-image:hover { transform: scale(1.2); cursor: crosshair; }
+
+    .stock-info { font-size: 0.7rem; color: #4a5568; margin-top: 0.2rem; }
+    .size-stock { font-weight: 600; color: #1877F2; }
+    .sold-info { font-size: 0.7rem; color: #4a5568; margin-top: 0.1rem; }
   </style>
 </head>
 <body class="text-[#1C1E21]">
@@ -465,6 +421,9 @@ let fullscreenCurrentIndex = 0;
 let lastAddedItemId = null;
 let allReviews = [];
 
+// প্রতিটি প্রোডাক্টের জন্য সিলেক্টেড ডিজাইন ট্র্যাক করা
+let selectedDesignIndex = {};
+
 async function fetchWithRetry(url, options = {}, retries = 3, delay = 1000) {
   for (let i = 0; i < retries; i++) {
     try {
@@ -502,7 +461,6 @@ function checkHashAndScroll() {
   const hash = window.location.hash;
   if (!hash) return;
   
-  // ক্যাটাগরি ফিল্টার চেক
   const categoryMatch = hash.match(/^#collection-(.+)$/);
   if (categoryMatch) {
     const category = categoryMatch[1];
@@ -516,7 +474,6 @@ function checkHashAndScroll() {
     return;
   }
   
-  // প্রোডাক্ট আইডি চেক
   const productMatch = hash.match(/^#product-(\d+)$/);
   if (productMatch) {
     const productId = parseInt(productMatch[1]);
@@ -527,7 +484,6 @@ function checkHashAndScroll() {
     return;
   }
   
-  // অন্য সেকশন
   const element = document.querySelector(hash);
   if (element) {
     setTimeout(() => {
@@ -703,6 +659,7 @@ function renderCategoryPills() {
     if (activePill) {
       document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
       activePill.classList.add('active');
+      currentFilter = category;
     }
   }
 }
@@ -712,7 +669,8 @@ async function loadProducts() {
     const res = await fetchWithRetry(`${API_BASE}/products`);
     products = await res.json();
     products.forEach(product => { 
-      currentProductImages[product.id] = 0; 
+      currentProductImages[product.id] = 0;
+      selectedDesignIndex[product.id] = 0;
     });
     renderProducts();
   } catch (error) {
@@ -735,9 +693,12 @@ function renderProducts() {
     const totalStock = product.sizes ? product.sizes.reduce((sum, s) => sum + (s.stock || 0), 0) : product.stock;
     const isSoldOut = totalStock <= 0;
     const images = product.images && product.images.length ? product.images : [product.img];
-    const currentIndex = currentProductImages[product.id] || 0;
-    const colors = product.colors || [];
-    const hasColors = colors.length > 0;
+    const currentIndex = selectedDesignIndex[product.id] || 0;
+    
+    // সাইজ অনুযায়ী স্টক এবং বিক্রি ডাটা
+    const sizeStocks = product.sizes || [];
+    const sizeSold = product.sizes ? product.sizes.map(s => s.stock > 0 ? '✓' : '০') : [];
+    const totalSold = product.sold || 0;
 
     html += `
       <div class="product-tile p-3" id="product-${product.id}">
@@ -745,10 +706,13 @@ function renderProducts() {
           <div class="product-gallery">
             <div class="zoom-container">
               <img src="${images[currentIndex]}" class="main-image zoom-image" id="mainImg-${product.id}" onclick="openFullscreen('${product.id}')" onerror="this.src='https://via.placeholder.com/300x400?text=AMAYRA'">
+              <div class="selected-design-badge">
+                <i class="fa-solid fa-check-circle mr-1"></i> সিলেক্টেড ডিজাইন
+              </div>
             </div>
             ${isSoldOut ? '<span class="sold-out">স্টক আউট</span>' : `<span class="absolute top-2 right-2 bg-[#FF7A00] text-white px-2 py-0.5 rounded-full text-xs">-${discount}%</span>`}
             <div class="thumbnail-container" id="thumbs-${product.id}">
-              ${images.map((img, i) => `<img src="${img}" class="${i === currentIndex ? 'active' : ''}" onclick="changeProductImage(${product.id}, ${i}, event)" onerror="this.src='https://via.placeholder.com/45?text=IMG'">`).join('')}
+              ${images.map((img, i) => `<img src="${img}" class="${i === currentIndex ? 'active' : ''}" onclick="changeProductDesign(${product.id}, ${i}, event)" onerror="this.src='https://via.placeholder.com/45?text=IMG'">`).join('')}
             </div>
           </div>
         </div>
@@ -758,37 +722,29 @@ function renderProducts() {
           <p class="text-xs text-[#1C1E21]/70 line-clamp-2">${product.desc}</p>
           
           <div class="mt-2">
-            <label class="text-xs font-medium text-gray-700">সাইজ:</label>
+            <label class="text-xs font-medium text-gray-700">সাইজ নির্বাচন করুন:</label>
             <div class="flex flex-wrap gap-1 mt-1">
-              ${product.sizes ? product.sizes.map(s => `
+              ${sizeStocks.map(s => `
                 <label class="size-option">
-                  <input type="radio" name="size-${product.id}" value="${s.size}" ${s.stock <= 0 ? 'disabled' : ''} class="hidden peer">
+                  <input type="radio" name="size-${product.id}" value="${s.size}" ${s.stock <= 0 ? 'disabled' : ''} class="hidden peer" onchange="updateSizeStockInfo(${product.id}, '${s.size}', ${s.stock})">
                   <span class="inline-block px-2 py-0.5 border rounded-full text-xs cursor-pointer peer-checked:bg-[#1877F2] peer-checked:text-white peer-checked:border-[#1877F2] ${s.stock <= 0 ? 'opacity-50 cursor-not-allowed bg-gray-100' : 'hover:border-[#1877F2]'}">
                     ${s.size}
                   </span>
                 </label>
-              `).join('') : `
-                <label class="size-option"><input type="radio" name="size-${product.id}" value="M" class="hidden peer"><span class="inline-block px-2 py-0.5 border rounded-full text-xs cursor-pointer peer-checked:bg-[#1877F2] peer-checked:text-white">M</span></label>
-                <label class="size-option"><input type="radio" name="size-${product.id}" value="L" class="hidden peer"><span class="inline-block px-2 py-0.5 border rounded-full text-xs cursor-pointer peer-checked:bg-[#1877F2] peer-checked:text-white">L</span></label>
-                <label class="size-option"><input type="radio" name="size-${product.id}" value="XL" class="hidden peer"><span class="inline-block px-2 py-0.5 border rounded-full text-xs cursor-pointer peer-checked:bg-[#1877F2] peer-checked:text-white">XL</span></label>
-                <label class="size-option"><input type="radio" name="size-${product.id}" value="XXL" class="hidden peer"><span class="inline-block px-2 py-0.5 border rounded-full text-xs cursor-pointer peer-checked:bg-[#1877F2] peer-checked:text-white">XXL</span></label>
-              `}
+              `).join('')}
+            </div>
+            
+            <div class="stock-info mt-1" id="stockInfo-${product.id}">
+              <span class="size-stock">🧵 মোট স্টক: ${totalStock}</span>
+            </div>
+            
+            <div class="sold-info mt-1" id="soldInfo-${product.id}">
+              <span class="text-gray-600">🔥 মোট বিক্রি: ${totalSold}</span>
+              ${sizeStocks.length > 0 ? `
+                <span class="text-xs text-gray-500 ml-1">(M: ${sizeStocks.find(s => s.size === 'M')?.sold || 0}, L: ${sizeStocks.find(s => s.size === 'L')?.sold || 0}, XL: ${sizeStocks.find(s => s.size === 'XL')?.sold || 0}, XXL: ${sizeStocks.find(s => s.size === 'XXL')?.sold || 0})</span>
+              ` : ''}
             </div>
           </div>
-          
-          ${hasColors ? `
-            <div class="mt-2">
-              <label class="text-xs font-medium text-gray-700">রং:</label>
-              <div class="flex flex-wrap gap-1 mt-1">
-                ${colors.map((color, idx) => `
-                  <label class="color-option">
-                    <input type="radio" name="color-${product.id}" value="${color.name}" data-code="${color.code}" data-image="${color.imageUrl}" class="hidden peer">
-                    <span class="inline-block w-6 h-6 rounded-full border-2 border-gray-300 cursor-pointer peer-checked:border-[#1877F2] peer-checked:scale-110 transition" style="background-color: ${color.code};" title="${color.name}"></span>
-                  </label>
-                `).join('')}
-              </div>
-            </div>
-          ` : ''}
           
           <div class="flex justify-between items-center mt-3">
             <div>
@@ -796,16 +752,11 @@ function renderProducts() {
               <span class="line-through text-[#1C1E21]/40 text-xs ml-1">৳${product.original}</span>
             </div>
             <div class="order-btn-container">
-              <button onclick="addToCartWithOptions(${product.id})" class="btn-primary px-3 py-1.5 text-xs" ${isSoldOut ? 'style="opacity:0.5;pointer-events:none;"' : ''}>
+              <button onclick="addToCart(${product.id})" class="btn-primary px-3 py-1.5 text-xs" ${isSoldOut ? 'style="opacity:0.5;pointer-events:none;"' : ''}>
                 <i class="fa-solid fa-bag-shopping mr-1"></i> অর্ডার
               </button>
               <span class="order-link-tooltip">#product-${product.id}</span>
             </div>
-          </div>
-          
-          <div class="flex justify-between mt-1 text-[10px] text-gray-500">
-            <span>🧵 স্টক: ${totalStock}</span>
-            <span>🔥 বিক্রি: ${product.sold}</span>
           </div>
         </div>
       </div>
@@ -815,7 +766,8 @@ function renderProducts() {
   document.getElementById('productGrid').innerHTML = html;
 }
 
-window.changeProductImage = (productId, index, event) => {
+// ডিজাইন পরিবর্তনের ফাংশন
+window.changeProductDesign = (productId, index, event) => {
   event.stopPropagation();
   const product = products.find(p => p.id === productId);
   if (!product) return;
@@ -823,16 +775,47 @@ window.changeProductImage = (productId, index, event) => {
   const mainImg = document.getElementById(`mainImg-${productId}`);
   if (mainImg && images[index]) {
     mainImg.src = images[index];
-    currentProductImages[productId] = index;
+    selectedDesignIndex[productId] = index;
+    
+    // থাম্বনেইল আপডেট
     const thumbs = document.querySelectorAll(`#thumbs-${productId} img`);
     thumbs.forEach((thumb, i) => { 
       if (i === index) thumb.classList.add('active'); 
       else thumb.classList.remove('active'); 
     });
+    
+    // ছোট নোটিফিকেশন দেখানো (ঐচ্ছিক)
+    Swal.fire({
+      icon: 'info',
+      title: 'ডিজাইন সিলেক্টেড',
+      text: 'আপনি এই ডিজাইনটি সিলেক্ট করেছেন। অর্ডার করতে সাইজ নির্বাচন করুন।',
+      timer: 1500,
+      showConfirmButton: false,
+      toast: true,
+      position: 'top-end'
+    });
   }
 };
 
-window.addToCartWithOptions = (productId) => {
+// সাইজ সিলেক্ট করলে স্টক ইনফো আপডেট
+window.updateSizeStockInfo = (productId, size, stock) => {
+  const product = products.find(p => p.id === productId);
+  if (!product) return;
+  
+  const stockInfo = document.getElementById(`stockInfo-${productId}`);
+  if (stockInfo) {
+    stockInfo.innerHTML = `<span class="size-stock">📦 ${size}: ${stock} টি স্টক</span>`;
+  }
+  
+  const soldInfo = document.getElementById(`soldInfo-${productId}`);
+  if (soldInfo && product.sizes) {
+    const sizeSold = product.sizes.find(s => s.size === size)?.sold || 0;
+    soldInfo.innerHTML = `<span class="text-gray-600">🔥 এই সাইজে বিক্রি: ${sizeSold}</span>`;
+  }
+};
+
+// অর্ডার ফাংশন - কালার বাদ দিয়ে শুধু সাইজ চেক
+window.addToCart = (productId) => {
   const product = products.find(p => p.id === productId);
   if (!product) return;
 
@@ -849,29 +832,6 @@ window.addToCartWithOptions = (productId) => {
     return;
   }
 
-  const hasColors = product.colors && product.colors.length > 0;
-  let selectedColor = 'Default';
-  let selectedColorCode = null;
-  let selectedColorImage = null;
-
-  if (hasColors) {
-    const colorInput = document.querySelector(`input[name="color-${productId}"]:checked`);
-    if (!colorInput) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'রং নির্বাচন করুন',
-        text: 'অর্ডার করার জন্য দয়া করে একটি রং নির্বাচন করুন। উপলব্ধ রং: ' + 
-              product.colors.map(c => c.name).join(', '),
-        confirmButtonColor: '#1877F2',
-        confirmButtonText: 'ঠিক আছে'
-      });
-      return;
-    }
-    selectedColor = colorInput.value;
-    selectedColorCode = colorInput.dataset.code;
-    selectedColorImage = colorInput.dataset.image;
-  }
-
   const size = selectedSize.value;
   const sizeObj = product.sizes?.find(s => s.size === size);
   
@@ -886,13 +846,14 @@ window.addToCartWithOptions = (productId) => {
     return;
   }
 
+  // সিলেক্টেড ডিজাইন ইমেজ
+  const images = product.images && product.images.length ? product.images : [product.img];
+  const selectedDesignImage = images[selectedDesignIndex[productId] || 0];
+
   const existingItem = cart.find(item => 
     item.id === productId && 
-    item.size === size && 
-    item.color === selectedColor
+    item.size === size
   );
-
-  const productImage = selectedColorImage || (product.images && product.images.length ? product.images[0] : product.img);
 
   if (existingItem) {
     const currentSizeStock = sizeObj ? sizeObj.stock : product.stock;
@@ -915,11 +876,9 @@ window.addToCartWithOptions = (productId) => {
       price: product.price,
       quantity: 1,
       size: size,
-      color: selectedColor,
-      colorCode: selectedColorCode,
-      colorImage: selectedColorImage,
-      stock: sizeObj ? sizeObj.stock : product.stock,
-      image: productImage
+      designIndex: selectedDesignIndex[productId] || 0,
+      designImage: selectedDesignImage,
+      stock: sizeObj ? sizeObj.stock : product.stock
     });
     lastAddedItemId = productId;
   }
@@ -929,6 +888,7 @@ window.addToCartWithOptions = (productId) => {
   window.location.hash = 'order';
 };
 
+// কুইক অর্ডার - কালার বাদ
 window.quickOrder = async (productId) => {
   try {
     let product;
@@ -961,9 +921,7 @@ window.quickOrder = async (productId) => {
     }
     
     const defaultSize = product.sizes ? product.sizes.find(s => s.stock > 0)?.size || 'M' : 'M';
-    const defaultColor = product.colors && product.colors.length > 0 ? product.colors[0].name : 'Default';
-    const defaultColorImage = product.colors && product.colors.length > 0 ? product.colors[0].imageUrl : null;
-    const defaultColorCode = product.colors && product.colors.length > 0 ? product.colors[0].code : null;
+    const images = product.images && product.images.length ? product.images : [product.img];
     
     cart = [{
       id: product.id,
@@ -971,11 +929,9 @@ window.quickOrder = async (productId) => {
       price: product.price,
       quantity: 1,
       size: defaultSize,
-      color: defaultColor,
-      colorCode: defaultColorCode,
-      colorImage: defaultColorImage,
-      stock: totalStock,
-      image: defaultColorImage || (product.images && product.images.length ? product.images[0] : product.img)
+      designIndex: 0,
+      designImage: images[0],
+      stock: totalStock
     }];
     
     updateCart();
@@ -1018,7 +974,7 @@ function updateCart() {
   
   cart.forEach((item, index) => {
     subtotal += item.price * item.quantity;
-    const productImage = item.colorImage || item.image || 'https://via.placeholder.com/50';
+    const productImage = item.designImage || 'https://via.placeholder.com/50';
     
     html += `
       <div class="cart-item-new flex items-center gap-2 ${item.id === lastAddedItemId ? 'highlight' : ''}" data-product-id="${item.id}">
@@ -1027,7 +983,6 @@ function updateCart() {
           <span class="font-medium text-[#1C1E21] text-xs block">${item.name}</span>
           <span class="text-[10px] text-[#1C1E21]/70 block">
             সাইজ: ${item.size} | 
-            রং: <span style="display:inline-block; width:10px; height:10px; background:${item.colorCode || '#ccc'}; border-radius:50%;"></span> ${item.color} | 
             ৳${item.price} x ${item.quantity}
           </span>
         </div>
@@ -1142,9 +1097,8 @@ document.getElementById('orderForm').addEventListener('submit', async (e) => {
       price: item.price,
       quantity: item.quantity,
       size: item.size,
-      color: item.color,
-      colorCode: item.colorCode,
-      colorImage: item.colorImage
+      designIndex: item.designIndex,
+      designImage: item.designImage
     })),
     subtotal: subtotal,
     deliveryCharge: deliveryCharge,
@@ -1297,7 +1251,7 @@ window.openFullscreen = (productId) => {
   const product = products.find(p => p.id === productId);
   if (!product) return;
   fullscreenImages = product.images && product.images.length ? product.images : [product.img];
-  fullscreenCurrentIndex = currentProductImages[productId] || 0;
+  fullscreenCurrentIndex = selectedDesignIndex[productId] || 0;
   const modal = document.getElementById('fullscreenModal');
   const img = document.getElementById('fullscreenImage');
   img.src = fullscreenImages[fullscreenCurrentIndex];
