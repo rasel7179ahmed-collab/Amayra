@@ -7,7 +7,7 @@
   <meta name="description" id="metaDescription" content="প্রিমিয়াম কোয়ালিটির ফরমাল, ক্যাজুয়াল ও প্রিমিয়াম শার্ট সেরা দামে। AMAYRA তে অর্ডার করুন দ্রুত ডেলিভারি পাবেন।">
   <meta name="keywords" id="metaKeywords" content="শার্ট, ফরমাল শার্ট, ক্যাজুয়াল শার্ট, প্রিমিয়াম শার্ট, পাঞ্জাবি, ঢাকা, বাংলাদেশ, AMAYRA">
   <meta name="author" id="metaAuthor" content="AMAYRA">
-  <title id="metaTitle">AMAYRA · প্রিমিয়াম শар্ট কালেকশন</title>
+  <title id="metaTitle">AMAYRA · প্রিমিয়াম শার্ট কালেকশন</title>
   <meta property="og:title" id="ogTitle" content="AMAYRA · প্রিমিয়াম শার্ট কালেকশন">
   <meta property="og:description" id="ogDescription" content="প্রিমিয়াম কোয়ালিটির ফরমাল, ক্যাজুয়াল ও প্রিমিয়াম শার্ট সেরা দামে।">
   <meta property="og:image" id="ogImage" content="images/Amayra.jpg">
@@ -222,6 +222,7 @@
     .stock-info { font-size: 0.7rem; color: #4a5568; margin-top: 0.2rem; }
     .size-stock { font-weight: 600; color: #1877F2; }
     .sold-info { font-size: 0.7rem; color: #4a5568; margin-top: 0.1rem; }
+    .size-stock-detail { font-size: 0.65rem; color: #6b7280; margin-left: 0.25rem; }
   </style>
 </head>
 <body class="text-[#1C1E21]">
@@ -697,8 +698,6 @@ function renderProducts() {
     
     // সাইজ অনুযায়ী স্টক এবং বিক্রি ডাটা
     const sizeStocks = product.sizes || [];
-    const sizeSold = product.sizes ? product.sizes.map(s => s.stock > 0 ? '✓' : '০') : [];
-    const totalSold = product.sold || 0;
 
     html += `
       <div class="product-tile p-3" id="product-${product.id}">
@@ -726,7 +725,7 @@ function renderProducts() {
             <div class="flex flex-wrap gap-1 mt-1">
               ${sizeStocks.map(s => `
                 <label class="size-option">
-                  <input type="radio" name="size-${product.id}" value="${s.size}" ${s.stock <= 0 ? 'disabled' : ''} class="hidden peer" onchange="updateSizeStockInfo(${product.id}, '${s.size}', ${s.stock})">
+                  <input type="radio" name="size-${product.id}" value="${s.size}" ${s.stock <= 0 ? 'disabled' : ''} class="hidden peer" onchange="updateSizeStockInfo(${product.id}, '${s.size}', ${s.stock}, ${s.sold || 0})">
                   <span class="inline-block px-2 py-0.5 border rounded-full text-xs cursor-pointer peer-checked:bg-[#1877F2] peer-checked:text-white peer-checked:border-[#1877F2] ${s.stock <= 0 ? 'opacity-50 cursor-not-allowed bg-gray-100' : 'hover:border-[#1877F2]'}">
                     ${s.size}
                   </span>
@@ -734,15 +733,26 @@ function renderProducts() {
               `).join('')}
             </div>
             
-            <div class="stock-info mt-1" id="stockInfo-${product.id}">
-              <span class="size-stock">🧵 মোট স্টক: ${totalStock}</span>
+            <div class="stock-info mt-2" id="stockInfo-${product.id}">
+              <span class="font-medium text-gray-700">📊 স্টক বিবরণ:</span><br>
+              <div class="grid grid-cols-2 gap-1 mt-1">
+                ${sizeStocks.map(s => `
+                  <span class="text-xs ${s.stock > 0 ? 'text-green-600' : 'text-red-500'}">
+                    ${s.size}: ${s.stock} টি
+                  </span>
+                `).join('')}
+              </div>
             </div>
             
-            <div class="sold-info mt-1" id="soldInfo-${product.id}">
-              <span class="text-gray-600">🔥 মোট বিক্রি: ${totalSold}</span>
-              ${sizeStocks.length > 0 ? `
-                <span class="text-xs text-gray-500 ml-1">(M: ${sizeStocks.find(s => s.size === 'M')?.sold || 0}, L: ${sizeStocks.find(s => s.size === 'L')?.sold || 0}, XL: ${sizeStocks.find(s => s.size === 'XL')?.sold || 0}, XXL: ${sizeStocks.find(s => s.size === 'XXL')?.sold || 0})</span>
-              ` : ''}
+            <div class="sold-info mt-2" id="soldInfo-${product.id}">
+              <span class="font-medium text-gray-700">🔥 বিক্রি:</span><br>
+              <div class="grid grid-cols-2 gap-1 mt-1">
+                ${sizeStocks.map(s => `
+                  <span class="text-xs text-[#FF7A00]">
+                    ${s.size}: ${s.sold || 0} টি
+                  </span>
+                `).join('')}
+              </div>
             </div>
           </div>
           
@@ -784,7 +794,6 @@ window.changeProductDesign = (productId, index, event) => {
       else thumb.classList.remove('active'); 
     });
     
-    // ছোট নোটিফিকেশন দেখানো (ঐচ্ছিক)
     Swal.fire({
       icon: 'info',
       title: 'ডিজাইন সিলেক্টেড',
@@ -798,23 +807,40 @@ window.changeProductDesign = (productId, index, event) => {
 };
 
 // সাইজ সিলেক্ট করলে স্টক ইনফো আপডেট
-window.updateSizeStockInfo = (productId, size, stock) => {
+window.updateSizeStockInfo = (productId, size, stock, sold) => {
   const product = products.find(p => p.id === productId);
   if (!product) return;
   
   const stockInfo = document.getElementById(`stockInfo-${productId}`);
   if (stockInfo) {
-    stockInfo.innerHTML = `<span class="size-stock">📦 ${size}: ${stock} টি স্টক</span>`;
+    stockInfo.innerHTML = `
+      <span class="font-medium text-gray-700">📊 স্টক বিবরণ:</span><br>
+      <div class="grid grid-cols-2 gap-1 mt-1">
+        ${product.sizes.map(s => `
+          <span class="text-xs ${s.size === size ? 'text-[#1877F2] font-bold' : (s.stock > 0 ? 'text-green-600' : 'text-red-500')}">
+            ${s.size}: ${s.stock} টি ${s.size === size ? '✓' : ''}
+          </span>
+        `).join('')}
+      </div>
+    `;
   }
   
   const soldInfo = document.getElementById(`soldInfo-${productId}`);
-  if (soldInfo && product.sizes) {
-    const sizeSold = product.sizes.find(s => s.size === size)?.sold || 0;
-    soldInfo.innerHTML = `<span class="text-gray-600">🔥 এই সাইজে বিক্রি: ${sizeSold}</span>`;
+  if (soldInfo) {
+    soldInfo.innerHTML = `
+      <span class="font-medium text-gray-700">🔥 বিক্রি:</span><br>
+      <div class="grid grid-cols-2 gap-1 mt-1">
+        ${product.sizes.map(s => `
+          <span class="text-xs ${s.size === size ? 'text-[#1877F2] font-bold' : 'text-[#FF7A00]'}">
+            ${s.size}: ${s.sold || 0} টি ${s.size === size ? '✓' : ''}
+          </span>
+        `).join('')}
+      </div>
+    `;
   }
 };
 
-// অর্ডার ফাংশন - কালার বাদ দিয়ে শুধু সাইজ চেক
+// অর্ডার ফাংশন
 window.addToCart = (productId) => {
   const product = products.find(p => p.id === productId);
   if (!product) return;
@@ -888,7 +914,7 @@ window.addToCart = (productId) => {
   window.location.hash = 'order';
 };
 
-// কুইক অর্ডার - কালার বাদ
+// কুইক অর্ডার
 window.quickOrder = async (productId) => {
   try {
     let product;
