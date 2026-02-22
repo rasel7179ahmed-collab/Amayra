@@ -127,7 +127,7 @@
     .loading-overlay.active { display: flex; }
     .color-preview { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     .size-badge { display: inline-block; padding: 0.25rem 0.5rem; background: #f3f4f6; border-radius: 12px 2px 12px 2px; font-size: 0.8rem; margin-right: 0.25rem; }
-  </style>  
+  </style>
 </head>
 <body>
 <div class="loading-overlay" id="loadingOverlay"><div class="loading-spinner"></div><div class="loading-text" id="loadingText">অপেক্ষা করুন...</div></div>
@@ -490,7 +490,7 @@ window.deleteCategory = async (id) => {
   } catch (error) { console.error('Delete category error:', error); showPopup('মুছতে সমস্যা হয়েছে', 'error'); }
 };
 
-async function loadProducts(category = 'all') {
+async function loadProducts() {
   const content = document.getElementById('pageContent');
   showLoading('প্রোডাক্ট লোড হচ্ছে...');
   try {
@@ -498,50 +498,10 @@ async function loadProducts(category = 'all') {
       fetchWithRetry(`${API_BASE}/admin/products`, { headers: { 'Authorization': `Bearer ${token}` } }),
       fetchWithRetry(`${API_BASE}/categories`, { headers: { 'Authorization': `Bearer ${token}` } })
     ]);
-    const allProducts = await productsRes.json();
+    const products = await productsRes.json();
     const categories = await categoriesRes.json();
-    window.allProducts = allProducts; // store globally
-    document.getElementById('productCount').textContent = allProducts.length;
-    
-    // Filter products based on selected category
-    const filtered = category === 'all' ? allProducts : allProducts.filter(p => p.category === category);
-    
-    // Render category pills
-    let categoryPillsHtml = '<div class="flex flex-wrap gap-2 mb-4">';
-    categoryPillsHtml += `<button class="cat-pill ${category === 'all' ? 'active' : ''}" onclick="loadProducts('all')">সকল</button>`;
-    categories.forEach(cat => {
-      const count = allProducts.filter(p => p.category === cat.name).length;
-      categoryPillsHtml += `<button class="cat-pill ${category === cat.name ? 'active' : ''}" onclick="loadProducts('${cat.name}')">${cat.banglaName || cat.name} (${count})</button>`;
-    });
-    categoryPillsHtml += '</div>';
-    
-    // Render table with filtered products
-    let tableRows = filtered.map(product => {
-      const totalStock = product.sizes ? product.sizes.reduce((sum, s) => sum + s.stock, 0) : product.stock;
-      const sizeInfo = product.sizes ? product.sizes.map(s => `${s.size}: ${s.stock}`).join(', ') : 'M:10, L:10, XL:10, XXL:5';
-      const colorCount = product.colors ? product.colors.length : 0;
-      return `
-        <tr>
-          <td><img src="${product.img || product.images?.[0] || ''}" class="image-preview w-12 h-12" onerror="this.src='https://via.placeholder.com/50'"></td>
-          <td>${product.name || ''}</td>
-          <td>${product.category || ''}</td>
-          <td>৳${product.price || 0}</td>
-          <td><span class="status-badge bg-[#FF7A00] text-white">${product.discountPercent || 0}%</span></td>
-          <td>${totalStock}</td>
-          <td><span class="size-badge">${sizeInfo}</span></td>
-          <td>${colorCount} টি</td>
-          <td>${product.sold || 0}</td>
-          <td>
-            <button onclick='showProductForm(${JSON.stringify(product).replace(/'/g, "\\'")})' class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-edit"></i></button>
-            <button onclick="confirmDeleteProduct('${product._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
-          </td>
-        </tr>
-      `;
-    }).join('');
-    
-    if (filtered.length === 0) {
-      tableRows = '<tr><td colspan="10" class="text-center py-4">কোন প্রোডাক্ট নেই</td></tr>';
-    }
+    document.getElementById('productCount').textContent = products.length;
+    window.allProducts = products;
     
     content.innerHTML = `
       <div class="section-card">
@@ -549,7 +509,6 @@ async function loadProducts(category = 'all') {
           <h3 class="text-xl font-bold">প্রোডাক্ট পরিচালনা</h3>
           <button class="btn-primary" onclick="showProductForm()"><i class="fas fa-plus mr-2"></i>নতুন প্রোডাক্ট</button>
         </div>
-        ${categoryPillsHtml}
         <div class="data-table">
           <table>
             <thead>
@@ -567,17 +526,37 @@ async function loadProducts(category = 'all') {
               </tr>
             </thead>
             <tbody>
-              ${tableRows}
+              ${products.map(product => {
+                const totalStock = product.sizes ? product.sizes.reduce((sum, s) => sum + s.stock, 0) : product.stock;
+                const sizeInfo = product.sizes ? product.sizes.map(s => `${s.size}: ${s.stock}`).join(', ') : 'M:10, L:10, XL:10, XXL:5';
+                const colorCount = product.colors ? product.colors.length : 0;
+                return `
+                  <tr>
+                    <td><img src="${product.img || product.images?.[0] || ''}" class="image-preview w-12 h-12" onerror="this.src='https://via.placeholder.com/50'"></td>
+                    <td>${product.name || ''}</td>
+                    <td>${product.category || ''}</td>
+                    <td>৳${product.price || 0}</td>
+                    <td><span class="status-badge bg-[#FF7A00] text-white">${product.discountPercent || 0}%</span></td>
+                    <td>${totalStock}</td>
+                    <td><span class="size-badge">${sizeInfo}</span></td>
+                    <td>${colorCount} টি</td>
+                    <td>${product.sold || 0}</td>
+                    <td>
+                      <button onclick='showProductForm(${JSON.stringify(product).replace(/'/g, "\\'")})' class="btn-primary text-sm px-3 py-1 mr-2"><i class="fas fa-edit"></i></button>
+                      <button onclick="confirmDeleteProduct('${product._id}')" class="btn-danger text-sm px-3 py-1"><i class="fas fa-trash"></i></button>
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+              ${products.length === 0 ? '<tr><td colspan="10" class="text-center py-4">কোন প্রোডাক্ট নেই</td></tr>' : ''}
             </tbody>
           </table>
         </div>
       </div>
     `;
-  } catch (error) {
-    console.error('Error loading products:', error);
-    content.innerHTML = `<div class="text-center py-8"><p class="text-red-500 mb-4">প্রোডাক্ট লোড করতে ব্যর্থ হয়েছে</p><button onclick="loadProducts()" class="btn-primary px-6 py-2"><i class="fas fa-sync-alt mr-2"></i>আবার চেষ্টা করুন</button></div>`;
-  } finally { hideLoading(); }
+  } catch (error) { console.error('Error loading products:', error); content.innerHTML = `<div class="text-center py-8"><p class="text-red-500 mb-4">প্রোডাক্ট লোড করতে ব্যর্থ হয়েছে</p><button onclick="loadProducts()" class="btn-primary px-6 py-2"><i class="fas fa-sync-alt mr-2"></i>আবার চেষ্টা করুন</button></div>`; } finally { hideLoading(); }
 }
+
 window.showProductForm = async (product = null) => {
   currentProductId = product?._id || null;
   productImages = product?.images || (product?.img ? [product.img] : []);
