@@ -127,6 +127,9 @@
     .loading-overlay.active { display: flex; }
     .color-preview { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     .size-badge { display: inline-block; padding: 0.25rem 0.5rem; background: #f3f4f6; border-radius: 12px 2px 12px 2px; font-size: 0.8rem; margin-right: 0.25rem; }
+    .category-filter { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .category-filter-btn { padding: 0.5rem 1rem; border: 1px solid #e2e8f0; border-radius: 20px; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
+    .category-filter-btn.active { background: #1877F2; color: white; border-color: #1877F2; }
   </style>
 </head>
 <body>
@@ -503,12 +506,26 @@ async function loadProducts() {
     document.getElementById('productCount').textContent = products.length;
     window.allProducts = products;
     
+    // ক্যাটাগরি ভিত্তিক প্রোডাক্ট কাউন্ট
+    const categoryCounts = {};
+    categories.forEach(cat => {
+      categoryCounts[cat.name] = products.filter(p => p.category === cat.name).length;
+    });
+    
     content.innerHTML = `
       <div class="section-card">
         <div class="section-header">
           <h3 class="text-xl font-bold">প্রোডাক্ট পরিচালনা</h3>
           <button class="btn-primary" onclick="showProductForm()"><i class="fas fa-plus mr-2"></i>নতুন প্রোডাক্ট</button>
         </div>
+        
+        <div class="category-filter" id="productCategoryFilter">
+          <button class="category-filter-btn active" onclick="filterProductsByCategory('all')">সকল (${products.length})</button>
+          ${categories.map(cat => `
+            <button class="category-filter-btn" onclick="filterProductsByCategory('${cat.name}')">${cat.banglaName || cat.name} (${categoryCounts[cat.name] || 0})</button>
+          `).join('')}
+        </div>
+        
         <div class="data-table">
           <table>
             <thead>
@@ -525,13 +542,13 @@ async function loadProducts() {
                 <th>অ্যাকশন</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="productsTableBody">
               ${products.map(product => {
                 const totalStock = product.sizes ? product.sizes.reduce((sum, s) => sum + s.stock, 0) : product.stock;
                 const sizeInfo = product.sizes ? product.sizes.map(s => `${s.size}: ${s.stock}`).join(', ') : 'M:10, L:10, XL:10, XXL:5';
                 const colorCount = product.colors ? product.colors.length : 0;
                 return `
-                  <tr>
+                  <tr data-category="${product.category}">
                     <td><img src="${product.img || product.images?.[0] || ''}" class="image-preview w-12 h-12" onerror="this.src='https://via.placeholder.com/50'"></td>
                     <td>${product.name || ''}</td>
                     <td>${product.category || ''}</td>
@@ -554,6 +571,21 @@ async function loadProducts() {
         </div>
       </div>
     `;
+    
+    window.filterProductsByCategory = (category) => {
+      document.querySelectorAll('#productCategoryFilter .category-filter-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      const rows = document.querySelectorAll('#productsTableBody tr');
+      rows.forEach(row => {
+        if (category === 'all' || row.dataset.category === category) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    };
+    
   } catch (error) { console.error('Error loading products:', error); content.innerHTML = `<div class="text-center py-8"><p class="text-red-500 mb-4">প্রোডাক্ট লোড করতে ব্যর্থ হয়েছে</p><button onclick="loadProducts()" class="btn-primary px-6 py-2"><i class="fas fa-sync-alt mr-2"></i>আবার চেষ্টা করুন</button></div>`; } finally { hideLoading(); }
 }
 
